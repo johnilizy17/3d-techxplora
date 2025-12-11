@@ -98,14 +98,14 @@ export default function GameControls({
                             onClick={onUndoMove}
                             disabled={!canUndo}
                             variant="outline"
-                            className="flex-1 border-white/20 hover:bg-white/10 text-white"
+                            className="flex-1 border-white/20 bg-white/10 text-white"
                         >
                             <RotateCcw className="w-4 h-4 mr-2" /> Undo
                         </Button>
                         <Button
                             onClick={onResetGame}
                             variant="outline"
-                            className="flex-1 border-white/20 hover:bg-white/10 text-white"
+                            className="flex-1 border-white/20 bg-white/10 text-white"
                         >
                             <ArrowLeft className="w-4 h-4 mr-2" /> Reset
                         </Button>

@@ -14,19 +14,25 @@ function ChessPiece({ position, piece, color, isHighlighted = false, isDragging 
     })
 
     // Theme colors
-    const pieceColor = color === 'w' ? '#f0f0f0' : '#1a1a1a'
+    const pieceColor = color === 'w' ? '#f0f0f0' : '#000000'
     const highlightColor = isHighlighted ? '#ffb585' : pieceColor
 
     // Materials
-    const Material = ({ roughness = 0.3, metalness = 0.6 }) => (
-        <meshStandardMaterial
-            color={highlightColor}
-            roughness={roughness}
-            metalness={metalness}
-            emissive={highlightColor}
-            emissiveIntensity={isHighlighted ? 0.3 : 0}
-        />
-    )
+    const Material = ({ roughness = 0.3, metalness = 0.6 }) => {
+        // Different material properties for black pieces to ensure they look "pure black"
+        const finalRoughness = color === 'b' ? 0.7 : roughness
+        const finalMetalness = color === 'b' ? 0.2 : metalness
+
+        return (
+            <meshStandardMaterial
+                color={highlightColor}
+                roughness={finalRoughness}
+                metalness={finalMetalness}
+                emissive={highlightColor}
+                emissiveIntensity={isHighlighted ? 0.3 : 0}
+            />
+        )
+    }
 
     const renderPiece = () => {
         switch (piece) {
@@ -242,7 +248,7 @@ export default function ChessBoard3D({ board, ...props }) {
     return (
         <div className="w-full relative rounded-2xl overflow-hidden shadow-2xl bg-[#0a0a0a] border border-white/10" style={{ height: windowHeight }}>
             <Canvas camera={{ position: cameraPosition, fov: 45 }} shadows>
-                <ambientLight intensity={0.7} />
+                <ambientLight intensity={0.4} />
                 <directionalLight
                     position={[5, 10, 5]}
                     castShadow
