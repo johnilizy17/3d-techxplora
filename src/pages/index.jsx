@@ -36,7 +36,7 @@ function PagesContent() {
                 <Route path="/" element={<Home />} />
 
 
-                <Route path="/Home" element={<Home />} />
+                <Route path="/test" element={<Home />} />
 
                 <Route path="/chess" element={<Chess />} />
 
