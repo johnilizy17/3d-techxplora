@@ -1,54 +1,49 @@
+// Pages.jsx
+import React from "react";
+import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
+
 import Layout from "./Layout.jsx";
-
-import Home from "./Home";
-
-import { BrowserRouter as Router, Route, Routes, useLocation } from 'react-router-dom';
+import Home from "./Home.jsx";
 import Chess from "./chess.jsx";
 
+// Mapping of page names for Layout highlighting (optional)
 const PAGES = {
+  Home: "Home",
+  Test: "Test",
+  Chess: "Chess",
+};
 
-    Home: Home,
-
-}
-
+// Helper to get current page from URL
 function _getCurrentPage(url) {
-    if (url.endsWith('/')) {
-        url = url.slice(0, -1);
-    }
-    let urlLastPart = url.split('/').pop();
-    if (urlLastPart.includes('?')) {
-        urlLastPart = urlLastPart.split('?')[0];
-    }
-
-    const pageName = Object.keys(PAGES).find(page => page.toLowerCase() === urlLastPart.toLowerCase());
-    return pageName || Object.keys(PAGES)[0];
+  if (url.endsWith("/")) url = url.slice(0, -1);
+  const lastPart = url.split("/").pop();
+  return Object.keys(PAGES).find(
+    (page) => page.toLowerCase() === lastPart.toLowerCase()
+  ) || "Home";
 }
 
-// Create a wrapper component that uses useLocation inside the Router context
+// Wrapper to use useLocation inside Router
 function PagesContent() {
-    const location = useLocation();
-    const currentPage = _getCurrentPage(location.pathname);
+  const location = useLocation();
+  const currentPage = _getCurrentPage(location.pathname);
 
-    return (
-        <Layout currentPageName={currentPage}>
-            <Routes>
-
-                <Route path="/" element={<Home />} />
-
-
-                <Route path="/test" element={<Home />} />
-
-                <Route path="/chess" element={<Chess />} />
-
-            </Routes>
-        </Layout>
-    );
+  return (
+    <Layout currentPageName={currentPage}>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/test" element={<Home />} />
+        <Route path="/chess" element={<Chess />} />
+        {/* Fallback for unknown routes */}
+        <Route path="*" element={<div>404 - Page Not Found</div>} />
+      </Routes>
+    </Layout>
+  );
 }
 
 export default function Pages() {
-    return (
-        <Router>
-            <PagesContent />
-        </Router>
-    );
+  return (
+    <Router>
+      <PagesContent />
+    </Router>
+  );
 }
