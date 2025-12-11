@@ -70,20 +70,30 @@ export default function Navbar() {
                     ))}
 
                     <Button
-                        className="ml-4 bg-white/10 hover:bg-white/20 text-white border border-white/10 hover:border-[#a6b1ff]/50 transition-all duration-300"
+                        className="ml-4 relative px-6 py-2 text-sm font-bold bg-gradient-to-r from-[#a6b1ff] via-[#c7aff8] to-[#ffb585] text-[#0a0a0a] rounded-lg overflow-hidden group hover:scale-105 transition-all duration-300 shadow-[0_4px_0_#8b95cc] active:shadow-none active:translate-y-[4px]"
                         size="sm"
                     >
                         Sign in
                     </Button>
                 </div>
 
-                {/* Mobile Menu Toggle */}
-                <button
-                    className="md:hidden text-white"
-                    onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                >
-                    {isMobileMenuOpen ? <X /> : <Menu />}
-                </button>
+                {/* Mobile specific controls */}
+                <div className="flex md:hidden items-center gap-4">
+                    <Button
+                        onClick={() => { }} // Add sign in handler here
+                        className="relative px-4 py-2 text-xs font-bold bg-gradient-to-r from-[#a6b1ff] via-[#c7aff8] to-[#ffb585] text-[#0a0a0a] rounded-lg overflow-hidden group active:scale-95 transition-all duration-300 shadow-[0_3px_0_#8b95cc] active:shadow-none active:translate-y-[3px]"
+                    >
+                        Sign In
+                    </Button>
+
+                    {/* Mobile Menu Toggle */}
+                    <button
+                        className="text-white p-1"
+                        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                    >
+                        {isMobileMenuOpen ? <X /> : <Menu />}
+                    </button>
+                </div>
             </div>
 
             {/* Mobile Menu */}
@@ -104,9 +114,6 @@ export default function Navbar() {
                             {link.name}
                         </NavLink>
                     ))}
-                    <Button className="w-full mt-4 bg-gradient-to-r from-[#a6b1ff] to-[#c7aff8] text-black font-semibold">
-                        Sign In
-                    </Button>
                 </div>
             </div>
         </nav>
