@@ -5,6 +5,7 @@ import { BrowserRouter as Router, Routes, Route, useLocation } from "react-route
 import Layout from "./Layout.jsx";
 import Home from "./Home.jsx";
 import Chess from "./chess.jsx";
+import ChessGame from "./ChessGame.jsx"; // Import new game page
 import HowToUse from "./HowToUse.jsx";
 import About from "./About.jsx";
 
@@ -30,6 +31,8 @@ function PagesContent() {
   const location = useLocation();
   const currentPage = _getCurrentPage(location.pathname);
 
+  // If we are in the game itself, we might want a minimal layout or the standard one.
+  // The layout wrapper is applied here.
   return (
     <Layout currentPageName={currentPage}>
       <Routes>
@@ -37,6 +40,7 @@ function PagesContent() {
         <Route path="/how-to-use" element={<HowToUse />} />
         <Route path="/about" element={<About />} />
         <Route path="/chess" element={<Chess />} />
+        <Route path="/chess/game" element={<ChessGame />} />
         {/* Fallback for unknown routes */}
         <Route path="*" element={<div>404 - Page Not Found</div>} />
       </Routes>
