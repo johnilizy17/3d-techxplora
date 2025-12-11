@@ -31,15 +31,15 @@ export default function Navbar() {
     return (
         <nav
             className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled || isMobileMenuOpen
-                    ? 'bg-[#0a0a0a]/80 backdrop-blur-md border-b border-white/10'
-                    : 'bg-transparent'
+                ? 'bg-[#0a0a0a]/80 backdrop-blur-md border-b border-white/10'
+                : 'bg-transparent'
                 }`}
         >
             <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
                 {/* Logo */}
                 <NavLink to="/" className="flex items-center gap-2 group">
                     <div className="relative">
-                        <Sparkles className="w-6 h-6 text-[#a6b1ff] group-hover:animate-pulse" />
+                        <img src="/public/favicon.ico" alt="Logo" className="w-6 h-6" />
                         <div className="absolute inset-0 bg-[#a6b1ff] blur-lg opacity-20 group-hover:opacity-50 transition-opacity" />
                     </div>
                     <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-white/70 tracking-wide font-['Bricolage_Grotesque']">
@@ -105,7 +105,7 @@ export default function Navbar() {
                         </NavLink>
                     ))}
                     <Button className="w-full mt-4 bg-gradient-to-r from-[#a6b1ff] to-[#c7aff8] text-black font-semibold">
-                        Connect Wallet
+                        Sign In
                     </Button>
                 </div>
             </div>
