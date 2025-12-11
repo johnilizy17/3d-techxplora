@@ -31,9 +31,8 @@ function Capsule({ position, color, size = 1, rotationSpeed, floatOffset }) {
                 <mesh castShadow receiveShadow>
                     <cylinderGeometry args={[0.4, 0.4, 1.8, 32]} />
                     <MeshTransmissionMaterial
-                        backside
-                        backsideThickness={1}
-                        samples={16}
+                        backside={false}
+                        samples={6}
                         thickness={0.2}
                         anisotropicBlur={0.1}
                         iridescence={1}
@@ -43,7 +42,7 @@ function Capsule({ position, color, size = 1, rotationSpeed, floatOffset }) {
                         clearcoatRoughness={0.1}
                         chromaticAberration={0.1}
                         color="#ffffff"
-                        resolution={1024}
+                        resolution={512}
                         distortion={0.5}
                         distortionScale={0.5}
                         temporalDistortion={0.2}
