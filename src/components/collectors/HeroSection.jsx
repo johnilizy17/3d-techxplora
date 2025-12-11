@@ -62,17 +62,17 @@ export default function HeroSection() {
         </p>
 
         {/* CTA with halo effect */}
-        <div style={{ display: "flex", flexDirection: "row", gap: 20 }}>
+        <div className="flex flex-col md:flex-row gap-6 md:gap-12 w-full md:w-auto px-4">
           <Button
             onClick={scrollToNext}
-            className="interactive halo-click relative px-10 py-7 text-lg font-semibold bg-gradient-to-r from-[#a6b1ff] via-[#c7aff8] to-[#ffb585] text-[#0a0a0a] rounded-full overflow-hidden group hover:scale-105 hover:shadow-[0_0_40px_rgba(166,177,255,0.5)] transition-all duration-500 animate-in fade-in zoom-in duration-1000 delay-300"
+            className="interactive halo-click relative w-full md:w-auto px-10 py-8 text-xl font-bold bg-gradient-to-r from-[#a6b1ff] via-[#c7aff8] to-[#ffb585] text-[#0a0a0a] rounded-xl overflow-hidden group hover:scale-105 transition-all duration-300 shadow-[0_6px_0_#8b95cc] active:shadow-none active:translate-y-[6px]"
           >
             <span className="relative z-10 tracking-wide">For Teacher</span>
             <div className="absolute inset-0 bg-gradient-to-r from-[#c7aff8] via-[#ffb585] to-[#a6b1ff] opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
           </Button>
           <Button
             onClick={scrollToNext}
-            className="interactive halo-click relative px-10 py-7 text-lg font-semibold bg-gradient-to-r from-[#a6b1ff] via-[#c7aff8] to-[#ffb585] text-[#0a0a0a] rounded-full overflow-hidden group hover:scale-105 hover:shadow-[0_0_40px_rgba(166,177,255,0.5)] transition-all duration-500 animate-in fade-in zoom-in duration-1000 delay-300"
+            className="interactive halo-click relative w-full md:w-auto px-10 py-8 text-xl font-bold bg-gradient-to-r from-[#a6b1ff] via-[#c7aff8] to-[#ffb585] text-[#0a0a0a] rounded-xl overflow-hidden group hover:scale-105 transition-all duration-300 shadow-[0_6px_0_#8b95cc] active:shadow-none active:translate-y-[6px]"
           >
             <span className="relative z-10 tracking-wide">For Student</span>
             <div className="absolute inset-0 bg-gradient-to-r from-[#c7aff8] via-[#ffb585] to-[#a6b1ff] opacity-0 group-hover:opacity-100 transition-opacity duration-700" />

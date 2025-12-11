@@ -39,7 +39,7 @@ export default function Navbar() {
                 {/* Logo */}
                 <NavLink to="/" className="flex items-center gap-2 group">
                     <div className="relative">
-                        <img src="/public/favicon.ico" alt="Logo" className="w-6 h-6" />
+                        <img src="favicon.ico" alt="Logo" className="w-6 h-6" />
                         <div className="absolute inset-0 bg-[#a6b1ff] blur-lg opacity-20 group-hover:opacity-50 transition-opacity" />
                     </div>
                     <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-white/70 tracking-wide font-['Bricolage_Grotesque']">

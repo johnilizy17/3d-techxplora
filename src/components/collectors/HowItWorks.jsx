@@ -83,13 +83,13 @@ export default function HowItWorks() {
               <div
                 key={index}
                 className={`transform transition-all duration-1000 ${isVisible
-                    ? 'opacity-100 translate-y-0'
-                    : isEven
-                      ? 'opacity-0 -translate-y-20'
-                      : 'opacity-0 translate-y-20'
+                  ? 'opacity-100 translate-y-0'
+                  : isEven
+                    ? 'opacity-0 -translate-y-20'
+                    : 'opacity-0 translate-y-20'
                   }`}
               >
-                <Card className="interactive relative h-full glass-effect border-white/10 p-8 group hover:border-[#a8d8ff]/50 transition-all duration-300 hover:scale-105">
+                <Card className="interactive relative h-full glass-effect bg-gray-900/80 border-white/10 p-8 group hover:border-[#a8d8ff]/50 transition-all duration-300 hover:scale-105">
                   <div
                     className="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-500 rounded-lg"
                     style={{ background: `linear-gradient(135deg, ${step.color}, transparent)` }}
