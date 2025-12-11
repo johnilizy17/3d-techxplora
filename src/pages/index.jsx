@@ -5,11 +5,14 @@ import { BrowserRouter as Router, Routes, Route, useLocation } from "react-route
 import Layout from "./Layout.jsx";
 import Home from "./Home.jsx";
 import Chess from "./chess.jsx";
+import HowToUse from "./HowToUse.jsx";
+import About from "./About.jsx";
 
 // Mapping of page names for Layout highlighting (optional)
 const PAGES = {
   Home: "Home",
-  Test: "Test",
+  HowToUse: "How To Use",
+  About: "About",
   Chess: "Chess",
 };
 
@@ -31,7 +34,8 @@ function PagesContent() {
     <Layout currentPageName={currentPage}>
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="/test" element={<Home />} />
+        <Route path="/how-to-use" element={<HowToUse />} />
+        <Route path="/about" element={<About />} />
         <Route path="/chess" element={<Chess />} />
         {/* Fallback for unknown routes */}
         <Route path="*" element={<div>404 - Page Not Found</div>} />

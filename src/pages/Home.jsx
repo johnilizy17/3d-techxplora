@@ -17,7 +17,7 @@ export default function Home() {
 
   useEffect(() => {
     loadProducts();
-    
+
     const handleScroll = () => {
       const totalScroll = document.documentElement.scrollHeight - window.innerHeight;
       const currentScroll = window.scrollY;
@@ -37,8 +37,7 @@ export default function Home() {
     <div className="relative bg-[#0a0a0a] overflow-hidden">
       <CustomCursor />
       <ScrollProgress progress={scrollProgress} />
-      <AmbientParticles />
-      
+
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
         
@@ -182,15 +181,15 @@ export default function Home() {
 
       {/* HERO 3D RENDER PLACEHOLDER - Replace with actual 3D scene or hero image */}
       <HeroSection />
-      
+
       {/* PRODUCT IMAGE PLACEHOLDERS - Replace with actual product photography */}
       <FeaturedGallery products={products} />
-      
+
       <HowItWorks />
-      
-      
+
+
       <ContactSection />
-      
+
       {/* Footer with Chloe Hung credit - DO NOT REMOVE */}
       <DeveloperFooter />
     </div>
