@@ -3,11 +3,12 @@ import Layout from "./Layout.jsx";
 import Home from "./Home";
 
 import { BrowserRouter as Router, Route, Routes, useLocation } from 'react-router-dom';
+import Chess from "./chess.jsx";
 
 const PAGES = {
-    
+
     Home: Home,
-    
+
 }
 
 function _getCurrentPage(url) {
@@ -27,16 +28,18 @@ function _getCurrentPage(url) {
 function PagesContent() {
     const location = useLocation();
     const currentPage = _getCurrentPage(location.pathname);
-    
+
     return (
         <Layout currentPageName={currentPage}>
-            <Routes>            
-                
-                    <Route path="/" element={<Home />} />
-                
-                
+            <Routes>
+
+                <Route path="/" element={<Home />} />
+
+
                 <Route path="/Home" element={<Home />} />
-                
+
+                <Route path="/chess" element={<Chess />} />
+
             </Routes>
         </Layout>
     );
