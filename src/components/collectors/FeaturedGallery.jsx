@@ -237,14 +237,14 @@ export default function FeaturedGallery({ products }) {
           >
             <div className="mb-6 inline-flex items-center gap-2 glass-morphism px-5 py-2 rounded-full">
               <Sparkles className="w-4 h-4 text-[#ffb585]" />
-              <span className="text-sm text-gray-300 tracking-[0.15em] uppercase font-medium">Curated Selection</span>
+              <span className="text-sm text-gray-300 tracking-[0.15em] uppercase font-medium">Avarta Selection</span>
             </div>
 
             <h2 className="text-4xl md:text-6xl font-bold mb-6 gradient-text-shine">
               Featured Collection
             </h2>
             <p className="text-xl text-gray-400/90 max-w-2xl mx-auto font-light leading-relaxed">
-              Discover our handpicked selection of premium collectible figures
+         Select your agent to increase your experience
             </p>
           </div>
 

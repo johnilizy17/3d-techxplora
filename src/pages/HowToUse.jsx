@@ -1,9 +1,11 @@
-import React from 'react';
-import { BookOpen, GraduationCap, Trophy, ChevronRight } from 'lucide-react';
+import React, { useState } from 'react';
+import { BookOpen, GraduationCap, Trophy, ChevronRight, X } from 'lucide-react';
 import Scene from "@/components/3d/Scene";
 import HeroExamples from "@/components/3d/HeroExamples";
 
 export default function HowToUse() {
+    const [showVideo, setShowVideo] = useState(false);
+
     return (
         <div className="relative min-h-screen pt-20 overflow-hidden">
             {/* Background with 3D elements (dimmed) */}
@@ -12,6 +14,27 @@ export default function HowToUse() {
                     <HeroExamples />
                 </Scene>
             </div>
+
+            {/* Video Modal */}
+            {showVideo && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
+                    <div className="relative w-full max-w-4xl aspect-video bg-black rounded-2xl overflow-hidden shadow-2xl">
+                        <button
+                            onClick={() => setShowVideo(false)}
+                            className="absolute top-4 right-4 z-10 p-2 bg-black/50 hover:bg-black/70 text-white rounded-full transition-colors"
+                        >
+                            <X className="w-6 h-6" />
+                        </button>
+                        <iframe
+                            src="https://www.youtube.com/embed/3Irx1TdHvfA?autoplay=1"
+                            title="Techxplora Trailer"
+                            className="w-full h-full"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowFullScreen
+                        />
+                    </div>
+                </div>
+            )}
 
             <div className="relative z-10 max-w-7xl mx-auto px-6 py-20">
 
@@ -28,12 +51,15 @@ export default function HowToUse() {
                     />
 
                     {/* Play Button */}
-                    <div className="absolute inset-0 flex items-center justify-center z-10">
+                    <div
+                        onClick={() => setShowVideo(true)}
+                        className="absolute inset-0 flex items-center justify-center z-10"
+                    >
                         <div className="w-24 h-24 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center cursor-pointer group-hover:scale-110 transition-all duration-500 hover:bg-[#a6b1ff] hover:border-[#a6b1ff]">
                             <div className="w-0 h-0 border-t-[12px] border-t-transparent border-l-[20px] border-l-white border-b-[12px] border-b-transparent ml-2 group-hover:border-l-black transition-colors" />
                         </div>
                         <p className="absolute mt-32 text-gray-400 font-medium tracking-widest text-sm uppercase opacity-0 group-hover:opacity-100 transition-opacity transform translate-y-4 group-hover:translate-y-0 duration-300">
-                            Watch Trailer
+                            Watch Tutorial
                         </p>
                     </div>
 

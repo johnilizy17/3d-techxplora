@@ -75,14 +75,7 @@ export default function About() {
                 </div>
 
                 {/* Credits */}
-                <div className="text-center border-t border-white/10 pt-20">
-                    <p className="text-gray-500 mb-4 uppercase tracking-widest text-sm">Created By</p>
-                    <div className="inline-flex items-center gap-2 glass-morphism px-6 py-3 rounded-full">
-                        <Heart className="w-4 h-4 text-red-400 fill-red-400" />
-                        <span className="text-white font-medium">Chloe Hung</span>
-                    </div>
-                </div>
-
+              
             </div>
         </div>
     );
