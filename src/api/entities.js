@@ -10,7 +10,7 @@ export const Product = {
       {
         id: "1",
         name: "Dream Bear",
-        description: "A soft collectible plush from the Dreamland series.",
+        description: "A soft collectible plush from the Techxplora series.",
         price: 49.99,
         image: "/placeholders/dreambear.png",
         created_at: "2025-09-15",

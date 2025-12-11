@@ -43,7 +43,7 @@ export default function Navbar() {
                         <div className="absolute inset-0 bg-[#a6b1ff] blur-lg opacity-20 group-hover:opacity-50 transition-opacity" />
                     </div>
                     <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-white/70 tracking-wide font-['Bricolage_Grotesque']">
-                        Dreamland
+                        Techxplora
                     </span>
                 </NavLink>
 
@@ -73,7 +73,7 @@ export default function Navbar() {
                         className="ml-4 bg-white/10 hover:bg-white/20 text-white border border-white/10 hover:border-[#a6b1ff]/50 transition-all duration-300"
                         size="sm"
                     >
-                        Connect Wallet
+                        Sign in
                     </Button>
                 </div>
 

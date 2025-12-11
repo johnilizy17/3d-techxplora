@@ -19,7 +19,7 @@ export default function About() {
                 {/* Header */}
                 <div className="text-center mb-20 animate-in fade-in slide-in-from-bottom duration-700">
                     <h1 className="text-5xl md:text-8xl font-bold mb-8">
-                        <span className="gradient-text-shine">Dreamland</span>
+                        <span className="gradient-text-shine">Techxplora</span>
                     </h1>
                     <p className="text-2xl text-gray-400 font-light max-w-3xl mx-auto leading-relaxed">
                         Reimagining education through the power of 3D interactivity and digital ownership.
@@ -60,7 +60,7 @@ export default function About() {
                             <h2 className="text-4xl font-bold mb-6 text-white">The Story</h2>
                             <div className="space-y-6 text-gray-300 text-lg leading-relaxed">
                                 <p>
-                                    Dreamland started with a simple question: <span className="text-[#a6b1ff]">Why can't homework be as fun as video games?</span>
+                                    Techxplora started with a simple question: <span className="text-[#a6b1ff]">Why can't homework be as fun as video games?</span>
                                 </p>
                                 <p>
                                     We built a platform where academic success translates directly into tangible digital rewards. By combining state-of-the-art 3D web technologies with proven pedagogical methods, we're creating a new standard for ed-tech.

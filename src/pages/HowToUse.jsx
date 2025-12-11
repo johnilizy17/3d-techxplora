@@ -41,7 +41,7 @@ export default function HowToUse() {
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent pointer-events-none" />
 
                     <div className="absolute bottom-8 left-8 right-8 z-20">
-                        <h3 className="text-2xl font-bold text-white mb-2">Welcome to Dreamland</h3>
+                        <h3 className="text-2xl font-bold text-white mb-2">Welcome to Techxplora</h3>
                         <p className="text-gray-300">A quick introduction to the future of education</p>
                     </div>
                 </div>
@@ -52,7 +52,7 @@ export default function HowToUse() {
                         <span className="gradient-text-shine">How It Works</span>
                     </h1>
                     <p className="text-xl text-gray-400 max-w-2xl mx-auto leading-relaxed">
-                        Connect, Learn, and Earn in the Dreamland Metaverse. Choose your path below.
+                        Connect, Learn, and Earn in the Techxplora Metaverse. Choose your path below.
                     </p>
                 </div>
 
