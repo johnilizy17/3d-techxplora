@@ -1,6 +1,6 @@
-import React, { useRef, useMemo } from 'react'
+import React, { useRef, useMemo, useState, useEffect } from 'react'
 import { useFrame } from '@react-three/fiber'
-import { Float, Environment, SpotLight, Sparkles } from '@react-three/drei'
+import { Float, Environment, MeshTransmissionMaterial, SpotLight, Sparkles } from '@react-three/drei'
 import * as THREE from 'three'
 
 function Rig() {
@@ -10,7 +10,7 @@ function Rig() {
     })
 }
 
-function Capsule({ position, color, size = 1, rotationSpeed, floatOffset }) {
+function Capsule({ position, color, size = 1, rotationSpeed, floatOffset, isMobile }) {
     const mesh = useRef()
 
     useFrame((state, delta) => {
@@ -27,20 +27,39 @@ function Capsule({ position, color, size = 1, rotationSpeed, floatOffset }) {
             position={position}
         >
             <group scale={size} ref={mesh}>
-                {/* Glass Shell */}
-                <mesh castShadow receiveShadow>
+                <mesh castShadow={!isMobile} receiveShadow={!isMobile}>
                     <cylinderGeometry args={[0.4, 0.4, 1.8, 32]} />
-                    <meshPhysicalMaterial
-                        color="#ffffff"
-                        metalness={0.1}
-                        roughness={0.1}
-                        transmission={0.9}
-                        thickness={0.5}
-                        transparent={true}
-                        opacity={0.5}
-                        clearcoat={1}
-                        clearcoatRoughness={0.1}
-                    />
+                    {isMobile ? (
+                        <meshPhysicalMaterial
+                            color="#ffffff"
+                            metalness={0.1}
+                            roughness={0.1}
+                            transmission={0.9}
+                            thickness={0.5}
+                            transparent={true}
+                            opacity={0.5}
+                            clearcoat={1}
+                            clearcoatRoughness={0.1}
+                        />
+                    ) : (
+                        <MeshTransmissionMaterial
+                            backside={false}
+                            samples={6}
+                            thickness={0.2}
+                            anisotropicBlur={0.1}
+                            iridescence={1}
+                            iridescenceIOR={1}
+                            iridescenceThicknessRange={[0, 1400]}
+                            clearcoat={1}
+                            clearcoatRoughness={0.1}
+                            chromaticAberration={0.1}
+                            color="#ffffff"
+                            resolution={512}
+                            distortion={0.5}
+                            distortionScale={0.5}
+                            temporalDistortion={0.2}
+                        />
+                    )}
                 </mesh>
 
                 {/* Inner Content - Placeholder for 3D Figure */}
@@ -67,14 +86,25 @@ function Capsule({ position, color, size = 1, rotationSpeed, floatOffset }) {
                     />
                 </mesh>
 
-                {/* Local Light */}
-                <pointLight position={[0, 0, 0]} intensity={5} color={color} distance={3} decay={2} />
+                {/* Local Light - Only on Desktop */}
+                {!isMobile && (
+                    <pointLight position={[0, 0, 0]} intensity={5} color={color} distance={3} decay={2} castShadow />
+                )}
             </group>
         </Float>
     )
 }
 
 export default function HeroExamples() {
+    const [isMobile, setIsMobile] = useState(false);
+
+    useEffect(() => {
+        const checkMobile = () => setIsMobile(window.innerWidth < 768);
+        checkMobile();
+        window.addEventListener('resize', checkMobile);
+        return () => window.removeEventListener('resize', checkMobile);
+    }, []);
+
     const collectibles = useMemo(() => [
         { position: [-2.5, 0.5, -1], color: "#a6b1ff", size: 1 },
         { position: [2.5, -0.5, -2], color: "#c7aff8", size: 0.9 },
@@ -95,15 +125,23 @@ export default function HeroExamples() {
                 angle={0.15}
                 penumbra={1}
                 intensity={2}
-                castShadow
+                castShadow={!isMobile}
             />
 
-            <Sparkles count={100} scale={12} size={4} speed={0.4} opacity={0.5} color="#a6b1ff" />
+            <Sparkles
+                count={isMobile ? 30 : 100}
+                scale={12}
+                size={4}
+                speed={0.4}
+                opacity={0.5}
+                color="#a6b1ff"
+            />
 
             {collectibles.map((props, i) => (
                 <Capsule
                     key={i}
                     {...props}
+                    isMobile={isMobile}
                     rotationSpeed={0.002 + Math.random() * 0.001}
                     floatOffset={Math.random() * Math.PI * 2}
                 />
