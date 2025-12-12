@@ -1,6 +1,6 @@
 import React, { useRef, useMemo } from 'react'
 import { useFrame } from '@react-three/fiber'
-import { Float, Environment, MeshTransmissionMaterial, SpotLight, Sparkles } from '@react-three/drei'
+import { Float, Environment, SpotLight, Sparkles } from '@react-three/drei'
 import * as THREE from 'three'
 
 function Rig() {
@@ -30,22 +30,16 @@ function Capsule({ position, color, size = 1, rotationSpeed, floatOffset }) {
                 {/* Glass Shell */}
                 <mesh castShadow receiveShadow>
                     <cylinderGeometry args={[0.4, 0.4, 1.8, 32]} />
-                    <MeshTransmissionMaterial
-                        backside={false}
-                        samples={4}
-                        thickness={0.2}
-                        anisotropicBlur={0}
-                        iridescence={1}
-                        iridescenceIOR={1}
-                        iridescenceThicknessRange={[0, 1400]}
+                    <meshPhysicalMaterial
+                        color="#ffffff"
+                        metalness={0.1}
+                        roughness={0.1}
+                        transmission={0.9}
+                        thickness={0.5}
+                        transparent={true}
+                        opacity={0.5}
                         clearcoat={1}
                         clearcoatRoughness={0.1}
-                        chromaticAberration={0.1}
-                        color="#ffffff"
-                        resolution={256}
-                        distortion={0.5}
-                        distortionScale={0.5}
-                        temporalDistortion={0.2}
                     />
                 </mesh>
 
