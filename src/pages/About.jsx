@@ -1,7 +1,7 @@
 import React from 'react';
 import { Sparkles, Heart, Globe, Shield } from 'lucide-react';
-import Scene from "@/components/3d/Scene";
-import HeroExamples from "@/components/3d/HeroExamples";
+const Scene = React.lazy(() => import("@/components/3d/Scene"));
+const HeroExamples = React.lazy(() => import("@/components/3d/HeroExamples"));
 
 export default function About() {
     return (
@@ -9,9 +9,11 @@ export default function About() {
 
             {/* Background with 3D elements (dimmed) */}
             <div className="fixed inset-0 z-0 opacity-30 pointer-events-none">
-                <Scene>
-                    <HeroExamples />
-                </Scene>
+                <React.Suspense fallback={null}>
+                    <Scene>
+                        <HeroExamples />
+                    </Scene>
+                </React.Suspense>
             </div>
 
             <div className="relative z-10 max-w-5xl mx-auto px-6 py-20">
@@ -75,7 +77,7 @@ export default function About() {
                 </div>
 
                 {/* Credits */}
-              
+
             </div>
         </div>
     );

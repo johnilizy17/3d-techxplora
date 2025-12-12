@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { BookOpen, GraduationCap, Trophy, ChevronRight, X } from 'lucide-react';
-import Scene from "@/components/3d/Scene";
-import HeroExamples from "@/components/3d/HeroExamples";
+const Scene = React.lazy(() => import("@/components/3d/Scene"));
+const HeroExamples = React.lazy(() => import("@/components/3d/HeroExamples"));
 
 export default function HowToUse() {
     const [showVideo, setShowVideo] = useState(false);
@@ -10,9 +10,11 @@ export default function HowToUse() {
         <div className="relative min-h-screen pt-20 overflow-hidden">
             {/* Background with 3D elements (dimmed) */}
             <div className="fixed inset-0 z-0 opacity-40 pointer-events-none">
-                <Scene>
-                    <HeroExamples />
-                </Scene>
+                <React.Suspense fallback={null}>
+                    <Scene>
+                        <HeroExamples />
+                    </Scene>
+                </React.Suspense>
             </div>
 
             {/* Video Modal */}
