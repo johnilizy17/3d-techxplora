@@ -69,14 +69,14 @@ export default function HeroSection() {
             onClick={scrollToNext}
             className="interactive halo-click relative w-full md:w-auto px-10 py-8 text-xl font-bold bg-gradient-to-r from-[#a6b1ff] via-[#c7aff8] to-[#ffb585] text-[#0a0a0a] rounded-xl overflow-hidden group hover:scale-105 transition-all duration-300 shadow-[0_6px_0_#8b95cc] active:shadow-none active:translate-y-[6px]"
           >
-            <span className="relative z-10 tracking-wide">For Teacher</span>
+            <span className="relative z-10 tracking-wide">For Teacher & Student</span>
             <div className="absolute inset-0 bg-gradient-to-r from-[#c7aff8] via-[#ffb585] to-[#a6b1ff] opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
           </Button>
           <Button
             onClick={scrollToNext}
             className="interactive halo-click relative w-full md:w-auto px-10 py-8 text-xl font-bold bg-gradient-to-r from-[#a6b1ff] via-[#c7aff8] to-[#ffb585] text-[#0a0a0a] rounded-xl overflow-hidden group hover:scale-105 transition-all duration-300 shadow-[0_6px_0_#8b95cc] active:shadow-none active:translate-y-[6px]"
           >
-            <span className="relative z-10 tracking-wide">For Student</span>
+            <span className="relative z-10 tracking-wide">For Sponsers & Partner</span>
             <div className="absolute inset-0 bg-gradient-to-r from-[#c7aff8] via-[#ffb585] to-[#a6b1ff] opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
           </Button>
         </div>
