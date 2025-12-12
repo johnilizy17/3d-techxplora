@@ -7,7 +7,7 @@ export default function Scene({ children }) {
     return (
         <Canvas
             shadows
-            dpr={[1, 2]}
+            dpr={[1, 1.5]}
             camera={{ position: [0, 0, 6], fov: 50 }}
             gl={{ antialias: false, alpha: true }}
             style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}

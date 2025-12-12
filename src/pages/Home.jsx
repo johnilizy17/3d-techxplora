@@ -7,7 +7,7 @@ import HowItWorks from "../components/collectors/HowItWorks";
 import ShopCarousel from "../components/collectors/ShopCarousel";
 import ContactSection from "../components/collectors/ContactSection";
 import DeveloperFooter from "../components/collectors/DeveloperFooter";
-import AmbientParticles from "../components/collectors/AmbientParticles";
+
 
 export default function Home() {
   const [products, setProducts] = useState([]);

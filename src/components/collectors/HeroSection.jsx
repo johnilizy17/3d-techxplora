@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { ChevronDown, Sparkles } from "lucide-react";
-import Scene from "../3d/Scene";
-import HeroExamples from "../3d/HeroExamples";
+const Scene = React.lazy(() => import("../3d/Scene"));
+const HeroExamples = React.lazy(() => import("../3d/HeroExamples"));
 
 export default function HeroSection() {
   const [scrollY, setScrollY] = useState(0);
@@ -27,9 +27,11 @@ export default function HeroSection() {
 
       {/* 3D Scene */}
       <div className="absolute inset-0 z-0">
-        <Scene>
-          <HeroExamples />
-        </Scene>
+        <React.Suspense fallback={<div className="w-full h-full flex items-center justify-center"><div className="w-8 h-8 border-4 border-t-[#a6b1ff] border-r-transparent border-b-[#c7aff8] border-l-transparent rounded-full animate-spin"></div></div>}>
+          <Scene>
+            <HeroExamples />
+          </Scene>
+        </React.Suspense>
       </div>
 
       {/* Gradient overlay for depth */}
