@@ -4,6 +4,7 @@ import HeroSection from "../components/collectors/HeroSection";
 import FeaturedGallery from "../components/collectors/FeaturedGallery";
 import BrandStory from "../components/collectors/BrandStory";
 import HowItWorks from "../components/collectors/HowItWorks";
+import FAQ from "../components/collectors/FAQ";
 import ShopCarousel from "../components/collectors/ShopCarousel";
 import ContactSection from "../components/collectors/ContactSection";
 import DeveloperFooter from "../components/collectors/DeveloperFooter";
@@ -30,6 +31,8 @@ export default function Home() {
       <FeaturedGallery products={products} />
 
       <HowItWorks />
+
+      <FAQ />
 
 
       <ContactSection />

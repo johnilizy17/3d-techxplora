@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Card } from "@/components/ui/card";
-import { Search, Palette, TentTreeIcon, Package } from "lucide-react";
+import { Search, Palette, TentTreeIcon, Package, X } from "lucide-react";
 
 const steps = [
   {
@@ -35,6 +35,7 @@ const steps = [
 
 export default function HowItWorks() {
   const [visibleSteps, setVisibleSteps] = useState([]);
+  const [showVideo, setShowVideo] = useState(false);
   const sectionRef = useRef();
 
   useEffect(() => {
@@ -135,7 +136,65 @@ export default function HowItWorks() {
             );
           })}
         </div>
+
+        {/* Video Section */}
+        <div className="mt-32 max-w-5xl mx-auto">
+          <div className="relative aspect-video rounded-2xl overflow-hidden glass-effect border border-white/10 shadow-2xl">
+            <div className="absolute inset-0 bg-gradient-to-tr from-purple-500/10 to-blue-500/10 mix-blend-overlay" />
+
+            {/* Placeholder for Video - Replace src with actual video URL */}
+            <div
+              className="absolute inset-0 flex items-center justify-center bg-black/40 group cursor-pointer hover:bg-black/30 transition-colors"
+              onClick={() => setShowVideo(true)}
+            >
+              <div className="w-20 h-20 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center border border-white/20 group-hover:scale-110 transition-transform duration-300">
+                <div className="w-0 h-0 border-t-[12px] border-t-transparent border-l-[24px] border-l-white border-b-[12px] border-b-transparent ml-2" />
+              </div>
+              <p className="absolute bottom-8 text-white/80 font-light tracking-widest text-sm uppercase">
+                Watch Tutorial
+              </p>
+            </div>
+
+            {/* If using actual video, uncomment and use this:
+            <video 
+              className="w-full h-full object-cover"
+              controls
+              poster="/path/to/poster-image.jpg"
+            >
+              <source src="/path/to/video.mp4" type="video/mp4" />
+              Your browser does not support the video tag.
+            </video>
+            */}
+          </div>
+        </div>
       </div>
+
+      {/* Video Modal */}
+      {showVideo && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300"
+          onClick={() => setShowVideo(false)}
+        >
+          <div
+            className="relative w-full max-w-4xl aspect-video bg-black rounded-2xl overflow-hidden shadow-2xl"
+            onClick={e => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setShowVideo(false)}
+              className="absolute top-4 right-4 z-10 p-2 bg-black/50 hover:bg-black/70 text-white rounded-full transition-colors"
+            >
+              <X className="w-6 h-6" />
+            </button>
+            <iframe
+              src="https://www.youtube.com/embed/3Irx1TdHvfA?autoplay=1"
+              title="Techxplora Trailer"
+              className="w-full h-full"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
