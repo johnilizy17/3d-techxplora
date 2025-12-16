@@ -141,7 +141,7 @@ export default function HeroExamples() {
                 <Environment preset="night" />
             </SafeEnvironment>
 
-            {/* Key Light */}
+            {/* Key Light 3 */}
             <SpotLight
                 position={[10, 10, 10]}
                 angle={0.15}
