@@ -1,13 +1,24 @@
-// Pages.jsx
 import React from "react";
 import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
 
 import Layout from "./Layout.jsx";
 import Home from "./Home.jsx";
 import Chess from "./chess.jsx";
-import ChessGame from "./ChessGame.jsx"; // Import new game page
+import ChessGame from "./ChessGame.jsx";
 import HowToUse from "./HowToUse.jsx";
 import About from "./About.jsx";
+import Auth from "./auth/Auth.jsx";
+import Start from "./auth/Start.jsx";
+import Signup from "./auth/Signup.jsx";
+import PhoneVerify from "./auth/PhoneVerify.jsx";
+import OTPVerify from "./auth/OTPVerify.jsx";
+import PinCreate from "./auth/PinCreate.jsx";
+import ForgotPassword from "./auth/ForgotPassword.jsx";
+import ResetPassword from "./auth/ResetPassword.jsx";
+import VerifySuccess from "./auth/VerifySuccess.jsx";
+import CreateGroup from "./auth/CreateGroup.jsx";
+import GroupInfo from "./auth/GroupInfo.jsx";
+import Options from "./auth/Options.jsx";
 
 // Mapping of page names for Layout highlighting (optional)
 const PAGES = {
@@ -15,6 +26,7 @@ const PAGES = {
   HowToUse: "How To Use",
   About: "About",
   Chess: "Chess",
+  Auth: "Login",
 };
 
 // Helper to get current page from URL
@@ -31,8 +43,6 @@ function PagesContent() {
   const location = useLocation();
   const currentPage = _getCurrentPage(location.pathname);
 
-  // If we are in the game itself, we might want a minimal layout or the standard one.
-  // The layout wrapper is applied here.
   return (
     <Layout currentPageName={currentPage}>
       <Routes>
@@ -41,6 +51,21 @@ function PagesContent() {
         <Route path="/about" element={<About />} />
         <Route path="/chess" element={<Chess />} />
         <Route path="/chess/game" element={<ChessGame />} />
+
+        {/* Auth Routes */}
+        <Route path="/auth/login" element={<Auth />} />
+        <Route path="/auth/start" element={<Start />} />
+        <Route path="/auth/signup" element={<Signup />} />
+        <Route path="/auth/phone" element={<PhoneVerify />} />
+        <Route path="/auth/otp" element={<OTPVerify />} />
+        <Route path="/auth/pin" element={<PinCreate />} />
+        <Route path="/auth/forgot-password" element={<ForgotPassword />} />
+        <Route path="/auth/reset-password" element={<ResetPassword />} />
+        <Route path="/auth/verify-success" element={<VerifySuccess />} />
+        <Route path="/auth/create-group" element={<CreateGroup />} />
+        <Route path="/auth/group-info" element={<GroupInfo />} />
+        <Route path="/auth/options" element={<Options />} />
+
         {/* Fallback for unknown routes */}
         <Route path="*" element={<div>404 - Page Not Found</div>} />
       </Routes>
