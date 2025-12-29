@@ -8,6 +8,8 @@ import ChessGame from "./ChessGame.jsx";
 import HowToUse from "./HowToUse.jsx";
 import About from "./About.jsx";
 import Auth from "./auth/Auth.jsx";
+import Courses from "./Courses.jsx";
+import CoursePreview from "./CoursePreview.jsx";
 import Start from "./auth/Start.jsx";
 import Signup from "./auth/Signup.jsx";
 import PhoneVerify from "./auth/PhoneVerify.jsx";
@@ -27,6 +29,7 @@ const PAGES = {
   About: "About",
   Chess: "Chess",
   Auth: "Login",
+  Courses: "Courses",
 };
 
 // Helper to get current page from URL
@@ -51,6 +54,8 @@ function PagesContent() {
         <Route path="/about" element={<About />} />
         <Route path="/chess" element={<Chess />} />
         <Route path="/chess/game" element={<ChessGame />} />
+        <Route path="/courses" element={<Courses />} />
+        <Route path="/courses/:courseId" element={<CoursePreview />} />
 
         {/* Auth Routes */}
         <Route path="/auth/login" element={<Auth />} />
