@@ -1,12 +1,40 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { ChevronDown, Sparkles } from "lucide-react";
+import { ChevronDown, Sparkles, GraduationCap, Users, Handshake, Building } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Link, useNavigate } from "react-router-dom";
 import ThreeErrorBoundary from "../3d/ErrorBoundary";
+
 const Scene = React.lazy(() => import("../3d/Scene"));
 const HeroExamples = React.lazy(() => import("../3d/HeroExamples"));
 
+const ModalCard = ({ icon: Icon, title, description, to, onClick }) => {
+  const CardContent = (
+    <div className="group flex items-center gap-4 p-5 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-[#a6b1ff]/30 transition-all duration-300 cursor-pointer">
+      <div className="flex-shrink-0 w-14 h-14 rounded-xl bg-gradient-to-br from-[#a6b1ff]/20 to-[#c7aff8]/20 flex items-center justify-center border border-[#a6b1ff]/20 group-hover:scale-110 transition-transform">
+        <Icon className="w-7 h-7 text-[#a6b1ff]" />
+      </div>
+      <div className="text-left">
+        <h3 className="text-lg font-bold text-white group-hover:text-[#a6b1ff] transition-colors">{title}</h3>
+        <p className="text-sm text-gray-400 leading-snug">{description}</p>
+      </div>
+    </div>
+  );
+
+  if (to) return <Link to={to} onClick={onClick}>{CardContent}</Link>;
+  return <div onClick={onClick}>{CardContent}</div>;
+};
+
 export default function HeroSection() {
   const [scrollY, setScrollY] = useState(0);
+  const [isStudentTeacherOpen, setIsStudentTeacherOpen] = useState(false);
+  const [isSponsorPartnerOpen, setIsSponsorPartnerOpen] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const handleScroll = () => setScrollY(window.scrollY);
@@ -69,14 +97,14 @@ export default function HeroSection() {
         {/* CTA with halo effect */}
         <div className="flex flex-col md:flex-row gap-6 md:gap-12 w-full md:w-auto px-4">
           <Button
-            onClick={() => window.location.href = "http://techxplora.co/"}
+            onClick={() => setIsStudentTeacherOpen(true)}
             className="interactive halo-click relative w-full md:w-auto px-10 py-8 text-xl font-bold bg-gradient-to-r from-[#a6b1ff] via-[#c7aff8] to-[#ffb585] text-[#0a0a0a] rounded-xl overflow-hidden group hover:scale-105 transition-all duration-300 shadow-[0_6px_0_#8b95cc] active:shadow-none active:translate-y-[6px]"
           >
             <span className="relative z-10 tracking-wide">For Teacher & Student</span>
             <div className="absolute inset-0 bg-gradient-to-r from-[#c7aff8] via-[#ffb585] to-[#a6b1ff] opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
           </Button>
           <Button
-            onClick={() => window.location.href = "http://techxplora.co/"}
+            onClick={() => setIsSponsorPartnerOpen(true)}
             className="interactive halo-click relative w-full md:w-auto px-10 py-8 text-xl font-bold bg-gradient-to-r from-[#a6b1ff] via-[#c7aff8] to-[#ffb585] text-[#0a0a0a] rounded-xl overflow-hidden group hover:scale-105 transition-all duration-300 shadow-[0_6px_0_#8b95cc] active:shadow-none active:translate-y-[6px]"
           >
             <span className="relative z-10 tracking-wide">For Sponsers & Partner</span>
@@ -89,6 +117,72 @@ export default function HeroSection() {
           <ChevronDown className="w-8 h-8 text-[#a6b1ff] drop-shadow-[0_0_12px_rgba(166,177,255,0.6)]" />
         </div>
       </div>
+
+      {/* Student/Teacher Modal */}
+      <Dialog open={isStudentTeacherOpen} onOpenChange={setIsStudentTeacherOpen}>
+        <DialogContent className="max-w-md bg-[#0d0d0d]/95 backdrop-blur-2xl border-white/10 rounded-3xl p-8 shadow-2xl">
+          <DialogHeader className="mb-6">
+            <DialogTitle className="text-2xl font-bold text-center text-white">Join as...</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4">
+            <ModalCard
+              icon={GraduationCap}
+              title="Student"
+              description="Learn, join quizzes and get great scores"
+              to="https://app.techxplora.co/auth/signup"
+              onClick={() => setIsStudentTeacherOpen(false)}
+            />
+            <ModalCard
+              icon={Users}
+              title="Teacher"
+              description="Create quizzes or manage results"
+              to="https://app.techxplora.co/auth/signup/?page=3"
+              onClick={() => setIsStudentTeacherOpen(false)}
+            />
+          </div>
+          <div className="mt-8 flex justify-center">
+            <button
+              onClick={() => setIsStudentTeacherOpen(false)}
+              className="text-white hover:text-white/80 transition-colors text-sm font-semibold tracking-wide uppercase"
+            >
+              Cancel
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Sponsor/Partner Modal */}
+      <Dialog open={isSponsorPartnerOpen} onOpenChange={setIsSponsorPartnerOpen}>
+        <DialogContent className="max-w-md bg-[#0d0d0d]/95 backdrop-blur-2xl border-white/10 rounded-3xl p-8 shadow-2xl">
+          <DialogHeader className="mb-6">
+            <DialogTitle className="text-2xl font-bold text-center text-white">Partner with us...</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4">
+            <ModalCard
+              icon={Handshake}
+              title="Teacher Admin"
+              description="Support education and gain visibility"
+              to="https://app.techxplora.co/auth/signup/?page=3"
+              onClick={() => setIsSponsorPartnerOpen(false)}
+            />
+            <ModalCard
+              icon={Building}
+              title="Partner"
+              description="Collaborate with us for deeper integration"
+              to="https://app.techxplora.co/auth/signup/?page=3"
+              onClick={() => setIsSponsorPartnerOpen(false)}
+            />
+          </div>
+          <div className="mt-8 flex justify-center">
+            <button
+              onClick={() => setIsSponsorPartnerOpen(false)}
+              className="text-white hover:text-white/80 transition-colors text-sm font-semibold tracking-wide uppercase"
+            >
+              Cancel
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

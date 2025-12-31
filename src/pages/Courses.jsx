@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import TiltCard from "@/components/ui/TiltCard";
 import { useGetStudentCoursesQuery } from '@/redux/api/studentApi';
+import { cashFormat } from '@/utils/cashFormat';
 
 export default function Courses() {
     const navigate = useNavigate();
@@ -155,7 +156,7 @@ export default function Courses() {
                                         {/* Course Image */}
                                         <div className="relative aspect-video overflow-hidden transform-style-3d">
                                             <img
-                                                src={course.banner || course.image || "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=2070&auto=format&fit=crop"}
+                                                src={course.banner_url || course.banner || course.image || "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=2070&auto=format&fit=crop"}
                                                 alt={course.title}
                                                 className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 translate-z-10"
                                                 onError={(e) => {
@@ -220,7 +221,7 @@ export default function Courses() {
                                                 <span>students</span>
                                             </div>
                                             <span className="text-lg font-bold text-[#a6b1ff]">
-                                                {course.price ? `$${parseFloat(course.price).toFixed(2)}` : 'Free'}
+                                                {course.amount ? `${cashFormat(course.amount)}` : 'Free'}
                                             </span>
                                         </CardFooter>
                                     </Card>

@@ -74,7 +74,7 @@ export default function Navbar() {
                     <Button
                         className="ml-4 relative px-6 py-2 text-sm font-bold bg-gradient-to-r from-[#a6b1ff] via-[#c7aff8] to-[#ffb585] text-[#0a0a0a] rounded-lg overflow-hidden group hover:scale-105 transition-all duration-300 shadow-[0_4px_0_#8b95cc] active:shadow-none active:translate-y-[4px]"
                         size="sm"
-                        onClick={() => navigate("/auth/login")}
+                        onClick={() => window.location.href = "https://app.techxplora.co/auth/login"}
                     >
                         Sign in
                     </Button>
@@ -83,7 +83,7 @@ export default function Navbar() {
                 {/* Mobile specific controls */}
                 <div className="flex md:hidden items-center gap-4">
                     <Button
-                        onClick={() => navigate("/auth/login")}
+                        onClick={() => window.location.href = "https://app.techxplora.co/auth/login"}
                         className="relative px-4 py-2 text-xs font-bold bg-gradient-to-r from-[#a6b1ff] via-[#c7aff8] to-[#ffb585] text-[#0a0a0a] rounded-lg overflow-hidden group active:scale-95 transition-all duration-300 shadow-[0_3px_0_#8b95cc] active:shadow-none active:translate-y-[3px]"
                     >
                         Sign In
