@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { ChevronDown, Sparkles, GraduationCap, Users, Handshake, Building } from "lucide-react";
+import { ChevronDown, Sparkles, GraduationCap, Users, Handshake, Building, PlayCircle } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -52,6 +52,8 @@ export default function HeroSection() {
   return (
     <div className="relative h-screen w-full overflow-hidden">
       {/* Aurora gradient background */}
+      <div style={{ height: 100 }} />
+
       <div className="absolute inset-0 bg-gradient-to-br from-[#0a0a0a] via-[#1a1520] to-[#0a0a0a]" />
 
       {/* 3D Scene */}
@@ -70,7 +72,7 @@ export default function HeroSection() {
 
       {/* Hero content with parallax */}
       <div
-        className="relative z-10 h-full flex flex-col items-center justify-center text-center px-6"
+        className="relative z-10 h-full flex flex-col items-center justify-center text-center px-6 pt-20"
         style={{
           transform: `translateY(${scrollY * 0.3}px)`,
           opacity: Math.max(0, 1 - scrollY / 500),
@@ -79,37 +81,62 @@ export default function HeroSection() {
         {/* Premium badge */}
         <div className="mb-8 inline-flex items-center gap-2 glass-morphism px-6 py-3 rounded-full animate-in fade-in slide-in-from-top duration-700">
           <Sparkles className="w-4 h-4 text-[#a6b1ff]" />
-          <span className="text-sm text-gray-300 tracking-[0.2em] uppercase font-medium">Play Smart</span>
+          <span className="text-sm text-gray-300 tracking-[0.2em] uppercase font-medium"> LEARN FASTER </span>
         </div>
 
         {/* Main headline with gradient shine */}
-        <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold mb-8 tracking-tight leading-[1.1] animate-in fade-in slide-in-from-bottom duration-1000">
+        <h1 className="text-2xl md:text-2xl lg:text-3xl font-bold mb-8 tracking-tight leading-[1.1] animate-in fade-in slide-in-from-bottom duration-1000">
           <span className="gradient-text-shine block mb-2">
-            Join the Challenge
+            TURN LEARNING INTO A GAME STUDENTS <br />
+            ACTUALLY RETURN TO.
           </span>
         </h1>
 
         {/* Tagline */}
-        <p className="text-xl md:text-3xl text-gray-400/90 mb-14 max-w-3xl font-light tracking-wide leading-relaxed animate-in fade-in slide-in-from-bottom duration-1000 delay-200">
-          Quiz. Play. Win.
+        <p className="text-sm md:text-1xl text-gray-400/90 mb-14 max-w-3xl font-light tracking-wide leading-relaxed animate-in fade-in slide-in-from-bottom duration-1000 delay-200">
+          TECHXPLORA
+          MAKES LEARNING A DAILY GAME - STUDENTS EARN REWARDS AND TRACK
+          PROGRESS, WHILE SCHOOLS AND SPONSORS RUN CHALLENGES WITH REAL RESULTS.
         </p>
 
         {/* CTA with halo effect */}
-        <div className="flex flex-col md:flex-row gap-6 md:gap-12 w-full md:w-auto px-4">
-          <Button
-            onClick={() => setIsStudentTeacherOpen(true)}
-            className="interactive halo-click relative w-full md:w-auto px-10 py-8 text-xl font-bold bg-gradient-to-r from-[#a6b1ff] via-[#c7aff8] to-[#ffb585] text-[#0a0a0a] rounded-xl overflow-hidden group hover:scale-105 transition-all duration-300 shadow-[0_6px_0_#8b95cc] active:shadow-none active:translate-y-[6px]"
+        <div className="flex flex-col md:flex-row gap-8 md:gap-16 w-full md:w-auto px-4">
+          <div className="flex flex-col items-center gap-3 space-y-2">
+            <Button
+              onClick={() => setIsStudentTeacherOpen(true)}
+              className="interactive halo-click relative w-full md:w-80 px-10 py-8 text-xl font-bold bg-gradient-to-r from-[#a6b1ff] via-[#c7aff8] to-[#ffb585] text-[#0a0a0a] rounded-xl overflow-hidden group hover:scale-105 transition-all duration-300 shadow-[0_6px_0_#8b95cc] active:shadow-none active:translate-y-[6px]"
+            >
+              <span className="relative z-10 tracking-wide">Start as Student / Teacher</span>
+              <div className="absolute inset-0 bg-gradient-to-r from-[#c7aff8] via-[#ffb585] to-[#a6b1ff] opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+            </Button>
+            <p className="text-gray-400 text-sm font-medium tracking-wide animate-in fade-in slide-in-from-top-2 duration-1000 delay-300">
+              Play quizzes, earn XP, track progress.
+            </p>
+          </div>
+
+          <div className="flex flex-col items-center gap-3 space-y-2">
+            <Button
+              onClick={() => setIsSponsorPartnerOpen(true)}
+              className="interactive halo-click relative w-full md:w-80 px-10 py-8 text-xl font-bold bg-gradient-to-r from-[#a6b1ff] via-[#c7aff8] to-[#ffb585] text-[#0a0a0a] rounded-xl overflow-hidden group hover:scale-105 transition-all duration-300 shadow-[0_6px_0_#8b95cc] active:shadow-none active:translate-y-[6px]"
+            >
+              <span className="relative z-10 tracking-wide">Sponsor a Challenge</span>
+              <div className="absolute inset-0 bg-gradient-to-r from-[#c7aff8] via-[#ffb585] to-[#a6b1ff] opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+            </Button>
+            <p className="text-gray-400 text-sm font-medium tracking-wide animate-in fade-in slide-in-from-top-2 duration-1000 delay-300">
+              Run competitions, measure impact, reach schools.
+            </p>
+          </div>
+        </div>
+
+        {/* Third CTA: Lightweight link */}
+        <div className="mt-12 animate-in fade-in slide-in-from-bottom-2 duration-1000 delay-500">
+          <button
+            className="flex items-center gap-2 text-[#a6b1ff] hover:text-[#c7aff8] font-medium transition-colors group"
+            onClick={() => navigate('/how-to-use')}
           >
-            <span className="relative z-10 tracking-wide">For Teacher & Student</span>
-            <div className="absolute inset-0 bg-gradient-to-r from-[#c7aff8] via-[#ffb585] to-[#a6b1ff] opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
-          </Button>
-          <Button
-            onClick={() => setIsSponsorPartnerOpen(true)}
-            className="interactive halo-click relative w-full md:w-auto px-10 py-8 text-xl font-bold bg-gradient-to-r from-[#a6b1ff] via-[#c7aff8] to-[#ffb585] text-[#0a0a0a] rounded-xl overflow-hidden group hover:scale-105 transition-all duration-300 shadow-[0_6px_0_#8b95cc] active:shadow-none active:translate-y-[6px]"
-          >
-            <span className="relative z-10 tracking-wide">For Sponsers & Partner</span>
-            <div className="absolute inset-0 bg-gradient-to-r from-[#c7aff8] via-[#ffb585] to-[#a6b1ff] opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
-          </Button>
+            <PlayCircle className="w-5 h-5 group-hover:scale-110 transition-transform" />
+            <span className="border-b border-[#a6b1ff]/30 group-hover:border-[#c7aff8]">Watch a 60-sec demo</span>
+          </button>
         </div>
 
         {/* Scroll indicator */}
@@ -129,14 +156,14 @@ export default function HeroSection() {
               icon={GraduationCap}
               title="Student"
               description="Learn, join quizzes and get great scores"
-              to="https://app.techxplora.co/auth/signup"
+              to="/auth/signup"
               onClick={() => setIsStudentTeacherOpen(false)}
             />
             <ModalCard
               icon={Users}
               title="Teacher"
               description="Create quizzes or manage results"
-              to="https://app.techxplora.co/auth/signup/?page=3"
+              to="/auth/signup/?page=3"
               onClick={() => setIsStudentTeacherOpen(false)}
             />
           </div>
@@ -162,14 +189,14 @@ export default function HeroSection() {
               icon={Handshake}
               title="Teacher Admin"
               description="Support education and gain visibility"
-              to="https://app.techxplora.co/auth/signup/?page=3"
+              to="/auth/signup/?page=3"
               onClick={() => setIsSponsorPartnerOpen(false)}
             />
             <ModalCard
               icon={Building}
               title="Partner"
               description="Collaborate with us for deeper integration"
-              to="https://app.techxplora.co/auth/signup/?page=3"
+              to="/auth/signup/?page=3"
               onClick={() => setIsSponsorPartnerOpen(false)}
             />
           </div>

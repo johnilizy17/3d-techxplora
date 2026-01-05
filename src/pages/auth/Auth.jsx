@@ -4,13 +4,18 @@ import { GoogleOAuthProvider, useGoogleLogin } from "@react-oauth/google";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Sparkles, Mail, Lock, Loader2, ArrowRight } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Sparkles, Mail, Lock, Loader2, ArrowRight, AlertCircle, CheckCircle2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Toaster, toast } from "sonner";
+import { toast } from "@/components/ui/use-toast";
+import { cn } from "@/lib/utils";
 import GoogleIcon from "@/components/icons/GoogleIcon";
 import ThreeErrorBoundary from "@/components/3d/ErrorBoundary";
+import { useDispatch } from "react-redux";
+import { setCredentials } from "@/redux/slices/authSlice";
+import { useLoginMutation } from "@/redux/api/authApi";
 // import { publicRequest, setToken } from "@/api/integration";
 
 const Scene = React.lazy(() => import("@/components/3d/Scene"));
@@ -25,8 +30,12 @@ const loginSchema = z.object({
 });
 
 function AuthContent() {
-    const [isLoading, setIsLoading] = useState(false);
+    const dispatch = useDispatch();
     const navigate = useNavigate();
+    const [login, { isLoading: isLoginLoading }] = useLoginMutation();
+
+    const [isLoading, setIsLoading] = useState(false);
+    const [authFeedback, setAuthFeedback] = useState(null);
 
     const form = useForm({
         resolver: zodResolver(loginSchema),
@@ -50,19 +59,28 @@ function AuthContent() {
                 email: googleUser.email.trim().toLowerCase(),
                 password: googleUser.sub + googleUser.given_name, // v1 Logic
             };
+            const response = await login(loginData).unwrap();
 
-            const response = await publicRequest.post("/login", loginData);
-            const { data: responseData } = response;
+            // Save credentials to Redux
+            dispatch(setCredentials({
+                user: response.data.user || response.data,
+                token: response.data.token,
+            }));
 
-            setToken(responseData.data.token);
-
-            toast({
-                title: "Login successful",
-                description: `Welcome back, ${googleUser.given_name}!`,
-                variant: "default",
+            // Show success alert
+            setAuthFeedback({
+                type: "success",
+                message: "Login successful! Welcome back to the Techxplora.",
             });
 
-            navigate("/");
+            // Show success toast
+            toast({
+                title: "Login successful",
+                description: "Welcome back to the Techxplora!",
+            });
+
+            // Redirect to dashboard (with a slight delay to allow alert to be seen)
+            setTimeout(() => navigate("/dashboard"), 1500);
 
         } catch (error) {
             console.error("Google verify error:", error);
@@ -84,38 +102,55 @@ function AuthContent() {
     });
 
     const onSubmit = async (data) => {
-        setIsLoading(true);
+        setAuthFeedback(null);
         try {
-            // const response = await publicRequest.post("/login", {
-            //     email: data.email.trim().toLowerCase(),
-            //     password: data.password,
-            // });
+            const response = await login({
+                email: data.email.trim().toLowerCase(),
+                password: data.password,
+            }).unwrap();
 
-            // const { data: responseData } = response;
+            // Save credentials to Redux
+            dispatch(setCredentials({
+                user: response.data.user || response.data,
+                token: response.data.token,
+            }));
 
-            // // Save token
-            // setToken(responseData.data.token);
+            // Show success alert
+            setAuthFeedback({
+                type: "success",
+                message: "Login successful! Welcome back to the Techxplora.",
+            });
 
-            // // Show success message
-            // toast({
-            //     title: "Login successful",
-            //     description: "Welcome back to the Dreamland!",
-            //     variant: "default",
-            // });
+            // Show success toast
+            toast({
+                title: "Login successful",
+                description: "Welcome back to the Techxplora!",
+            });
 
-            // // Navigate based on verification status (mimicking old logic)
-            // // Assuming a simple dashboard redirect for now for the new app structure
-            // navigate("/");
+            // Redirect to dashboard (with a slight delay to allow alert to be seen)
+            navigate("/dashboard");
 
         } catch (error) {
-            console.error("Login error:", error);
-            toast({
-                title: "Login failed",
-                description: error.response?.data?.message || "Please check your credentials and try again.",
-                variant: "destructive",
+            console.error("Login error details:", error);
+
+            // Extract the most descriptive error message
+            const errorMessage =
+                error?.data?.message ||
+                error?.data?.error ||
+                error?.message ||
+                "An unexpected error occurred. Please try again.";
+
+            // Set auth feedback alert
+            setAuthFeedback({
+                type: "error",
+                message: errorMessage,
             });
-        } finally {
-            setIsLoading(false);
+
+            toast({
+                variant: "destructive",
+                title: "Login failed",
+                description: errorMessage,
+            });
         }
     };
 
@@ -158,12 +193,47 @@ function AuthContent() {
                         <div className="absolute -inset-1 bg-gradient-to-r from-[#a6b1ff]/20 via-[#c7aff8]/20 to-[#ffb585]/20 blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
 
                         <div className="space-y-6 relative">
+                            {/* Auth Feedback Alert */}
+                            {authFeedback && (
+                                <Alert
+                                    variant={authFeedback.type === "error" ? "destructive" : "default"}
+                                    className={cn(
+                                        "mb-4 animate-in fade-in slide-in-from-top-2 duration-300",
+                                        authFeedback.type === "success" && "bg-green-500/10 border-green-500/20 text-green-400"
+                                    )}
+                                >
+                                    {authFeedback.type === "error" ? (
+                                        <AlertCircle className="h-4 w-4" />
+                                    ) : (
+                                        <CheckCircle2 className="h-4 w-4 text-green-400" />
+                                    )}
+                                    <AlertTitle>
+                                        {authFeedback.type === "error" ? "/authentication Error" : "Success"}
+                                    </AlertTitle>
+                                    <AlertDescription>
+                                        {authFeedback.message}
+                                    </AlertDescription>
+                                    <button
+                                        type="button"
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            setAuthFeedback(null);
+                                        }}
+                                        className="absolute right-3 top-3 p-1 rounded-md opacity-70 hover:opacity-100 transition-opacity z-20 cursor-pointer"
+                                        aria-label="Close alert"
+                                    >
+                                        <X className="h-4 w-4" />
+                                    </button>
+                                </Alert>
+                            )}
+
                             {/* Google Sign In */}
                             <Button
                                 type="button"
                                 onClick={() => loginWithGoogle()}
                                 className="w-full h-12 bg-white text-black hover:bg-gray-100 font-medium rounded-xl flex items-center justify-center gap-3 transition-transform hover:scale-[1.02]"
-                                disabled={isLoading}
+                                disabled={isLoading || isLoginLoading}
                             >
                                 <GoogleIcon />
                                 Continue with Google
@@ -189,7 +259,7 @@ function AuthContent() {
                                             type="email"
                                             placeholder="name@example.com"
                                             className="pl-10 h-12 bg-black/20 border-white/10 text-white placeholder:text-gray-500 focus:border-[#a6b1ff] focus:ring-[#a6b1ff]/20 rounded-xl transition-all"
-                                            disabled={isLoading}
+                                            disabled={isLoading || isLoginLoading}
                                         />
                                     </div>
                                     {form.formState.errors.email && (
@@ -214,7 +284,7 @@ function AuthContent() {
                                             type="password"
                                             placeholder="••••••••"
                                             className="pl-10 h-12 bg-black/20 border-white/10 text-white placeholder:text-gray-500 focus:border-[#a6b1ff] focus:ring-[#a6b1ff]/20 rounded-xl transition-all"
-                                            disabled={isLoading}
+                                            disabled={isLoading || isLoginLoading}
                                         />
                                     </div>
                                     {form.formState.errors.password && (
@@ -225,9 +295,9 @@ function AuthContent() {
                                 <Button
                                     type="submit"
                                     className="interactive halo-click relative w-full h-14 text-xl font-bold bg-gradient-to-r from-[#a6b1ff] via-[#c7aff8] to-[#ffb585] text-[#0a0a0a] rounded-xl overflow-hidden group hover:scale-[1.02] transition-all duration-300 shadow-[0_6px_0_#8b95cc] active:shadow-none active:translate-y-[6px]"
-                                    disabled={isLoading}
+                                    disabled={isLoading || isLoginLoading}
                                 >
-                                    {isLoading ? (
+                                    {isLoading || isLoginLoading ? (
                                         <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                                     ) : (
                                         <>

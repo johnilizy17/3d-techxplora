@@ -33,12 +33,12 @@ export default function ContactSection() {
   };
 
   return (
-    <div 
+    <div
       ref={sectionRef}
       className="relative py-32 px-6 overflow-hidden bg-gradient-to-b from-[#0a0a0a] to-[#1a1a1a]"
     >
       <div className="absolute inset-0 overflow-hidden">
-        <div 
+        <div
           className="absolute w-[600px] h-[600px] bg-[#a8d8ff] rounded-full blur-[150px] opacity-20 transition-transform duration-1000 ease-out"
           style={{
             left: `${mousePosition.x * 100}%`,
@@ -46,7 +46,7 @@ export default function ContactSection() {
             transform: 'translate(-50%, -50%)'
           }}
         />
-        <div 
+        <div
           className="absolute w-[400px] h-[400px] bg-[#c9b3ff] rounded-full blur-[150px] opacity-20 transition-transform duration-1000 ease-out delay-100"
           style={{
             left: `${(1 - mousePosition.x) * 100}%`,
@@ -58,53 +58,70 @@ export default function ContactSection() {
 
       <div className="relative max-w-4xl mx-auto text-center">
         <div className="mb-8 inline-flex items-center gap-2 glass-effect px-4 py-2 rounded-full">
-          <Sparkles className="w-4 h-4 text-[#ffb366]" />
-          <span className="text-sm text-gray-300 tracking-wider">Stay Connected</span>
+          <Sparkles className="w-4 h-4 text-[#a6b1ff]" />
+          <span className="text-sm text-gray-300 tracking-widest uppercase font-medium">Community</span>
         </div>
 
-        <h2 className="text-4xl md:text-6xl font-bold mb-6 text-white">
-          Join the
-          <span className="block mt-2 bg-gradient-to-r from-[#a8d8ff] via-[#c9b3ff] to-[#ffb366] bg-clip-text text-transparent">
-            Challenger's Circle
-          </span>
+        <h2 className="text-4xl md:text-6xl font-bold mb-6 text-white tracking-tight font-['Bricolage_Grotesque']">
+          Join the Challenger's Circle
         </h2>
 
         <p className="text-xl text-gray-400 mb-12 max-w-2xl mx-auto font-light leading-relaxed">
-          Be the first to know about new quiz, exclusive drops xp, and rewards
+          Get new quizzes, upcoming challenges, and reward updates — plus school and sponsor competitions you can join.
         </p>
 
-        <form onSubmit={handleSubmit} className="max-w-md mx-auto">
+        <form onSubmit={handleSubmit} className="max-w-md mx-auto mb-6">
           <div className="relative group">
-            <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-[#a8d8ff] transition-colors" />
+            <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-[#a6b1ff] transition-colors" />
             <Input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Enter your email"
-              className="interactive w-full pl-12 pr-32 py-6 glass-effect border-white/20 text-white placeholder:text-gray-500 rounded-full focus:border-[#a8d8ff] focus:ring-2 focus:ring-[#a8d8ff]/50 transition-all"
+              className="interactive w-full pl-12 pr-36 py-7 glass-morphism border-white/20 text-white placeholder:text-gray-500 rounded-2xl focus:border-[#a6b1ff] focus:ring-2 focus:ring-[#a6b1ff]/50 transition-all text-base"
               required
             />
             <Button
               type="submit"
-              className="interactive absolute right-2 top-1/2 transform -translate-y-1/2 bg-gradient-to-r from-[#a8d8ff] to-[#c9b3ff] text-[#1a1a1a] hover:scale-105 transition-transform rounded-full"
+              className="interactive absolute right-2 top-1/2 transform -translate-y-1/2 px-6 py-5 bg-gradient-to-r from-[#a6b1ff] to-[#c7aff8] text-[#0a0a0a] hover:scale-105 transition-transform rounded-xl font-bold"
             >
-              <Send className="w-4 h-4 mr-2" />
-              Subscribe
+              Get Updates
             </Button>
           </div>
+          <p className="mt-4 text-[11px] text-gray-500 font-medium tracking-wide">
+            "No spam. Unsubscribe anytime"
+          </p>
         </form>
 
-        <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3 mb-16">
+          <button
+            onClick={() => window.location.href = "/auth/signup"}
+            className="text-sm text-gray-400 hover:text-[#a6b1ff] transition-colors flex items-center gap-2 group"
+          >
+            I'm a Student/Teacher
+            <span className="group-hover:translate-x-1 transition-transform">→</span>
+          </button>
+          <div className="w-1 h-1 rounded-full bg-white/10 hidden md:block" />
+          <button
+            onClick={() => {/* Logic for partner CTA */ }}
+            className="text-sm text-gray-400 hover:text-[#ffb585] transition-colors flex items-center gap-2 group"
+          >
+            I'm a Sponsor/Partner
+            <span className="group-hover:translate-x-1 transition-transform">→</span>
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {[
-            { label: "Collectors", value: "10K+" },
-            { label: "Products", value: "500+" },
-            { label: "Countries", value: "50+" }
+            { label: "Learners", value: "4,000+" },
+            { label: "Partner Schools", value: "40+" },
+            { label: "Challenges Played", value: "5K+" }
           ].map((stat, index) => (
-            <div key={index} className="glass-effect rounded-2xl p-6 border border-white/10">
-              <div className="text-4xl font-bold bg-gradient-to-r from-[#a8d8ff] to-[#c9b3ff] bg-clip-text text-transparent mb-2">
+            <div key={index} className="glass-morphism rounded-2xl p-8 border border-white/10 group hover:border-[#a6b1ff]/30 transition-all duration-500">
+              <div className="text-4xl font-bold bg-gradient-to-r from-white to-white/70 bg-clip-text text-transparent mb-3 group-hover:scale-110 transition-transform duration-500">
                 {stat.value}
               </div>
-              <div className="text-gray-400 font-light">{stat.label}</div>
+              <div className="text-gray-500 font-medium text-sm tracking-widest uppercase">{stat.label}</div>
             </div>
           ))}
         </div>

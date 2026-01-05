@@ -1,170 +1,281 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Card } from "@/components/ui/card";
-import { Search, Palette, TentTreeIcon, Package, X } from "lucide-react";
+import {
+  UserPlus,
+  Hash,
+  Sparkles,
+  Trophy,
+  Building2,
+  Rocket,
+  Share2,
+  LineChart,
+  X,
+  ChevronRight
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
 
-const steps = [
+const learnSteps = [
   {
-    icon: Search,
-    title: "Register",
-    description: "Click the get Start Button to start",
-    color: "#1175c7ff",
-    delay: 0
+    icon: UserPlus,
+    title: "Create your account",
+    description: "Pick Student or Teacher in seconds.",
+    color: "#a6b1ff",
   },
   {
-    icon: Palette,
-    title: "Start a Quiz",
-    description: "start a quiz by a quiz code",
-    color: "#5f2fdaff",
-    delay: 200
+    icon: Hash,
+    title: "Join with a code",
+    description: "Enter your class or challenge code.",
+    color: "#c7aff8",
   },
   {
-    icon: TentTreeIcon,
-    title: "Manage Teachers",
-    description: "add the teachers and quiz with ea",
-    color: "#ffb366",
-    delay: 400
+    icon: Sparkles,
+    title: "Play daily & earn rewards",
+    description: "Build streaks, win XP and coins.",
+    color: "#ffb585",
   },
   {
-    icon: Package,
-    title: "Full Access",
-    description: "Start a zero cost",
+    icon: Trophy,
+    title: "Track progress & rank up",
+    description: "Dashboard + leaderboard in one place.",
     color: "#a8d8ff",
-    delay: 600
+  }
+];
+
+const sponsorSteps = [
+  {
+    icon: Building2,
+    title: "Create a challenge",
+    description: "Choose topic, rules, and duration.",
+    color: "#a6b1ff",
+  },
+  {
+    icon: Rocket,
+    title: "Launch with schools",
+    description: "Invite cohorts and partner schools fast.",
+    color: "#c7aff8",
+  },
+  {
+    icon: Share2,
+    title: "Drive participation",
+    description: "Rewards + leaderboards motivate students.",
+    color: "#ffb585",
+  },
+  {
+    icon: LineChart,
+    title: "Measure real impact",
+    description: "Get engagement and outcomes reports.",
+    color: "#a8d8ff",
   }
 ];
 
 export default function HowItWorks() {
+  const [activeTab, setActiveTab] = useState('learn'); // 'learn' or 'sponsor'
   const [visibleSteps, setVisibleSteps] = useState([]);
   const [showVideo, setShowVideo] = useState(false);
   const sectionRef = useRef();
 
   useEffect(() => {
+    setVisibleSteps([]);
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
-          steps.forEach((_, index) => {
-            setTimeout(() => {
-              setVisibleSteps(prev => [...prev, index]);
-            }, index * 150);
-          });
+          triggerAnimation();
         }
       },
-      { threshold: 0.2 }
+      { threshold: 0.1 }
     );
 
-    if (sectionRef.current) {
-      observer.observe(sectionRef.current);
-    }
-
+    if (sectionRef.current) observer.observe(sectionRef.current);
     return () => observer.disconnect();
-  }, []);
+  }, [activeTab]);
+
+  const triggerAnimation = () => {
+    setVisibleSteps([]);
+    const steps = activeTab === 'learn' ? learnSteps : sponsorSteps;
+    steps.forEach((_, index) => {
+      setTimeout(() => {
+        setVisibleSteps(prev => [...prev, index]);
+      }, index * 150);
+    });
+  };
+
+  const currentSteps = activeTab === 'learn' ? learnSteps : sponsorSteps;
 
   return (
     <div
       ref={sectionRef}
-      className="relative py-32 px-6 bg-gradient-to-b from-[#0a0a0a] to-[#1a1a1a]"
+      className="relative py-32 px-6 bg-gradient-to-b from-[#0a0a0a] to-[#030014]"
     >
       <div className="max-w-7xl mx-auto">
-        <div className="text-center mb-20">
-          <h2 className="text-4xl md:text-6xl font-bold mb-6 text-white">
+        <div className="text-center mb-16">
+          <h2 className="text-4xl md:text-6xl font-bold mb-8 text-white tracking-tight">
             How It Works
           </h2>
-          <p className="text-xl text-gray-400 max-w-2xl mx-auto font-light">
-            Four simple steps to start your collection
-          </p>
+
+          {/* Toggle Switch */}
+          <div className="inline-flex p-1 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl mb-12">
+            <button
+              onClick={() => setActiveTab('learn')}
+              className={`px-8 py-3 rounded-xl transition-all duration-500 font-bold tracking-wide text-sm ${activeTab === 'learn'
+                ? 'bg-gradient-to-r from-[#a6b1ff] to-[#c7aff8] text-[#0a0a0a] shadow-lg'
+                : 'text-gray-400 hover:text-white'
+                }`}
+            >
+              Learn & Compete
+            </button>
+            <button
+              onClick={() => setActiveTab('sponsor')}
+              className={`px-8 py-3 rounded-xl transition-all duration-500 font-bold tracking-wide text-sm ${activeTab === 'sponsor'
+                ? 'bg-gradient-to-r from-[#c7aff8] to-[#ffb585] text-[#0a0a0a] shadow-lg'
+                : 'text-gray-400 hover:text-white'
+                }`}
+            >
+              Sponsor a Challenge
+            </button>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          {steps.map((step, index) => {
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-20">
+          {currentSteps.map((step, index) => {
             const Icon = step.icon;
             const isVisible = visibleSteps.includes(index);
-            const isEven = index % 2 === 0;
 
             return (
               <div
-                key={index}
-                className={`transform transition-all duration-1000 ${isVisible
-                  ? 'opacity-100 translate-y-0'
-                  : isEven
-                    ? 'opacity-0 -translate-y-20'
-                    : 'opacity-0 translate-y-20'
+                key={`${activeTab}-${index}`}
+                className={`transform transition-all duration-700 ${isVisible
+                  ? 'opacity-100 translate-y-0 scale-100'
+                  : 'opacity-0 translate-y-10 scale-95'
                   }`}
               >
-                <Card className="interactive relative h-full glass-effect bg-gray-900/80 border-white/10 p-8 group hover:border-[#a8d8ff]/50 transition-all duration-300 hover:scale-105">
-                  <div
-                    className="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-500 rounded-lg"
-                    style={{ background: `linear-gradient(135deg, ${step.color}, transparent)` }}
-                  />
-
+                <Card className="interactive relative h-full glass-morphism bg-white/5 border-white/10 p-8 group hover:border-[#a6b1ff]/30 transition-all duration-500">
                   <div className="relative space-y-6">
                     <div
-                      className="w-16 h-16 rounded-2xl flex items-center justify-center glass-effect border border-white/20 group-hover:scale-110 transition-transform duration-300"
-                      style={{
-                        boxShadow: `0 0 30px ${step.color}40`
-                      }}
+                      className="w-16 h-16 rounded-2xl flex items-center justify-center bg-gradient-to-br from-white/10 to-transparent border border-white/10 group-hover:scale-110 transition-transform duration-500"
+                      style={{ boxShadow: `0 0 40px ${step.color}20` }}
                     >
                       <Icon className="w-8 h-8" style={{ color: step.color }} />
                     </div>
 
                     <div className="space-y-3">
-                      <div className="flex items-center gap-3">
-                        <span
-                          className="text-sm font-bold px-3 py-1 rounded-full glass-effect"
-                          style={{ color: step.color }}
-                        >
-                          Step {index + 1}
-                        </span>
-                      </div>
-
-                      <h3 className="text-2xl font-bold text-white group-hover:text-[#a8d8ff] transition-colors">
+                      <h3 className="text-xl font-bold text-white group-hover:text-[#a6b1ff] transition-colors">
                         {step.title}
                       </h3>
-
-                      <p className="text-gray-400 leading-relaxed">
+                      <p className="text-gray-400 text-sm leading-relaxed font-light">
                         {step.description}
                       </p>
                     </div>
                   </div>
-
-                  {index < steps.length - 1 && (
-                    <div className="hidden lg:block absolute top-1/2 -right-4 transform -translate-y-1/2">
-                      <div className="w-8 h-0.5 bg-gradient-to-r from-[#a8d8ff] to-transparent" />
-                    </div>
-                  )}
                 </Card>
               </div>
             );
           })}
         </div>
 
-        {/* Video Section */}
-        <div className="mt-32 max-w-5xl mx-auto">
-          <div className="relative aspect-video rounded-2xl overflow-hidden glass-effect border border-white/10 shadow-2xl">
-            <div className="absolute inset-0 bg-gradient-to-tr from-purple-500/10 to-blue-500/10 mix-blend-overlay" />
+        {/* CTA Section for Learn Pathway */}
+        {activeTab === 'learn' && (
+          <div className="flex flex-col items-center gap-6 mb-32 animate-in fade-in slide-in-from-bottom duration-1000">
+            <div className="flex flex-col md:flex-row gap-6 w-full md:w-auto">
+              <Button
+                className="interactive relative px-10 py-7 text-lg font-bold bg-gradient-to-r from-[#a6b1ff] via-[#c7aff8] to-[#ffb585] text-[#0a0a0a] rounded-xl overflow-hidden group hover:scale-105 transition-all duration-300 shadow-[0_5px_0_#8b95cc] active:shadow-none active:translate-y-[5px]"
+                onClick={() => window.location.href = "/auth/signup"}
+              >
+                <span className="relative z-10 tracking-wide">Start Free</span>
+                <div className="absolute inset-0 bg-gradient-to-r from-[#c7aff8] via-[#ffb585] to-[#a6b1ff] opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+              </Button>
+              <Button
+                variant="outline"
+                className="interactive px-10 py-7 text-lg font-bold border-2 border-white/10 bg-transparent text-white rounded-xl hover:bg-white/5 hover:border-[#a6b1ff]/30 transition-all duration-300 flex items-center gap-2"
+                onClick={() => {/* TODO: Logic for join with code */ }}
+              >
+                Join with a Code
+                <ChevronRight className="w-5 h-5" />
+              </Button>
+            </div>
+            <p className="text-gray-500 text-sm font-medium tracking-wide">
+              "No payment needed to start."
+            </p>
+          </div>
+        )}
 
-            {/* Placeholder for Video - Replace src with actual video URL */}
+        {/* CTA Section for Sponsor Pathway */}
+        {activeTab === 'sponsor' && (
+          <div className="flex flex-col items-center gap-6 mb-32 animate-in fade-in slide-in-from-bottom duration-1000">
+            <div className="flex flex-col md:flex-row gap-6 w-full md:w-auto">
+              <Button
+                className="interactive relative px-10 py-7 text-lg font-bold bg-gradient-to-r from-[#c7aff8] via-[#ffb585] to-[#a6b1ff] text-[#0a0a0a] rounded-xl overflow-hidden group hover:scale-105 transition-all duration-300 shadow-[0_5px_0_#8b95cc] active:shadow-none active:translate-y-[5px]"
+                onClick={() => window.location.href = "/auth/signup"}
+              >
+                <span className="relative z-10 tracking-wide">Sponsor a Challenge</span>
+                <div className="absolute inset-0 bg-gradient-to-r from-[#ffb585] via-[#a6b1ff] to-[#c7aff8] opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+              </Button>
+              <Button
+                variant="outline"
+                className="interactive px-10 py-7 text-lg font-bold border-2 border-white/10 bg-transparent text-white rounded-xl hover:bg-white/5 hover:border-[#a6b1ff]/30 transition-all duration-300 flex items-center gap-2"
+                onClick={() => {/* TODO: Logic for request impact deck */ }}
+              >
+                Request Impact Deck
+                <ChevronRight className="w-5 h-5" />
+              </Button>
+            </div>
+            <p className="text-gray-500 text-sm font-medium tracking-wide">
+              "Run challenges with measurable CSR outcomes."
+            </p>
+          </div>
+        )}
+
+        {/* Video Section */}
+        <div className="mt-40 max-w-5xl mx-auto text-center">
+          <div className="mb-12 space-y-4">
+            <h3 className="text-3xl md:text-4xl font-bold text-white tracking-tight">
+              See Techxplora in 60 seconds
+            </h3>
+            <p className="text-gray-400 text-lg md:text-xl font-light max-w-3xl mx-auto leading-relaxed">
+              Learn how students join challenges, earn rewards, and track progress; and how schools/sponsors run competitions.
+            </p>
+          </div>
+
+          <div className="relative aspect-video rounded-3xl overflow-hidden glass-morphism border border-white/10 shadow-[0_0_80px_rgba(166,177,255,0.1)] group">
+            {/* Cinematic Gradient Background */}
+            <div className="absolute inset-0 bg-gradient-to-tr from-[#a6b1ff]/20 via-transparent to-[#ffb585]/20 mix-blend-overlay z-0" />
+            <div className="absolute inset-0 bg-[#030014]/40 z-0" />
+
+            {/* Animated Grid Overlay for "Tech" look */}
+            <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay z-0" />
+
             <div
-              className="absolute inset-0 flex items-center justify-center bg-black/40 group cursor-pointer hover:bg-black/30 transition-colors"
+              className="absolute inset-0 flex items-center justify-center z-10 cursor-pointer group/play"
               onClick={() => setShowVideo(true)}
             >
-              <div className="w-20 h-20 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center border border-white/20 group-hover:scale-110 transition-transform duration-300">
-                <div className="w-0 h-0 border-t-[12px] border-t-transparent border-l-[24px] border-l-white border-b-[12px] border-b-transparent ml-2" />
-              </div>
-              <p className="absolute bottom-8 text-white/80 font-light tracking-widest text-sm uppercase">
-                Watch Tutorial
-              </p>
-            </div>
+              <div className="relative">
+                {/* Pulsing play button rings */}
+                <div className="absolute inset-0 rounded-full bg-[#a6b1ff]/20 animate-ping duration-[3000ms]" />
+                <div className="absolute inset-0 rounded-full bg-[#a6b1ff]/10 animate-pulse duration-[2000ms]" />
 
-            {/* If using actual video, uncomment and use this:
-            <video 
-              className="w-full h-full object-cover"
-              controls
-              poster="/path/to/poster-image.jpg"
+                <div className="relative w-28 h-28 rounded-full bg-white/5 backdrop-blur-xl flex items-center justify-center border border-white/20 group-hover/play:scale-110 group-hover/play:border-[#a6b1ff]/50 transition-all duration-500 shadow-[0_0_50px_rgba(166,177,255,0.3)]">
+                  <div className="w-0 h-0 border-t-[18px] border-t-transparent border-l-[32px] border-l-white border-b-[18px] border-b-transparent ml-2 drop-shadow-[0_0_15px_rgba(255,255,255,0.5)]" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Post-Video CTAs */}
+          <div className="mt-16 flex flex-col md:flex-row items-center justify-center gap-6">
+            <Button
+              className="interactive relative px-8 py-6 text-base font-bold bg-gradient-to-r from-[#a6b1ff] to-[#c7aff8] text-[#0a0a0a] rounded-xl overflow-hidden group hover:scale-105 transition-all duration-300 shadow-[0_4px_0_#8b95cc] active:shadow-none active:translate-y-[4px]"
+              onClick={() => window.location.href = "/auth/signup"}
             >
-              <source src="/path/to/video.mp4" type="video/mp4" />
-              Your browser does not support the video tag.
-            </video>
-            */}
+              <span className="relative z-10 tracking-wide">Start as Student/Teacher</span>
+              <div className="absolute inset-0 bg-gradient-to-r from-[#c7aff8] to-[#a6b1ff] opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+            </Button>
+
+            <Button
+              variant="outline"
+              className="interactive px-8 py-6 text-base font-bold border border-white/10 bg-white/5 text-white rounded-xl hover:bg-white/10 hover:border-[#a6b1ff]/30 transition-all duration-300"
+              onClick={() => setActiveTab('sponsor')}
+            >
+              Sponsor a Challenge
+            </Button>
           </div>
         </div>
       </div>
@@ -172,16 +283,16 @@ export default function HowItWorks() {
       {/* Video Modal */}
       {showVideo && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300"
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-in fade-in duration-500"
           onClick={() => setShowVideo(false)}
         >
           <div
-            className="relative w-full max-w-4xl aspect-video bg-black rounded-2xl overflow-hidden shadow-2xl"
+            className="relative w-full max-w-5xl aspect-video bg-black rounded-3xl overflow-hidden shadow-[0_0_100px_rgba(166,177,255,0.15)] border border-white/10"
             onClick={e => e.stopPropagation()}
           >
             <button
               onClick={() => setShowVideo(false)}
-              className="absolute top-4 right-4 z-10 p-2 bg-black/50 hover:bg-black/70 text-white rounded-full transition-colors"
+              className="absolute top-6 right-6 z-10 p-3 bg-white/10 hover:bg-white/20 text-white rounded-full transition-all duration-300 border border-white/10"
             >
               <X className="w-6 h-6" />
             </button>

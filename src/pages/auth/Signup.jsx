@@ -77,14 +77,9 @@ export default function Signup() {
                         <div className="flex-grow border-t border-white/10"></div>
                     </div>
 
-                    <div className="flex gap-4">
-                        <Button variant="outline" className="flex-1 h-12 bg-white/5 border-white/10 hover:bg-white/10 text-white rounded-xl">
-                            <GoogleIcon className="mr-2 h-5 w-5" /> Google
-                        </Button>
-                        <Button variant="outline" className="flex-1 h-12 bg-white/5 border-white/10 hover:bg-white/10 text-white rounded-xl">
-                            <span className="mr-2"></span> Apple
-                        </Button>
-                    </div>
+                    <Button variant="outline" className="w-full h-12 bg-white/5 border-white/10 hover:bg-white/10 text-white rounded-xl">
+                        <GoogleIcon className="mr-2 h-5 w-5" /> Google
+                    </Button>
                 </div>
 
                 <div className="text-center">
