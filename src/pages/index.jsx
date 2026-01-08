@@ -8,6 +8,10 @@ import ChessGame from "./ChessGame.jsx";
 import HowToUse from "./HowToUse.jsx";
 import About from "./About.jsx";
 import Auth from "./auth/Auth.jsx";
+import Dashboard from "./Dashboard.jsx";
+import Wallet from "./Wallet.jsx";
+import Profile from "./Profile.jsx";
+import UserProfile from "./UserProfile.jsx";
 import Courses from "./Courses.jsx";
 import CoursePreview from "./CoursePreview.jsx";
 import Start from "./auth/Start.jsx";
@@ -58,6 +62,10 @@ function PagesContent() {
         <Route path="/courses/:courseId" element={<CoursePreview />} />
 
         {/* Auth Routes */}
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/dashboard/wallet" element={<Wallet />} />
+        <Route path="/dashboard/profile" element={<Profile />} />
+        <Route path="/dashboard/profile/edit" element={<UserProfile />} />
         <Route path="/auth/login" element={<Auth />} />
         <Route path="/auth/start" element={<Start />} />
         <Route path="/auth/signup" element={<Signup />} />

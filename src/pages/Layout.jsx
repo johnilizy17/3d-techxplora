@@ -1,3 +1,4 @@
+import { useLocation } from "react-router-dom";
 import Navbar from "@/components/navigation/Navbar";
 import React, { useState, useEffect } from "react";
 import CustomCursor from "@/components/collectors/CustomCursor";
@@ -17,11 +18,14 @@ export default function Layout({ children }) {
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
+    const location = useLocation();
+    const isDashboard = location.pathname.startsWith('/dashboard');
+
     return (
         <div className="min-h-screen bg-[#0a0a0a] text-white selection:bg-[#a6b1ff]/30">
             <CustomCursor />
             <ScrollProgress progress={scrollProgress} />
-            <Navbar />
+            {!isDashboard && <Navbar />}
             <main>
                 {children}
             </main>
