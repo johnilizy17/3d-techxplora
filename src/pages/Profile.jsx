@@ -17,12 +17,22 @@ import { useSelector } from 'react-redux';
 import { selectCurrentUser } from '@/redux/slices/authSlice';
 import DashboardBottomNav from '@/components/dashboard/DashboardBottomNav';
 import ChangePasswordModal from '@/components/profile/ChangePasswordModal';
+import LogoutModal from '@/components/profile/LogoutModal';
+import { useDispatch } from 'react-redux';
+import { logout } from '@/redux/slices/authSlice';
 
 export default function Profile() {
     const navigate = useNavigate();
     const user = useSelector(selectCurrentUser);
+    const dispatch = useDispatch();
     const [pushEnabled, setPushEnabled] = useState(true);
     const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+    const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
+
+    const handleLogout = () => {
+        dispatch(logout());
+        navigate('/auth/login');
+    };
 
     const MenuItem = ({ icon: Icon, label, onClick, showArrow = true, color = "text-white" }) => (
         <motion.button
@@ -59,7 +69,10 @@ export default function Profile() {
                             <p className="text-gray-400 text-sm">Welcome</p>
                             <h2 className="text-xl font-bold text-white">{user?.name || "Mr. John Doe"}</h2>
                         </div>
-                        <button className="ml-auto p-2 bg-white/5 rounded-full hover:bg-white/10 text-white">
+                        <button
+                            onClick={() => setIsLogoutModalOpen(true)}
+                            className="ml-auto p-2 bg-white/5 rounded-full hover:bg-white/10 text-white"
+                        >
                             <LogOut size={20} />
                         </button>
                     </div>
@@ -122,6 +135,13 @@ export default function Profile() {
                 <ChangePasswordModal
                     isOpen={isPasswordModalOpen}
                     onClose={() => setIsPasswordModalOpen(false)}
+                />
+
+                {/* Logout Modal */}
+                <LogoutModal
+                    isOpen={isLogoutModalOpen}
+                    onClose={() => setIsLogoutModalOpen(false)}
+                    onConfirm={handleLogout}
                 />
             </div>
         </div>
