@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 
 export default function JoinRoomBanner() {
     return (
-        <div className="px-6 mb-8">
+        <div className="px-6 lg:px-0 mb-4 sm:mb-8">
             <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}

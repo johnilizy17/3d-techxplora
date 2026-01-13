@@ -9,6 +9,12 @@ const loadAuthState = () => {
                 user: null,
                 token: null,
                 isAuthenticated: false,
+                tempVerification: {
+                    code: null,
+                    phone: null,
+                    type: null, // 'email' or 'phone'
+                },
+                tempStorage: null
             };
         }
         return JSON.parse(serializedState);
@@ -52,16 +58,46 @@ const authSlice = createSlice({
             state.user = null;
             state.token = null;
             state.isAuthenticated = false;
+            state.tempVerification = {
+                code: null,
+                phone: null,
+                type: null,
+            };
             localStorage.removeItem('auth');
+        },
+        setTemporaryVerification: (state, action) => {
+            state.tempVerification = {
+                ...state.tempVerification,
+                ...action.payload,
+            };
+        },
+        clearTemporaryVerification: (state) => {
+            state.tempVerification = {
+                code: null,
+                phone: null,
+                type: null,
+            };
+        },
+        setTemporaryStorage: (state, action) => {
+            state.tempStorage = action.payload;
+            saveAuthState(state);
         },
     },
 });
 
-export const { setCredentials, updateUser, logout } = authSlice.actions;
+export const {
+    setCredentials,
+    updateUser,
+    logout,
+    setTemporaryVerification,
+    clearTemporaryVerification,
+    setTemporaryStorage
+} = authSlice.actions;
 
 // Selectors
 export const selectCurrentUser = (state) => state.auth.user;
 export const selectCurrentToken = (state) => state.auth.token;
 export const selectIsAuthenticated = (state) => state.auth.isAuthenticated;
+export const selectTempStorage = (state) => state.auth.tempStorage;
 
 export default authSlice.reducer;

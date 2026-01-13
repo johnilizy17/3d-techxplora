@@ -36,7 +36,9 @@ export default function Navbar() {
     const navigate = useNavigate();
     const isAuthenticated = useSelector(selectIsAuthenticated);
 
-    const isAuthPage = location.pathname.startsWith('/auth/login') || location.pathname.startsWith('/auth/signup');
+    const isLoginPage = location.pathname.startsWith('/auth/login');
+    const isSignupPage = location.pathname.startsWith('/auth/signup');
+    const isAuthPage = isLoginPage || isSignupPage;
 
     useEffect(() => {
         const handleScroll = () => {
@@ -64,7 +66,9 @@ export default function Navbar() {
             navigate('/dashboard');
             return;
         }
-        if (isAuthPage) {
+        if (isSignupPage) {
+            navigate('/auth/login');
+        } else if (isLoginPage) {
             setIsRegisterModalOpen(true);
         } else {
             navigate('/auth/login');
@@ -82,7 +86,7 @@ export default function Navbar() {
                 {/* Logo */}
                 <NavLink to="/" className="flex items-center gap-2 group">
                     <div className="relative">
-                        <img src="../favicon.ico" alt="Logo" className="w-8" />
+                        <img src="/favicon.ico" alt="Logo" className="w-8" />
                         <div className="absolute inset-0 bg-[#a6b1ff] blur-lg opacity-20 group-hover:opacity-50 transition-opacity" />
                     </div>
                     <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-white/70 tracking-wide font-['Bricolage_Grotesque']">
@@ -127,7 +131,7 @@ export default function Navbar() {
                             size="sm"
                             onClick={handleAuthAction}
                         >
-                            {isAuthPage ? 'Sign Up' : 'Sign in'}
+                            {isLoginPage ? 'Sign Up' : 'Sign In'}
                         </Button>
                     )}
                 </div>
@@ -147,7 +151,7 @@ export default function Navbar() {
                             onClick={handleAuthAction}
                             className="relative px-4 py-2 text-xs font-bold bg-gradient-to-r from-[#a6b1ff] via-[#c7aff8] to-[#ffb585] text-[#0a0a0a] rounded-lg overflow-hidden group active:scale-95 transition-all duration-300 shadow-[0_3px_0_#8b95cc] active:shadow-none active:translate-y-[3px]"
                         >
-                            {isAuthPage ? 'Sign Up' : 'Sign In'}
+                            {isLoginPage ? 'Sign Up' : 'Sign In'}
                         </Button>
                     )}
 

@@ -14,6 +14,7 @@ import Profile from "./Profile.jsx";
 import UserProfile from "./UserProfile.jsx";
 import Courses from "./Courses.jsx";
 import CoursePreview from "./CoursePreview.jsx";
+import Groups from "./Groups.jsx";
 import Start from "./auth/Start.jsx";
 import Signup from "./auth/Signup.jsx";
 import PhoneVerify from "./auth/PhoneVerify.jsx";
@@ -23,8 +24,10 @@ import ForgotPassword from "./auth/ForgotPassword.jsx";
 import ResetPassword from "./auth/ResetPassword.jsx";
 import VerifySuccess from "./auth/VerifySuccess.jsx";
 import CreateGroup from "./auth/CreateGroup.jsx";
+import GroupCode from "./auth/GroupCode.jsx";
 import GroupInfo from "./auth/GroupInfo.jsx";
 import Options from "./auth/Options.jsx";
+import Option from "./auth/Option.jsx";
 
 // Mapping of page names for Layout highlighting (optional)
 const PAGES = {
@@ -63,6 +66,7 @@ function PagesContent() {
 
         {/* Auth Routes */}
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/dashboard/groups" element={<Groups />} />
         <Route path="/dashboard/wallet" element={<Wallet />} />
         <Route path="/dashboard/profile" element={<Profile />} />
         <Route path="/dashboard/profile/edit" element={<UserProfile />} />
@@ -76,8 +80,10 @@ function PagesContent() {
         <Route path="/auth/reset-password" element={<ResetPassword />} />
         <Route path="/auth/verify-success" element={<VerifySuccess />} />
         <Route path="/auth/create-group" element={<CreateGroup />} />
-        <Route path="/auth/group-info" element={<GroupInfo />} />
+        <Route path="/auth/group" element={<GroupCode />} />
+        <Route path="/auth/info" element={<GroupInfo />} />
         <Route path="/auth/options" element={<Options />} />
+        <Route path="/auth/option" element={<Option />} />
 
         {/* Fallback for unknown routes */}
         <Route path="*" element={<div>404 - Page Not Found</div>} />

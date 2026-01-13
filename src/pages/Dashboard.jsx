@@ -3,36 +3,53 @@ import { useSelector } from 'react-redux';
 import { selectCurrentUser } from '@/redux/slices/authSlice';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import StatsCards from '@/components/dashboard/StatsCards';
-import RecentPlays from '@/components/dashboard/RecentPlays';
+import RecentQuizzes from '@/components/dashboard/RecentQuizzes';
 import JoinRoomBanner from '@/components/dashboard/JoinRoomBanner';
-import StartPlaying from '@/components/dashboard/StartPlaying';
-import DashboardBottomNav from '@/components/dashboard/DashboardBottomNav';
+import RecentGroups from '@/components/dashboard/RecentGroups';
+import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import { motion } from 'framer-motion';
 
 export default function Dashboard() {
     const user = useSelector(selectCurrentUser);
 
-
     return (
-        <div className="min-h-screen bg-[#0a0a0a] pb-20">
-            {/* Main Content Container */}
-            <div className="max-w-md mx-auto w-full bg-[#0a0a0a] md:border-x md:border-white/5 min-h-screen relative shadow-2xl">
+        <DashboardLayout>
+            <div className="min-h-screen pb-24 lg:pb-10">
+                {/* Main Content Grid */}
+                <div className="w-full relative">
+                    {/* Top Section: Header & Stats */}
+                    <div className="space-y-0 lg:space-y-6">
+                        <DashboardHeader user={user} />
+                        <div className="lg:px-10">
+                            <StatsCards />
+                        </div>
+                    </div>
 
-                <DashboardHeader user={user} />
-                <StatsCards />
+                    {/* Responsive Grid for Body Content */}
+                    <div className="grid grid-cols-1  gap-0 lg:gap-10 lg:px-10 lg:mt-10">
+                        {/* Primary Column (Left on Laptop) */}
+                        <motion.div
+                            className="lg:col-span-8 order-2 lg:order-1"
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.2 }}
+                        >
+                            <div className="space-y-4 lg:space-y-8">
+                                <section className="bg-white/0 lg:bg-white/[0.02] lg:border lg:border-white/5 lg:rounded-[2.5rem] lg:p-8 lg:backdrop-blur-xl">
+                                    <RecentQuizzes />
+                                </section>
 
-                <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.2 }}
-                >
-                    <RecentPlays />
-                    <JoinRoomBanner />
-                    <StartPlaying />
-                </motion.div>
+                                <JoinRoomBanner />
 
-                <DashboardBottomNav />
+                                <section className="bg-white/0 lg:bg-white/[0.02] lg:border lg:border-white/5 lg:rounded-[2.5rem] lg:p-8 lg:backdrop-blur-xl">
+                                    <RecentGroups />
+                                </section>
+                            </div>
+                        </motion.div>
+
+                    </div>
+                </div>
             </div>
-        </div>
+        </DashboardLayout>
     );
 }

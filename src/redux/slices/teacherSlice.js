@@ -6,6 +6,9 @@ const initialState = {
     teacherCourses: [],
     teacherStudents: [],
     teacherProfile: null,
+    groups: [],
+    quizzes: [],
+    quizData: { group: [], class: [], quiz: [] },
     loading: false,
     error: null,
 };
@@ -28,6 +31,15 @@ const teacherSlice = createSlice({
         },
         setTeacherProfile: (state, action) => {
             state.teacherProfile = action.payload;
+        },
+        setGroups: (state, action) => {
+            state.groups = action.payload;
+        },
+        setQuizzes: (state, action) => {
+            state.quizzes = action.payload;
+        },
+        setQuizData: (state, action) => {
+            state.quizData = action.payload;
         },
         updateTeacherProfile: (state, action) => {
             state.teacherProfile = { ...state.teacherProfile, ...action.payload };
@@ -95,6 +107,9 @@ export const selectSelectedTeacher = (state) => state.teacher.selectedTeacher;
 export const selectTeacherCourses = (state) => state.teacher.teacherCourses;
 export const selectTeacherStudents = (state) => state.teacher.teacherStudents;
 export const selectTeacherProfile = (state) => state.teacher.teacherProfile;
+export const selectTeacherGroups = (state) => state.teacher.groups;
+export const selectTeacherQuizzes = (state) => state.teacher.quizzes;
+export const selectQuizData = (state) => state.teacher.quizData;
 export const selectTeacherLoading = (state) => state.teacher.loading;
 export const selectTeacherError = (state) => state.teacher.error;
 

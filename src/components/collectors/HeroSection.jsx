@@ -163,7 +163,7 @@ export default function HeroSection() {
               icon={Users}
               title="Teacher"
               description="Create quizzes or manage results"
-              to="/auth/signup/?page=3"
+              to="/auth/group"
               onClick={() => setIsStudentTeacherOpen(false)}
             />
           </div>

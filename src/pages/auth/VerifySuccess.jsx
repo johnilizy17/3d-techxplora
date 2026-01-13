@@ -36,7 +36,7 @@ export default function VerifySuccess() {
                     <span className="animate-bounce delay-400">🐰</span>
                 </div>
 
-                <Link to="/" className="block pt-4">
+                <Link to="/dashboard" className="block pt-4">
                     <Button
                         className="w-full h-16 text-2xl font-bold bg-gradient-to-r from-[#A78BFA] to-[#F472B6] hover:opacity-90 text-white rounded-2xl shadow-[0_8px_0_rgba(0,0,0,0.3)] shadow-purple-900 active:shadow-none active:translate-y-[8px] transition-all"
                     >

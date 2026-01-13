@@ -24,7 +24,8 @@ export default function DeveloperFooter() {
             </button>
             <div className="h-4 w-px bg-white/10 hidden md:block" />
             <button
-              onClick={() => {/* Logic for sponsor CTA */ }}
+              onClick={() => {/* Logic for sponsor CTA */     window.location.href = "/auth/signup/?page=3"
+              }}
               className="text-sm font-bold text-white hover:text-[#ffb585] transition-all duration-300 tracking-wider uppercase"
             >
               Sponsor a Challenge

@@ -103,7 +103,8 @@ export default function ContactSection() {
           </button>
           <div className="w-1 h-1 rounded-full bg-white/10 hidden md:block" />
           <button
-            onClick={() => {/* Logic for partner CTA */ }}
+            onClick={() => window.location.href = "/auth/signup/?page=3"
+            }
             className="text-sm text-gray-400 hover:text-[#ffb585] transition-colors flex items-center gap-2 group"
           >
             I'm a Sponsor/Partner

@@ -4,7 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Settings, ArrowUpRight, ArrowDownLeft, MoreHorizontal } from 'lucide-react';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
-import DashboardBottomNav from '@/components/dashboard/DashboardBottomNav';
+import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import WithdrawModal from '@/components/dashboard/WithdrawModal';
 
 const transactions = [
@@ -17,92 +17,96 @@ export default function Wallet() {
     const navigate = useNavigate();
 
     return (
-        <div className="min-h-screen bg-[#0a0a0a] text-white font-sans relative overflow-hidden">
-            {/* Background Gradients to match the purple vibe */}
-            <div className="absolute top-0 left-0 w-full h-1/2 bg-gradient-to-b from-[#4c1d95] to-[#0a0a0a] opacity-50 z-0 pointer-events-none" />
+        <DashboardLayout>
+            <div className="min-h-screen relative overflow-hidden pb-10">
+                {/* Background Gradients to match the purple vibe */}
+                <div className="absolute top-0 left-0 w-full h-[500px] bg-gradient-to-b from-[#4c1d95]/40 to-transparent z-0 pointer-events-none" />
 
-            <div className="relative z-10 max-w-md mx-auto min-h-screen flex flex-col">
+                <div className="relative z-10 w-full max-w-md lg:max-w-none lg:px-10 mx-auto min-h-screen flex flex-col">
+                    {/* Header */}
+                    <div className="flex items-center justify-between px-6 lg:px-0 pt-8 lg:pt-12 pb-6">
+                        <button onClick={() => navigate(-1)} className="p-3 lg:p-4 bg-white/5 hover:bg-white/10 rounded-2xl transition-all text-white border border-white/10 shadow-xl">
+                            <ArrowLeft size={24} />
+                        </button>
+                        <h1 className="text-2xl font-black uppercase tracking-tighter italic">My Wallet</h1>
+                        <button className="p-3 lg:p-4 bg-white/5 hover:bg-white/10 rounded-2xl transition-all text-white border border-white/10 shadow-xl">
+                            <Settings size={24} />
+                        </button>
+                    </div>
 
-                {/* Header */}
-                <div className="flex items-center justify-between px-6 pt-8 pb-6">
-                    <button onClick={() => navigate(-1)} className="p-2 -ml-2 hover:bg-white/10 rounded-full transition-colors text-white">
-                        <ArrowLeft size={24} />
-                    </button>
-                    <h1 className="text-xl font-bold">Wallet</h1>
-                    <button className="p-2 -mr-2 hover:bg-white/10 rounded-full transition-colors text-white">
-                        <Settings size={24} />
-                    </button>
-                </div>
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:mt-6">
+                        {/* Balance Column */}
+                        <div className="lg:col-span-5 px-6 lg:px-0">
+                            <motion.div
+                                initial={{ scale: 0.95, opacity: 0 }}
+                                animate={{ scale: 1, opacity: 1 }}
+                                className="w-full bg-gradient-to-br from-[#6d28d9] via-[#8b5cf6] to-[#d946ef] rounded-[2.5rem] p-10 relative overflow-hidden shadow-[0_20px_50px_rgba(109,40,217,0.3)]"
+                            >
+                                {/* Decorative elements */}
+                                <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full blur-3xl -mr-20 -mt-20" />
 
-                <ScrollArea className="flex-1 px-6 pb-6">
-                    {/* Balance Card */}
-                    <motion.div
-                        initial={{ scale: 0.95, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        className="w-full bg-gradient-to-br from-[#6d28d9] via-[#8b5cf6] to-[#d946ef] rounded-[32px] p-8 relative overflow-hidden shadow-2xl mb-8"
-                    >
-                        {/* Decorative Circles */}
-                        <div className="absolute top-4 right-8 w-4 h-4 rounded-full bg-yellow-300 animate-pulse" />
-                        <div className="absolute bottom-8 left-8 w-6 h-6 rounded-full bg-blue-400 opacity-80" />
-                        <div className="absolute top-1/2 right-1/4 w-3 h-3 rounded-full bg-pink-300 opacity-60" />
-
-                        <div className="relative z-10 flex flex-col items-center text-center">
-                            {/* 3D Icon Placeholder (Money Stack) */}
-                            <div className="mb-4 text-6xl drop-shadow-xl animate-bounce-slow">
-                                💸
-                            </div>
-
-                            <p className="text-purple-100 text-sm font-medium mb-1">Current Earning</p>
-                            <h2 className="text-4xl font-bold text-white mb-8 tracking-tight"> 47 XP <span className="text-xl text-[#a6b1ff]"> (4.7 XD)</span></h2>
-
-                            <WithdrawModal
-                                balance="478.86"
-                                trigger={
-                                    <Button className="w-full max-w-[200px] h-14 bg-gradient-to-r from-[#f472b6] to-[#e879f9] border-t border-white/30 rounded-full font-bold text-white shadow-[0_6px_0_#be185d] hover:shadow-[0_6px_0_#be185d] hover:brightness-110 active:shadow-none active:translate-y-[6px] transition-all text-lg relative top-0">
-                                        Withdraw
-                                    </Button>
-                                }
-                            />
-                        </div>
-                    </motion.div>
-
-                    {/* Transaction History */}
-                    <motion.div
-                        initial={{ y: 50, opacity: 0 }}
-                        animate={{ y: 0, opacity: 1 }}
-                        transition={{ delay: 0.2 }}
-                        className="bg-white rounded-[32px] p-6 text-black min-h-[400px]"
-                    >
-                        <div className="flex items-center justify-between mb-6">
-                            <h3 className="text-lg font-bold text-gray-900">Transaction History</h3>
-                            <button className="text-gray-400 text-sm font-medium hover:text-gray-600">See All</button>
-                        </div>
-
-                        <div className="space-y-6">
-                            {transactions.map((tx) => (
-                                <div key={tx.id} className="flex items-center justify-between">
-                                    <div className="flex items-center gap-4">
-                                        <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center text-xl shadow-sm border border-gray-200">
-                                            {tx.icon}
-                                        </div>
-                                        <div>
-                                            <p className="font-bold text-gray-900">{tx.name}</p>
-                                            <p className={`text-xs font-medium ${tx.status === 'Successful' ? 'text-green-500' : 'text-red-500'}`}>
-                                                {tx.status}
-                                            </p>
-                                        </div>
+                                <div className="relative z-10 flex flex-col items-center text-center">
+                                    <div className="mb-6 text-7xl drop-shadow-2xl animate-bounce-slow">
+                                        💸
                                     </div>
-                                    <div className="text-right">
-                                        <p className="font-bold text-gray-900">₦{tx.amount}</p>
-                                        <p className="text-[10px] text-gray-400 mt-1">{tx.date}</p>
-                                    </div>
+
+                                    <p className="text-purple-100 text-sm font-black uppercase tracking-[0.2em] mb-2 opacity-80">Total Earnings</p>
+                                    <h2 className="text-5xl lg:text-6xl font-black text-white mb-10 tracking-tighter">
+                                        47 XP
+                                        <span className="block text-2xl text-purple-200/60 mt-2 font-bold tracking-normal italic">(4.7 XD)</span>
+                                    </h2>
+
+                                    <WithdrawModal
+                                        balance="478.86"
+                                        trigger={
+                                            <Button className="w-full h-16 bg-white hover:bg-purple-50 text-purple-700 rounded-2xl font-black text-xl shadow-[0_8px_0_#9333ea] active:shadow-none active:translate-y-[8px] transition-all uppercase tracking-widest relative">
+                                                Withdraw
+                                            </Button>
+                                        }
+                                    />
                                 </div>
-                            ))}
+                            </motion.div>
                         </div>
-                    </motion.div>
-                </ScrollArea>
-                <DashboardBottomNav currentTab='Wallet' />
+
+                        {/* Transaction History Column */}
+                        <div className="lg:col-span-7 px-6 lg:px-0">
+                            <motion.div
+                                initial={{ y: 50, opacity: 0 }}
+                                animate={{ y: 0, opacity: 1 }}
+                                transition={{ delay: 0.2 }}
+                                className="bg-white rounded-[2.5rem] lg:rounded-[3rem] p-8 text-black min-h-[400px] shadow-2xl"
+                            >
+                                <div className="flex items-center justify-between mb-10">
+                                    <h3 className="text-2xl font-black uppercase tracking-tight text-gray-900 italic">History</h3>
+                                    <button className="text-purple-600 text-sm font-black uppercase tracking-widest hover:text-purple-800 transition-colors">See All</button>
+                                </div>
+
+                                <div className="space-y-8">
+                                    {transactions.map((tx) => (
+                                        <div key={tx.id} className="flex items-center justify-between group">
+                                            <div className="flex items-center gap-5">
+                                                <div className="w-14 h-14 rounded-2xl bg-gray-50 flex items-center justify-center text-2xl shadow-inner border border-gray-100 group-hover:scale-110 transition-transform">
+                                                    {tx.icon}
+                                                </div>
+                                                <div>
+                                                    <p className="font-black text-gray-900 text-lg leading-tight uppercase tracking-tight">{tx.name}</p>
+                                                    <p className={`text-xs font-black uppercase tracking-widest mt-1 ${tx.status === 'Successful' ? 'text-green-500' : 'text-red-500'}`}>
+                                                        {tx.status}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div className="text-right">
+                                                <p className="font-black text-gray-900 text-xl tracking-tighter">₦{tx.amount}</p>
+                                                <p className="text-[10px] text-gray-400 font-bold uppercase mt-1 opacity-60 tracking-wider">{tx.date}</p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </motion.div>
+                        </div>
+                    </div>
+                </div>
             </div>
-        </div>
+        </DashboardLayout>
     );
 }

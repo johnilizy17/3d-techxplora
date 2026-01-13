@@ -12,10 +12,20 @@ export const authApi = baseApi.injectEndpoints({
             invalidatesTags: ['Auth'],
         }),
 
-        // Register
-        register: builder.mutation({
+        // Register Student
+        registerStudent: builder.mutation({
             query: (userData) => ({
-                url: '/register',
+                url: '/register-student',
+                method: 'POST',
+                body: userData,
+            }),
+            invalidatesTags: ['Auth'],
+        }),
+
+        // Register Teacher/Admin
+        registerTeacher: builder.mutation({
+            query: (userData) => ({
+                url: '/register-teacher',
                 method: 'POST',
                 body: userData,
             }),
@@ -82,12 +92,75 @@ export const authApi = baseApi.injectEndpoints({
                 body: { token, password },
             }),
         }),
+
+        // Verify Admin Code
+        verifyAdminCode: builder.mutation({
+            query: (code) => ({
+                url: `/verify-admin-code/${code}`,
+                method: 'GET'
+            }),
+        }),
+
+        // Get student sub-accounts
+        getStudentProfiles: builder.query({
+            query: (id) => `/students/${id}`,
+            providesTags: ['Auth'],
+        }),
+
+        // Register sub-account
+        registerSubAccount: builder.mutation({
+            query: (userData) => ({
+                url: '/register-sub-student',
+                method: 'POST',
+                body: userData,
+            }),
+            invalidatesTags: ['Auth'],
+        }),
+
+        // Send Email
+        sendEmail: builder.mutation({
+            query: (payload) => ({
+                url: '/send-email',
+                method: 'POST',
+                body: payload,
+            }),
+        }),
+
+        // Send SMS
+        sendSMS: builder.mutation({
+            query: (payload) => ({
+                url: '/send-sms',
+                method: 'POST',
+                body: payload,
+            }),
+        }),
+
+        // Update Teacher (used for verification)
+        updateTeacher: builder.mutation({
+            query: ({ id, ...payload }) => ({
+                url: `/teachers/${id}`,
+                method: 'PUT',
+                body: payload,
+            }),
+            invalidatesTags: ['Auth'],
+        }),
+
+        // Update Student (used for verification)
+        updateStudent: builder.mutation({
+            query: ({ id, ...payload }) => ({
+                url: `/students/${id}`,
+                method: 'PUT',
+                body: payload,
+            }),
+            invalidatesTags: ['Auth'],
+        }),
     }),
 });
 
 export const {
     useLoginMutation,
-    useRegisterMutation,
+    useRegisterStudentMutation,
+    useRegisterTeacherMutation,
     useGetProfileQuery,
     useUpdateProfileMutation,
     useLogoutMutation,
@@ -95,4 +168,11 @@ export const {
     useVerifyEmailMutation,
     useForgotPasswordMutation,
     useResetPasswordMutation,
+    useVerifyAdminCodeMutation,
+    useGetStudentProfilesQuery,
+    useRegisterSubAccountMutation,
+    useSendEmailMutation,
+    useSendSMSMutation,
+    useUpdateTeacherMutation,
+    useUpdateStudentMutation,
 } = authApi;

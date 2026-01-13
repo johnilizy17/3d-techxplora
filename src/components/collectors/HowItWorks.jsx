@@ -186,7 +186,7 @@ export default function HowItWorks() {
               <Button
                 variant="outline"
                 className="interactive px-10 py-7 text-lg font-bold border-2 border-white/10 bg-transparent text-white rounded-xl hover:bg-white/5 hover:border-[#a6b1ff]/30 transition-all duration-300 flex items-center gap-2"
-                onClick={() => {/* TODO: Logic for join with code */ }}
+                onClick={() => window.location.href = "/auth/group"}
               >
                 Join with a Code
                 <ChevronRight className="w-5 h-5" />
@@ -212,9 +212,9 @@ export default function HowItWorks() {
               <Button
                 variant="outline"
                 className="interactive px-10 py-7 text-lg font-bold border-2 border-white/10 bg-transparent text-white rounded-xl hover:bg-white/5 hover:border-[#a6b1ff]/30 transition-all duration-300 flex items-center gap-2"
-                onClick={() => {/* TODO: Logic for request impact deck */ }}
+                onClick={() => window.location.href = "/auth/login"}
               >
-                Request Impact Deck
+                Login with ease
                 <ChevronRight className="w-5 h-5" />
               </Button>
             </div>
@@ -272,7 +272,8 @@ export default function HowItWorks() {
             <Button
               variant="outline"
               className="interactive px-8 py-6 text-base font-bold border border-white/10 bg-white/5 text-white rounded-xl hover:bg-white/10 hover:border-[#a6b1ff]/30 transition-all duration-300"
-              onClick={() => setActiveTab('sponsor')}
+              onClick={() => window.location.href = "/auth/signup/?page=3"
+              }
             >
               Sponsor a Challenge
             </Button>

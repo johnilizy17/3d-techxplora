@@ -29,12 +29,12 @@ export default function StatsCards() {
     const groupCount = user?.groups?.length || 0;
 
     return (
-        <div className="px-6 -mt-8 relative z-10">
+        <div className="px-6 lg:px-0 -mt-8 lg:-mt-10 relative z-10 transition-all duration-500">
             <motion.div
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.2 }}
-                className="bg-[#0a0a0a]/80 backdrop-blur-xl border border-white/10 shadow-[0_8px_30px_rgb(0,0,0,0.12)] rounded-3xl p-4 flex items-center divide-x divide-white/10"
+                className="bg-[#0a0a0a]/80 backdrop-blur-xl border border-white/10 shadow-[0_20px_40px_rgba(0,0,0,0.4)] rounded-[2rem] sm:rounded-3xl p-4 lg:p-6 flex items-center divide-x divide-white/10"
             >
                 <StatItem label="Quiz" value={quizCount} delay={0.3} onClick={() => navigate('/dashboard/quiz')} />
                 <StatItem label="Group" value={groupCount} delay={0.4} onClick={() => navigate('/dashboard/group')} />

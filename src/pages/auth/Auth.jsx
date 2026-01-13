@@ -46,6 +46,7 @@ function AuthContent() {
     });
 
     const handleGoogleSuccess = async (tokenResponse) => {
+        console.log("Google Success:", tokenResponse);
         setIsLoading(true);
         try {
             // Get Google User Info
@@ -79,8 +80,24 @@ function AuthContent() {
                 description: "Welcome back to the Techxplora!",
             });
 
-            // Redirect to dashboard (with a slight delay to allow alert to be seen)
-            setTimeout(() => navigate("/dashboard"), 1500);
+            // Redirect logic (based on accountable_type and verification)
+            const userData = response.data.user || response.data;
+            const accountableType = userData.accountable_type;
+            const isVerified = userData.is_verified === 1;
+
+            if (accountableType === "App\\Models\\Student") {
+                navigate("/auth/option");
+            } else if (accountableType === "App\\Models\\Teacher") {
+                if (isVerified) {
+                    navigate("/dashboard");
+                } else {
+                    // Unverified teachers go to phone verification
+                    navigate("/auth/phone");
+                }
+            } else {
+                // Fallback for other types
+                navigate(isVerified ? "/dashboard" : "/auth/phone");
+            }
 
         } catch (error) {
             console.error("Google verify error:", error);
@@ -127,8 +144,24 @@ function AuthContent() {
                 description: "Welcome back to the Techxplora!",
             });
 
-            // Redirect to dashboard (with a slight delay to allow alert to be seen)
-            navigate("/dashboard");
+            // Redirect logic (based on accountable_type and verification)
+            const userData = response.data.user || response.data;
+            const accountableType = userData.accountable_type;
+            const isVerified = userData.is_verified === 1;
+
+            if (accountableType === "App\\Models\\Student") {
+                navigate("/auth/option");
+            } else if (accountableType === "App\\Models\\Teacher") {
+                if (isVerified) {
+                    navigate("/dashboard");
+                } else {
+                    // Unverified teachers go to phone verification
+                    navigate("/auth/phone");
+                }
+            } else {
+                // Fallback for other types
+                navigate(isVerified ? "/dashboard" : "/auth/phone");
+            }
 
         } catch (error) {
             console.error("Login error details:", error);

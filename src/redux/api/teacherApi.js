@@ -113,6 +113,23 @@ export const teacherApi = baseApi.injectEndpoints({
             }),
             providesTags: ['Course'],
         }),
+
+        // Dashboard specific queries
+        getQuizzes: builder.query({
+            query: ({ type, id }) => type === 'student' ? `/my-quizzes/${id}` : '/quizzes',
+            providesTags: ['Quiz'],
+        }),
+
+        getGroups: builder.query({
+            query: ({ type, id }) => type === 'student' ? `/my-groups/${id}` : '/groups',
+            providesTags: ['Teacher', 'Student'],
+        }),
+
+        getQuizData: builder.query({
+            query: () => '/classes', // This would normally be a series of requests or a specialized endpoint
+            // We'll mimic the old logic by providing tags that might trigger a refresh
+            providesTags: ['Course', 'Quiz'],
+        }),
     }),
 });
 
@@ -131,4 +148,7 @@ export const {
     useRemoveStudentMutation,
     useGetCourseByIdQuery,
     useGetCoursesQuery,
+    useGetQuizzesQuery,
+    useGetGroupsQuery,
+    useGetQuizDataQuery,
 } = teacherApi;
