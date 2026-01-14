@@ -79,7 +79,7 @@ export default function SyllabusDrawer({ isOpen, onClose, mode = 'chapter', pare
                         transition={{ type: 'spring', damping: 20, stiffness: 300 }}
                         className="fixed right-0 top-0 h-full w-full max-w-md bg-zinc-950 border-l border-white/10 shadow-2xl z-50 overflow-y-auto"
                     >
-                        <div className="p-6">
+                        <div className="p-6 pb-40">
                             <div className="flex items-center justify-between mb-8">
                                 <h2 className="text-2xl font-black text-white italic tracking-tighter">
                                     {mode === 'chapter' ? 'New Chapter' : 'New Sub-Topic'}

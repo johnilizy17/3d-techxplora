@@ -17,6 +17,7 @@ import CoursePreview from "./CoursePreview.jsx";
 import Groups from "./Groups.jsx";
 import Quizzes from "./Quizzes.jsx";
 import Leaderboard from "./Leaderboard.jsx";
+import Syllabus from "./Syllabus.jsx";
 import Start from "./auth/Start.jsx";
 import Signup from "./auth/Signup.jsx";
 import PhoneVerify from "./auth/PhoneVerify.jsx";
@@ -71,6 +72,7 @@ function PagesContent() {
         <Route path="/dashboard/groups" element={<Groups />} />
         <Route path="/dashboard/quizzes" element={<Quizzes />} />
         <Route path="/dashboard/leaderboard" element={<Leaderboard />} />
+        <Route path="/dashboard/syllabus" element={<Syllabus />} />
         <Route path="/dashboard/wallet" element={<Wallet />} />
         <Route path="/dashboard/profile" element={<Profile />} />
         <Route path="/dashboard/profile/edit" element={<UserProfile />} />
