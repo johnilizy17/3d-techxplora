@@ -58,3 +58,14 @@ export function hasDatePassed(inputDate) {
     const date = new Date(inputDate);
     return date < now;
 }
+
+export function formatDate(isoString) {
+    if (!isoString) return "";
+    const date = new Date(isoString);
+    return date.toLocaleString('en-US', {
+        month: 'long',
+        day: 'numeric',
+        year: 'numeric'
+    });
+}
+

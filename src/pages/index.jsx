@@ -20,6 +20,9 @@ import Leaderboard from "./Leaderboard.jsx";
 import Syllabus from "./Syllabus.jsx";
 import Teachers from "./Teachers.jsx";
 import CreateQuiz from "./CreateQuiz.jsx";
+import Questions from "./Questions.jsx";
+import AIReview from "./AIReview.jsx";
+import Drafts from "./Drafts.jsx";
 import JoinQuiz from './JoinQuiz.jsx';
 import JoinGroup from './JoinGroup.jsx';
 import Start from "./auth/Start.jsx";
@@ -80,6 +83,9 @@ function PagesContent() {
         <Route path="/dashboard/quizzes" element={<Quizzes />} />
         <Route path="/dashboard/quizzes/join" element={<JoinQuiz />} />
         <Route path="/dashboard/teacher/quizzes" element={<CreateQuiz />} />
+        <Route path="/dashboard/teacher/question" element={<Questions />} />
+        <Route path="/dashboard/teacher/draft" element={<Drafts />} />
+        <Route path="/dashboard/teacher/ai-review" element={<AIReview />} />
         <Route path="/dashboard/leaderboard" element={<Leaderboard />} />
         <Route path="/dashboard/syllabus" element={<Syllabus />} />
         <Route path="/dashboard/teachers" element={<Teachers />} />

@@ -89,7 +89,7 @@ export const questionApi = baseApi.injectEndpoints({
 
         // Get questions by quiz ID
         getQuestionsByQuizId: builder.query({
-            query: (quizId) => `/quizzes/${quizId}/questions`,
+            query: (quizId) => `/get-questions/${quizId}`,
             providesTags: ['Question'],
         }),
     }),
