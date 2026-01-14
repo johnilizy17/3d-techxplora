@@ -3,6 +3,7 @@ import Navbar from "@/components/navigation/Navbar";
 import React, { useState, useEffect } from "react";
 import CustomCursor from "@/components/collectors/CustomCursor";
 import ScrollProgress from "@/components/collectors/ScrollProgress";
+import ChatBot from "@/components/chat/ChatBot";
 
 export default function Layout({ children }) {
     const [scrollProgress, setScrollProgress] = useState(0);
@@ -29,6 +30,7 @@ export default function Layout({ children }) {
             <main>
                 {children}
             </main>
+            <ChatBot />
         </div>
     )
 }

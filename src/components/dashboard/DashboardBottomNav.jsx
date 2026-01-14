@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Home, LayoutGrid, BarChart2, User, Play, ChevronRight, Settings, Users, FileText, Wallet, LogOut, MoreHorizontal, X, Zap } from 'lucide-react';
-import AIChatWidget from './AIChatWidget';
 import QuizActionDrawer from './QuizActionDrawer';
 import { selectCurrentUser, logout } from '@/redux/slices/authSlice';
 
@@ -56,9 +55,6 @@ export default function DashboardBottomNav({ currentTab = 'Home', onLogout, onMo
 
                 <NavItem icon={BarChart2} label="Leaderboard" isActive={currentTab === 'Leaderboard'} onClick={() => navigate('/dashboard/leaderboard')} />
                 <NavItem icon={MoreHorizontal} label="More" isActive={false} onClick={onMoreToggle} />
-
-                {/* AI Chat Widget */}
-                <AIChatWidget />
             </div>
         </div>
     );

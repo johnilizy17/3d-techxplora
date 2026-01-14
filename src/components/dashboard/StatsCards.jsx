@@ -47,7 +47,7 @@ export default function StatsCards() {
                 className="bg-[#0a0a0a]/80 backdrop-blur-xl border border-white/10 shadow-[0_20px_40px_rgba(0,0,0,0.4)] rounded-[2rem] sm:rounded-3xl p-4 lg:p-6 flex items-center divide-x divide-white/10"
             >
                 <StatItem label="Quiz" value={quizCount} delay={0.3} onClick={() => navigate('/dashboard/quizzes')} />
-                <StatItem label="Group" value={groupCount} delay={0.4} onClick={() => navigate('/dashboard/group')} />
+                <StatItem label="Group" value={groupCount} delay={0.4} onClick={() => navigate('/dashboard/groups')} />
                 <StatItem label="Xp" value={xp} delay={0.5} onClick={() => navigate('/dashboard/wallet')} />
             </motion.div>
         </div>

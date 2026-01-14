@@ -37,7 +37,7 @@ export default function AIChatWidget() {
         <>
 
             {/* Floating Trigger Button */}
-            <div className="absolute bottom-full mb-4 right-0 z-50">
+            <div className="relative z-50">
                 <motion.button
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.9 }}
@@ -65,7 +65,7 @@ export default function AIChatWidget() {
                         initial={{ opacity: 0, y: 20, scale: 0.95 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 20, scale: 0.95 }}
-                        className="absolute bottom-[calc(100%+5rem)] right-0 z-50 w-80 rounded-3xl bg-[#1a1520]/95 backdrop-blur-xl border border-white/10 shadow-2xl overflow-hidden origin-bottom-right"
+                        className="absolute bottom-20 right-0 z-50 w-80 rounded-3xl bg-[#1a1520]/95 backdrop-blur-xl border border-white/10 shadow-2xl overflow-hidden origin-bottom-right"
                     >
                         {/* Header */}
                         <div className="h-16 bg-gradient-to-r from-[#5b21b6] to-[#7c3aed] p-4 flex items-center gap-3">

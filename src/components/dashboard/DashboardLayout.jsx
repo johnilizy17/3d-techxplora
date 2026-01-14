@@ -6,6 +6,7 @@ import LogoutModal from '@/components/profile/LogoutModal';
 import { useDispatch, useSelector } from 'react-redux';
 import { logout, selectCurrentUser, updateUser, setHistory } from '@/redux/slices/authSlice';
 import MoreMenuDrawer from './MoreMenuDrawer';
+import AIChatWidget from './AIChatWidget';
 import { useGetXpHistoryMutation } from '@/redux/api/authApi';
 import { useGetStudentProfileQuery } from '@/redux/api/studentApi';
 import { useGetTeacherProfileQuery } from '@/redux/api/teacherApi';
@@ -75,7 +76,7 @@ export default function DashboardLayout({ children }) {
             />
 
             {/* Main Content Area */}
-            <main className="flex-1 lg:ml-72 min-h-screen overflow-x-hidden">
+            <main className="flex-1 lg:ml-72 min-h-screen overflow-x-hidden pb-28 lg:pb-0">
                 <div className="lg:max-w-7xl lg:mx-auto">
                     {children}
                 </div>
@@ -89,6 +90,11 @@ export default function DashboardLayout({ children }) {
                     onMoreToggle={() => setIsMoreOpen(true)}
                 />
             </div>
+
+            {/* AI Chat Widget - Global Fixed Position
+            <div className="fixed bottom-6 right-6 lg:bottom-10 lg:right-10 z-[100]">
+                <AIChatWidget />
+            </div> */}
 
             {/* Shared Logout Modal */}
             <LogoutModal

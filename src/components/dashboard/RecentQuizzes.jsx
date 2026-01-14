@@ -28,7 +28,7 @@ export default function RecentQuizzes() {
         if (type === "student") {
             navigate(`/dashboard/quizzes/details?code=${quiz.quiz_code}`);
         } else {
-            navigate(`/dashboard/teacher/quizzes?code=${quiz.quiz_code}`);
+            navigate(`/dashboard/teacher/question?code=${quiz.quiz_code}`);
         }
     };
 
