@@ -23,6 +23,7 @@ import CreateQuiz from "./CreateQuiz.jsx";
 import Questions from "./Questions.jsx";
 import AIReview from "./AIReview.jsx";
 import Drafts from "./Drafts.jsx";
+import QuizDetails from "./QuizDetails.jsx";
 import JoinQuiz from './JoinQuiz.jsx';
 import JoinGroup from './JoinGroup.jsx';
 import Start from "./auth/Start.jsx";
@@ -81,6 +82,7 @@ function PagesContent() {
         <Route path="/dashboard/groups/join" element={<JoinGroup />} />
         <Route path="/dashboard/create_group" element={<CreateGroupTeacher />} />
         <Route path="/dashboard/quizzes" element={<Quizzes />} />
+        <Route path="/dashboard/quizzes/details" element={<QuizDetails />} />
         <Route path="/dashboard/quizzes/join" element={<JoinQuiz />} />
         <Route path="/dashboard/teacher/quizzes" element={<CreateQuiz />} />
         <Route path="/dashboard/teacher/question" element={<Questions />} />

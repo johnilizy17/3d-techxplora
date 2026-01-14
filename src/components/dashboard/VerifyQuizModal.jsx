@@ -31,8 +31,7 @@ export default function VerifyQuizModal({ isOpen, onClose, quiz }) {
 
             toast.success('Successfully joined the quiz!');
             onClose();
-            // Navigate to quizzes list or directly to the quiz detail/game if the design supports it
-            navigate('/dashboard/quizzes');
+            navigate(`/dashboard/quizzes/details?code=${quiz.quiz_code}`);
         } catch (error) {
             console.error('Join failed:', error);
             toast.error(error?.data?.message || 'Failed to join quiz');
