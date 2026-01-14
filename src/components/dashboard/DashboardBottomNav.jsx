@@ -1,9 +1,11 @@
-import React from 'react';
-import { Home, LayoutGrid, BarChart2, User, Plus } from 'lucide-react';
-import { motion } from 'framer-motion';
-import AIChatWidget from './AIChatWidget';
-
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Home, LayoutGrid, BarChart2, User, Play, ChevronRight, Settings, Users, FileText, Wallet, LogOut, MoreHorizontal, X, Zap } from 'lucide-react';
+import AIChatWidget from './AIChatWidget';
+import QuizActionDrawer from './QuizActionDrawer';
+import { selectCurrentUser, logout } from '@/redux/slices/authSlice';
 
 const NavItem = ({ icon: Icon, label, isActive, onClick }) => (
     <button
@@ -15,30 +17,45 @@ const NavItem = ({ icon: Icon, label, isActive, onClick }) => (
     </button>
 );
 
-export default function DashboardBottomNav({ currentTab = 'Home' }) {
+export default function DashboardBottomNav({ currentTab = 'Home', onLogout, onMoreToggle }) {
     const navigate = useNavigate();
 
     return (
         <div className="fixed bottom-0 left-0 right-0 z-50 flex justify-center">
-            <div className="w-full max-w-md bg-[#0a0a0a] border-t border-white/10 px-6 py-4 rounded-t-3xl shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.5)] flex items-end justify-between relative">
+            <div className="w-full max-w-md bg-[#0a0a0a]/95 backdrop-blur-xl border-t border-white/10 px-6 py-4 rounded-t-[2.5rem] shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.5)] flex items-end justify-between relative translate-y-[-1px]">
 
                 <NavItem icon={Home} label="Home" isActive={currentTab === 'Home'} onClick={() => navigate('/dashboard')} />
                 <NavItem icon={LayoutGrid} label="Groups" isActive={currentTab === 'groups'} onClick={() => navigate('/dashboard/groups')} />
 
-                {/* Play Button - Floating centered */}
-                <div className="relative -top-6">
-                    <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        className="w-16 h-16 rounded-full bg-gradient-to-r from-[#5b21b6] to-[#7c3aed] flex items-center justify-center text-white shadow-[0_0_20px_rgba(124,58,237,0.5)] border-4 border-[#0a0a0a] relative z-20"
-                    >
-                        <Plus size={32} />
-                    </motion.button>
-                    <span className="absolute -bottom-6 w-full text-center text-[10px] font-medium text-white left-0">Play</span>
-                </div>
+                {/* Play Button - Floating centered with Unified Drawer */}
+                <QuizActionDrawer>
+                    <div className="relative -top-10 group cursor-pointer">
+                        <motion.div
+                            animate={{
+                                scale: [1, 1.1, 1],
+                                boxShadow: [
+                                    "0 0 20px rgba(124,58,237,0.3)",
+                                    "0 0 40px rgba(124,58,237,0.6)",
+                                    "0 0 20px rgba(124,58,237,0.3)"
+                                ]
+                            }}
+                            transition={{
+                                duration: 2,
+                                repeat: Infinity,
+                                ease: "easeInOut"
+                            }}
+                            className="w-20 h-20 rounded-full bg-gradient-to-br from-[#6366f1] via-[#8b5cf6] to-[#d946ef] flex items-center justify-center text-white p-1 relative z-20 shadow-[0_0_30px_rgba(139,92,246,0.5)]"
+                        >
+                            <div className="w-full h-full rounded-full bg-[#0a0a0a]/20 flex items-center justify-center backdrop-blur-sm border-2 border-white/20">
+                                <Play size={36} fill="white" className="ml-1" />
+                            </div>
+                        </motion.div>
+                        <span className="absolute -bottom-8 w-full text-center text-[10px] font-black text-[#a6b1ff] left-0 uppercase tracking-widest italic">Play</span>
+                    </div>
+                </QuizActionDrawer>
 
                 <NavItem icon={BarChart2} label="Leaderboard" isActive={currentTab === 'Leaderboard'} onClick={() => navigate('/dashboard/leaderboard')} />
-                <NavItem icon={User} label="Profile" isActive={currentTab === 'Profile'} onClick={() => navigate('/dashboard/profile')} />
+                <NavItem icon={MoreHorizontal} label="More" isActive={false} onClick={onMoreToggle} />
 
                 {/* AI Chat Widget */}
                 <AIChatWidget />

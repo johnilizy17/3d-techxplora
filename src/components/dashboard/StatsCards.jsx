@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { selectCurrentUser } from '@/redux/slices/authSlice';
+import { useGetGroupsQuery, useGetQuizzesQuery } from '@/redux/api/teacherApi';
 
 const StatItem = ({ label, value, delay, onClick }) => (
     <motion.div
@@ -22,11 +23,20 @@ const StatItem = ({ label, value, delay, onClick }) => (
 export default function StatsCards() {
     const navigate = useNavigate();
     const user = useSelector(selectCurrentUser);
+    const type = user?.accountable_type === "App\\Models\\Student" ? "student" : "teacher";
+
+    const { data: groupsData } = useGetGroupsQuery({ type, id: user?.id }, {
+        skip: !user?.id
+    });
+
+    const { data: quizzesData } = useGetQuizzesQuery({ type, id: user?.id }, {
+        skip: !user?.id
+    });
 
     // Default values if data is missing
     const xp = user?.xp || 0;
-    const quizCount = user?.quizzes?.length || 0;
-    const groupCount = user?.groups?.length || 0;
+    const quizCount = quizzesData?.length || 0;
+    const groupCount = groupsData?.length || 0;
 
     return (
         <div className="px-6 lg:px-0 -mt-8 lg:-mt-10 relative z-10 transition-all duration-500">

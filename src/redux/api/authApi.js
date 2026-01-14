@@ -154,6 +154,15 @@ export const authApi = baseApi.injectEndpoints({
             }),
             invalidatesTags: ['Auth'],
         }),
+
+        // Get XP History
+        getXpHistory: builder.mutation({
+            query: (payload) => ({
+                url: '/xp-history',
+                method: 'POST',
+                body: payload,
+            }),
+        }),
     }),
 });
 
@@ -175,4 +184,5 @@ export const {
     useSendSMSMutation,
     useUpdateTeacherMutation,
     useUpdateStudentMutation,
+    useGetXpHistoryMutation,
 } = authApi;

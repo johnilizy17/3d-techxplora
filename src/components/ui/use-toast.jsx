@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 
 const TOAST_LIMIT = 20;
 const TOAST_REMOVE_DELAY = 400; // ms (after close animation)
+const DEFAULT_DURATION = 5000; // 5 seconds
 
 const actionTypes = {
   ADD_TOAST: "ADD_TOAST",
@@ -139,6 +140,12 @@ function toast(props) {
       },
     },
   });
+
+  if (props?.duration !== Infinity) {
+    setTimeout(() => {
+      dismiss();
+    }, props?.duration || DEFAULT_DURATION);
+  }
 
   return { id, dismiss, update };
 }

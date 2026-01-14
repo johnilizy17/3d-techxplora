@@ -20,10 +20,10 @@ export default function Start() {
                 {/* Header */}
                 <div className="space-y-4">
                     <h1 className="text-4xl font-bold tracking-tight text-white drop-shadow-[0_0_15px_rgba(167,139,250,0.5)]">
-                        Dreamland<br />Collectibles
+                        Techxplora
                     </h1>
                     <p className="text-lg text-gray-300">
-                        Start your journey into the<br />digital dreamscape
+                        Start your journey into the<br />digital Quiz
                     </p>
                 </div>
 

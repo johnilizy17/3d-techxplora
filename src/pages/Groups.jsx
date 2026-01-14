@@ -2,8 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { Users, Sparkles, ArrowUpRight } from 'lucide-react';
-import { useGetGroupsQuery } from '@/redux/api/teacherApi';
+import { Users, Sparkles, ArrowUpRight, ShieldCheck, ShieldAlert } from 'lucide-react';
+import { useGetGroupsQuery, useGetQuizzesQuery, useGetQuizDataQuery } from '@/redux/api/teacherApi';
 import { selectCurrentUser, setTemporaryStorage } from '@/redux/slices/authSlice';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import EmptyState from '@/components/dashboard/EmptyState';
@@ -21,7 +21,17 @@ export default function Groups() {
         skip: !user?.id
     });
 
+    const { data: quizzesData } = useGetQuizzesQuery({ type, id: user?.id }, {
+        skip: !user?.id
+    });
+
+    const { data: quizDataResults } = useGetQuizDataQuery(undefined, {
+        skip: !user?.id
+    });
+
     const groups = groupsData || [];
+    const quizzes = quizzesData || [];
+    const quizData = quizDataResults?.data || quizDataResults || { group: [], class: [], quiz: [] };
 
     const handleGroupClick = (group) => {
         dispatch(setTemporaryStorage(group));
@@ -33,7 +43,7 @@ export default function Groups() {
             <div className="min-h-screen pb-24 lg:pb-10">
                 <div className="w-full relative">
                     {/* Promotional Banner */}
-                    <PromotionalBanner />
+                    <PromotionalBanner groups={groups} quizzes={quizzes} quizData={quizData} />
 
                     {/* Groups Section */}
                     <div className="px-6 lg:px-10 mt-12">
@@ -75,12 +85,17 @@ export default function Groups() {
 }
 
 // Promotional Banner Component
-const PromotionalBanner = () => {
+const PromotionalBanner = ({ groups, quizzes, quizData }) => {
     const navigate = useNavigate();
     const user = useSelector(selectCurrentUser);
     const isStudent = user?.accountable_type === "App\\Models\\Student";
     const isTeacher = user?.accountable_type === "App\\Models\\Teacher";
     const isAdmin = user?.is_admin || user?.role === 'admin';
+
+    // Calculate statistics
+    const totalGroups = groups?.length || 0;
+    const totalQuizzes = quizzes?.length || 0;
+    const totalPlays = quizData?.quiz?.length || 0;
 
     // Determine content based on user type
     const getBannerContent = () => {
@@ -105,7 +120,6 @@ const PromotionalBanner = () => {
                 icon: Sparkles
             };
         }
-        // Default fallback
         return {
             badge: "EXPLORE",
             badgeColor: "from-purple-400 to-pink-500",
@@ -124,7 +138,7 @@ const PromotionalBanner = () => {
         <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mx-6 lg:mx-10 mt-8 relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-[#1a1f4d] via-[#2a2f6d] to-[#1a1f4d] border border-[#a6b1ff]/20 shadow-2xl"
+            className="mx-4 sm:mx-6 lg:mx-10 mt-6 lg:mt-8 relative overflow-hidden rounded-[2rem] lg:rounded-[2.5rem] bg-gradient-to-br from-[#1a1f4d] via-[#2a2f6d] to-[#1a1f4d] border border-[#a6b1ff]/20 shadow-2xl"
         >
             {/* Background Decorations */}
             <div className="absolute top-0 right-0 w-64 h-64 bg-purple-500/10 rounded-full blur-[100px]" />
@@ -141,90 +155,146 @@ const PromotionalBanner = () => {
                 <Sparkles className="text-indigo-400 animate-pulse" size={14} style={{ animationDelay: '1s' }} />
             </div>
 
-            <div className="relative z-10 p-8 lg:p-12 flex flex-col lg:flex-row items-center justify-between gap-8">
-                <div className="flex-1 space-y-4">
-                    {/* Dynamic Badge */}
-                    <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r ${content.badgeColor} border border-white/20 shadow-lg`}>
-                        <IconComponent className="text-white" size={16} />
-                        <span className="text-white font-black text-sm uppercase tracking-wider italic">{content.badge}</span>
+            <div className="relative z-10 p-6 sm:p-8 lg:p-12">
+                {/* Main Content Row */}
+                <div className="flex flex-col lg:flex-row items-center justify-between gap-6 lg:gap-8 mb-6 lg:mb-8">
+                    <div className="flex-1 space-y-3 lg:space-y-4 w-full lg:w-auto text-center lg:text-left">
+                        {/* Dynamic Badge */}
+                        <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r ${content.badgeColor} border border-white/20 shadow-lg`}>
+                            <IconComponent className="text-white" size={16} />
+                            <span className="text-white font-black text-sm uppercase tracking-wider italic">{content.badge}</span>
+                        </div>
+
+                        {/* Main Heading */}
+                        <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-white leading-tight">
+                            {content.title}
+                        </h2>
+
+                        {/* Subtext */}
+                        <p className="text-white/80 text-sm sm:text-base lg:text-lg font-medium max-w-md mx-auto lg:mx-0">
+                            {content.subtitle}
+                        </p>
+
+                        {/* Benefits List - Hidden on mobile for cleaner look */}
+                        <div className="hidden sm:flex flex-col gap-2 pt-2">
+                            {isStudent ? (
+                                <>
+                                    <div className="flex items-center gap-2 text-xs sm:text-sm text-white/70">
+                                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                                        <span>Access exclusive quizzes from your teachers</span>
+                                    </div>
+                                    <div className="flex items-center gap-2 text-xs sm:text-sm text-white/70">
+                                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                                        <span>Track your progress and compete with peers</span>
+                                    </div>
+                                    <div className="flex items-center gap-2 text-xs sm:text-sm text-white/70">
+                                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                                        <span>Earn XP and climb the leaderboard</span>
+                                    </div>
+                                </>
+                            ) : (
+                                <>
+                                    <div className="flex items-center gap-2 text-xs sm:text-sm text-white/70">
+                                        <div className="w-1.5 h-1.5 rounded-full bg-indigo-400" />
+                                        <span>Organize students into learning groups</span>
+                                    </div>
+                                    <div className="flex items-center gap-2 text-xs sm:text-sm text-white/70">
+                                        <div className="w-1.5 h-1.5 rounded-full bg-indigo-400" />
+                                        <span>Share quizzes and track student performance</span>
+                                    </div>
+                                    <div className="flex items-center gap-2 text-xs sm:text-sm text-white/70">
+                                        <div className="w-1.5 h-1.5 rounded-full bg-indigo-400" />
+                                        <span>Manage multiple groups with ease</span>
+                                    </div>
+                                </>
+                            )}
+                        </div>
+
+                        {/* CTA Button */}
+                        <motion.button
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            onClick={content.ctaAction}
+                            className="mt-4 w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 rounded-xl sm:rounded-2xl bg-white text-[#1a1f4d] font-black text-sm sm:text-base uppercase tracking-wide shadow-xl hover:shadow-2xl transition-all flex items-center justify-center gap-2 group"
+                        >
+                            {content.ctaText}
+                            <ArrowUpRight className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" size={18} />
+                        </motion.button>
                     </div>
 
-                    {/* Main Heading */}
-                    <h2 className="text-3xl lg:text-4xl font-black text-white leading-tight">
-                        {content.title}
-                    </h2>
-
-                    {/* Subtext */}
-                    <p className="text-white/80 text-base lg:text-lg font-medium">
-                        {content.subtitle}
-                    </p>
-
-                    {/* Benefits List */}
-                    <div className="flex flex-col gap-2 pt-2">
-                        {isStudent ? (
-                            <>
-                                <div className="flex items-center gap-2 text-sm text-white/70">
-                                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                                    <span>Access exclusive quizzes from your teachers</span>
-                                </div>
-                                <div className="flex items-center gap-2 text-sm text-white/70">
-                                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                                    <span>Track your progress and compete with peers</span>
-                                </div>
-                                <div className="flex items-center gap-2 text-sm text-white/70">
-                                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                                    <span>Earn XP and climb the leaderboard</span>
-                                </div>
-                            </>
-                        ) : (
-                            <>
-                                <div className="flex items-center gap-2 text-sm text-white/70">
-                                    <div className="w-1.5 h-1.5 rounded-full bg-indigo-400" />
-                                    <span>Organize students into learning groups</span>
-                                </div>
-                                <div className="flex items-center gap-2 text-sm text-white/70">
-                                    <div className="w-1.5 h-1.5 rounded-full bg-indigo-400" />
-                                    <span>Share quizzes and track student performance</span>
-                                </div>
-                                <div className="flex items-center gap-2 text-sm text-white/70">
-                                    <div className="w-1.5 h-1.5 rounded-full bg-indigo-400" />
-                                    <span>Manage multiple groups with ease</span>
-                                </div>
-                            </>
-                        )}
+                    {/* Character Illustration - Smaller on mobile */}
+                    <div className="relative hidden sm:block">
+                        <motion.div
+                            animate={{ y: [0, -10, 0] }}
+                            transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                            className="relative z-10"
+                        >
+                            <div className={`w-32 h-32 sm:w-48 sm:h-48 lg:w-56 lg:h-56 rounded-full bg-gradient-to-br ${content.badgeColor} flex items-center justify-center shadow-2xl`}>
+                                <IconComponent className="text-white" size={48} />
+                            </div>
+                        </motion.div>
+                        <div className={`absolute inset-0 bg-gradient-to-br ${content.badgeColor} opacity-20 rounded-full blur-3xl`} />
                     </div>
-
-                    {/* CTA Button */}
-                    <motion.button
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                        onClick={content.ctaAction}
-                        className="mt-4 w-full lg:w-auto px-8 py-4 rounded-2xl bg-white text-[#1a1f4d] font-black text-base uppercase tracking-wide shadow-xl hover:shadow-2xl transition-all flex items-center justify-center gap-2 group"
-                    >
-                        {content.ctaText}
-                        <ArrowUpRight className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" size={18} />
-                    </motion.button>
                 </div>
 
-                {/* Character Illustration */}
-                <div className="relative">
-                    <motion.div
-                        animate={{ y: [0, -10, 0] }}
-                        transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                        className="relative z-10"
-                    >
-                        <div className={`w-48 h-48 lg:w-64 lg:h-64 rounded-full bg-gradient-to-br ${content.badgeColor} flex items-center justify-center shadow-2xl`}>
-                            <IconComponent className="text-white" size={64} />
-                        </div>
-                    </motion.div>
-                    <div className={`absolute inset-0 bg-gradient-to-br ${content.badgeColor} opacity-20 rounded-full blur-3xl`} />
+                {/* Statistics Section */}
+                <div className="relative z-10 pt-6 border-t border-white/10">
+                    <div className="grid grid-cols-3 gap-3 sm:gap-4 lg:gap-6">
+                        {/* Total Groups */}
+                        <motion.div
+                            whileHover={{ scale: 1.05 }}
+                            onClick={() => navigate('/dashboard/groups')}
+                            className="bg-white/5 backdrop-blur-sm rounded-2xl p-3 sm:p-4 lg:p-5 border border-white/10 hover:border-[#a6b1ff]/30 transition-all cursor-pointer group"
+                        >
+                            <div className="flex flex-col items-center text-center">
+                                <span className="text-2xl sm:text-3xl lg:text-4xl font-black text-white group-hover:text-[#a6b1ff] transition-colors">
+                                    {totalGroups}
+                                </span>
+                                <span className="text-[10px] sm:text-xs lg:text-sm text-white/60 font-bold uppercase tracking-wider mt-1">
+                                    Total Groups
+                                </span>
+                            </div>
+                        </motion.div>
+
+                        {/* Total Quizzes */}
+                        <motion.div
+                            whileHover={{ scale: 1.05 }}
+                            onClick={() => navigate('/dashboard/quiz')}
+                            className="bg-white/5 backdrop-blur-sm rounded-2xl p-3 sm:p-4 lg:p-5 border border-white/10 hover:border-[#a6b1ff]/30 transition-all cursor-pointer group"
+                        >
+                            <div className="flex flex-col items-center text-center">
+                                <span className="text-2xl sm:text-3xl lg:text-4xl font-black text-white group-hover:text-[#a6b1ff] transition-colors">
+                                    {totalQuizzes}
+                                </span>
+                                <span className="text-[10px] sm:text-xs lg:text-sm text-white/60 font-bold uppercase tracking-wider mt-1">
+                                    Quizzes
+                                </span>
+                            </div>
+                        </motion.div>
+
+                        {/* Total Plays */}
+                        <motion.div
+                            whileHover={{ scale: 1.05 }}
+                            onClick={() => navigate('/dashboard/result')}
+                            className="bg-white/5 backdrop-blur-sm rounded-2xl p-3 sm:p-4 lg:p-5 border border-white/10 hover:border-[#a6b1ff]/30 transition-all cursor-pointer group"
+                        >
+                            <div className="flex flex-col items-center text-center">
+                                <span className="text-2xl sm:text-3xl lg:text-4xl font-black text-white group-hover:text-[#a6b1ff] transition-colors">
+                                    {totalPlays}
+                                </span>
+                                <span className="text-[10px] sm:text-xs lg:text-sm text-white/60 font-bold uppercase tracking-wider mt-1">
+                                    Plays
+                                </span>
+                            </div>
+                        </motion.div>
+                    </div>
                 </div>
             </div>
         </motion.div>
     );
 };
 
-// Group Card Component (reused from RecentGroups)
+// Group Card Component
 const GroupCard = ({ group, index, onClick }) => {
     const isActive = group.status === "1" || group.status === 1;
 
@@ -255,6 +325,7 @@ const GroupCard = ({ group, index, onClick }) => {
                 <div className="flex-1 min-w-0 pt-1">
                     <div className="flex items-center gap-2 mb-1.5">
                         <div className={`flex items-center gap-1 px-2.5 py-0.5 rounded-full ${isActive ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'} text-[9px] font-black uppercase tracking-tighter italic shadow-sm`}>
+                            {isActive ? <ShieldCheck size={10} /> : <ShieldAlert size={10} />}
                             {isActive ? 'Active' : 'Disabled'}
                         </div>
                         <span className="text-[9px] font-bold text-white/30 uppercase tracking-widest">{timeAgo(group.created_at)}</span>

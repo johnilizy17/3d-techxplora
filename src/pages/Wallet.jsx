@@ -6,15 +6,38 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import WithdrawModal from '@/components/dashboard/WithdrawModal';
-
-const transactions = [
-    { id: 1, name: 'Payoneer', status: 'Successful', amount: '30,000', date: 'July 11, 2023 | 11:56', type: 'incoming', icon: '🔵' },
-    { id: 2, name: 'Airwallex', status: 'Unsuccessful', amount: '200', date: 'July 13, 2023 | 10:22', type: 'outgoing', icon: '🅰️' },
-    { id: 3, name: 'Payoneer', status: 'Successful', amount: '150.66', date: 'April 29, 2023 | 10:45', type: 'incoming', icon: '🔵' },
-];
+import { useSelector } from 'react-redux';
+import { selectCurrentUser, selectHistory } from '@/redux/slices/authSlice';
 
 export default function Wallet() {
     const navigate = useNavigate();
+    const user = useSelector(selectCurrentUser);
+    const history = useSelector(selectHistory);
+    // Access the data array, handling if history is the array itself or an object containing data
+    const historyList = history?.data || (Array.isArray(history) ? history : []);
+
+    console.log("Wallet Page - Redux History:", history);
+    console.log("Wallet Page - Processed List:", historyList);
+
+    // Map API history to UI format, or default to empty array
+    const transactions = Array.isArray(historyList) ? historyList.map((tx, index) => {
+        const isSender = tx.sender_id === user?.id;
+        // Logic derived from legacy history.tsx
+        const name = tx.quiz
+            ? `Quiz: ${tx.hash}`
+            : (tx.account_id === user?.id ? tx.account?.email : (tx.sender_id ? tx.sender?.email : tx.account?.email));
+
+        return {
+            id: tx.id || index,
+            name: name || 'Transaction',
+            status: isSender ? 'Sent' : 'Received',
+            amount: tx.amount,
+            date: new Date(tx.created_at).toLocaleString(),
+            type: isSender ? 'outgoing' : 'incoming',
+            isSender: isSender,
+            icon: isSender ? '📤' : '📥'
+        };
+    }) : [];
 
     return (
         <DashboardLayout>
@@ -52,12 +75,14 @@ export default function Wallet() {
 
                                     <p className="text-purple-100 text-sm font-black uppercase tracking-[0.2em] mb-2 opacity-80">Total Earnings</p>
                                     <h2 className="text-5xl lg:text-6xl font-black text-white mb-10 tracking-tighter">
-                                        47 XP
-                                        <span className="block text-2xl text-purple-200/60 mt-2 font-bold tracking-normal italic">(4.7 XD)</span>
+                                        {user?.xp?.toLocaleString() || 0} XP
+                                        <span className="block text-2xl text-purple-200/60 mt-2 font-bold tracking-normal italic">
+                                            ({((user?.xp || 0) / 10).toLocaleString()} XD)
+                                        </span>
                                     </h2>
 
                                     <WithdrawModal
-                                        balance="478.86"
+                                        balance={user?.xp || 0}
                                         trigger={
                                             <Button className="w-full h-16 bg-white hover:bg-purple-50 text-purple-700 rounded-2xl font-black text-xl shadow-[0_8px_0_#9333ea] active:shadow-none active:translate-y-[8px] transition-all uppercase tracking-widest relative">
                                                 Withdraw
@@ -78,30 +103,39 @@ export default function Wallet() {
                             >
                                 <div className="flex items-center justify-between mb-10">
                                     <h3 className="text-2xl font-black uppercase tracking-tight text-gray-900 italic">History</h3>
-                                    <button className="text-purple-600 text-sm font-black uppercase tracking-widest hover:text-purple-800 transition-colors">See All</button>
                                 </div>
 
-                                <div className="space-y-8">
-                                    {transactions.map((tx) => (
-                                        <div key={tx.id} className="flex items-center justify-between group">
-                                            <div className="flex items-center gap-5">
-                                                <div className="w-14 h-14 rounded-2xl bg-gray-50 flex items-center justify-center text-2xl shadow-inner border border-gray-100 group-hover:scale-110 transition-transform">
-                                                    {tx.icon}
+                                {transactions.length > 0 ? (
+                                    <div className="space-y-8">
+                                        {transactions.map((tx) => (
+                                            <div key={tx.id} className="flex items-center justify-between group">
+                                                <div className="flex items-center gap-5">
+                                                    <div className="w-14 h-14 rounded-2xl bg-gray-50 flex items-center justify-center text-2xl shadow-inner border border-gray-100 group-hover:scale-110 transition-transform">
+                                                        {tx.icon}
+                                                    </div>
+                                                    <div>
+                                                        <p className="font-black text-gray-900 text-lg leading-tight uppercase tracking-tight truncate max-w-[150px] lg:max-w-xs" title={tx.name}>{tx.name}</p>
+                                                        <p className={`text-xs font-black uppercase tracking-widest mt-1 ${!tx.isSender ? 'text-green-500' : 'text-red-500'}`}>
+                                                            {tx.status}
+                                                        </p>
+                                                    </div>
                                                 </div>
-                                                <div>
-                                                    <p className="font-black text-gray-900 text-lg leading-tight uppercase tracking-tight">{tx.name}</p>
-                                                    <p className={`text-xs font-black uppercase tracking-widest mt-1 ${tx.status === 'Successful' ? 'text-green-500' : 'text-red-500'}`}>
-                                                        {tx.status}
+                                                <div className="text-right">
+                                                    <p className={`font-black text-xl tracking-tighter ${!tx.isSender ? 'text-green-600' : 'text-red-500'}`}>
+                                                        {tx.isSender ? '-' : '+'}{Number(tx.amount).toLocaleString()} XP
                                                     </p>
+                                                    <p className="text-[10px] text-gray-400 font-bold uppercase mt-1 opacity-60 tracking-wider">{tx.date}</p>
                                                 </div>
                                             </div>
-                                            <div className="text-right">
-                                                <p className="font-black text-gray-900 text-xl tracking-tighter">₦{tx.amount}</p>
-                                                <p className="text-[10px] text-gray-400 font-bold uppercase mt-1 opacity-60 tracking-wider">{tx.date}</p>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="flex flex-col items-center justify-center h-64 text-center opacity-50">
+                                        <div className="text-4xl mb-4">📜</div>
+                                        <p className="font-bold text-gray-900 text-lg">No history yet</p>
+                                        <p className="text-sm text-gray-500">Transactions will appear here.</p>
+                                    </div>
+                                )}
                             </motion.div>
                         </div>
                     </div>

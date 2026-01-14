@@ -19,7 +19,7 @@ export const teacherApi = baseApi.injectEndpoints({
 
         // Get teacher profile
         getTeacherProfile: builder.query({
-            query: () => '/teachers/profile',
+            query: (id) => `/teachers/${id}`,
             providesTags: ['Teacher'],
         }),
 

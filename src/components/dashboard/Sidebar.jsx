@@ -1,8 +1,11 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Home, LayoutGrid, BarChart2, User, Plus, LogOut, Settings } from 'lucide-react';
+import { Home, LayoutGrid, BarChart2, User, Play, LogOut, Settings, Plus, MoreHorizontal } from 'lucide-react';
 import { cn } from "@/lib/utils";
+import { useSelector } from 'react-redux';
+import { selectCurrentUser } from '@/redux/slices/authSlice';
+import QuizActionDrawer from './QuizActionDrawer';
 
 const SidebarItem = ({ icon: Icon, label, path, isActive }) => (
     <Link to={path}>
@@ -32,9 +35,11 @@ const SidebarItem = ({ icon: Icon, label, path, isActive }) => (
     </Link>
 );
 
-export default function Sidebar({ onLogout }) {
+export default function Sidebar({ onLogout, onMoreToggle }) {
     const location = useLocation();
     const currentPath = location.pathname;
+    const user = useSelector(selectCurrentUser);
+    const isStudent = user?.accountable_type === "App\\Models\\Student" || user?.role === 'student';
 
     return (
         <aside className="hidden lg:flex flex-col w-72 h-screen fixed left-0 top-0 bg-[#0a0a0a] border-r border-white/5 p-6 z-40 overflow-hidden">
@@ -59,20 +64,32 @@ export default function Sidebar({ onLogout }) {
                 <SidebarItem icon={LayoutGrid} label="My Groups" path="/dashboard/groups" isActive={currentPath === '/dashboard/groups'} />
                 <SidebarItem icon={BarChart2} label="Leaderboard" path="/dashboard/leaderboard" isActive={currentPath === '/dashboard/leaderboard'} />
                 <SidebarItem icon={User} label="Profile" path="/dashboard/profile" isActive={currentPath === '/dashboard/profile'} />
-                <SidebarItem icon={Settings} label="Settings" path="/dashboard/options" isActive={currentPath === '/dashboard/options'} />
+
+                <button
+                    onClick={onMoreToggle}
+                    className={cn(
+                        "w-full flex items-center gap-4 px-6 py-4 rounded-2xl transition-all duration-300 group",
+                        "text-gray-500 hover:text-gray-300 hover:bg-white/5"
+                    )}
+                >
+                    <MoreHorizontal size={24} className="group-hover:text-gray-300 transition-colors" />
+                    <span className="font-bold tracking-wide uppercase text-xs">More</span>
+                </button>
             </nav>
 
             {/* Footer Actions */}
             <div className="mt-auto space-y-4">
-                <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    className="w-full h-14 bg-gradient-to-r from-[#5b21b6] to-[#7c3aed] rounded-2xl flex items-center justify-center gap-3 text-white font-black uppercase tracking-widest text-sm shadow-lg shadow-purple-900/30 group relative overflow-hidden"
-                >
-                    <Plus size={20} />
-                    Create Quiz
-                    <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
-                </motion.button>
+                <QuizActionDrawer>
+                    <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        className="w-full h-14 bg-gradient-to-r from-[#5b21b6] to-[#7c3aed] rounded-2xl flex items-center justify-center gap-3 text-white font-black uppercase tracking-widest text-sm shadow-lg shadow-purple-900/30 group relative overflow-hidden"
+                    >
+                        {isStudent ? <Play size={20} fill="white" /> : <Plus size={20} />}
+                        {isStudent ? "Play Quiz" : "Create Quiz"}
+                        <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
+                    </motion.button>
+                </QuizActionDrawer>
 
                 <button
                     onClick={onLogout}
