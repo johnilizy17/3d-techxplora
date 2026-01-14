@@ -130,6 +130,36 @@ export const teacherApi = baseApi.injectEndpoints({
             // We'll mimic the old logic by providing tags that might trigger a refresh
             providesTags: ['Course', 'Quiz'],
         }),
+        getSyllabus: builder.query({
+            query: () => '/syllabus',
+            providesTags: ['Syllabus'],
+        }),
+
+        createSyllabus: builder.mutation({
+            query: (payload) => ({
+                url: '/syllabus',
+                method: 'POST',
+                body: payload,
+            }),
+            invalidatesTags: ['Syllabus'],
+        }),
+
+        createSubTopic: builder.mutation({
+            query: (payload) => ({
+                url: '/syllabus-topics',
+                method: 'POST',
+                body: payload,
+            }),
+            invalidatesTags: ['Syllabus'],
+        }),
+
+        deleteSyllabus: builder.mutation({
+            query: (id) => ({
+                url: `/syllabus/${id}`,
+                method: 'DELETE',
+            }),
+            invalidatesTags: ['Syllabus'],
+        }),
     }),
 });
 
@@ -151,4 +181,8 @@ export const {
     useGetQuizzesQuery,
     useGetGroupsQuery,
     useGetQuizDataQuery,
+    useGetSyllabusQuery,
+    useCreateSyllabusMutation,
+    useCreateSubTopicMutation,
+    useDeleteSyllabusMutation,
 } = teacherApi;
