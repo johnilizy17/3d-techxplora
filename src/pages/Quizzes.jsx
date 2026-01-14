@@ -30,9 +30,9 @@ export default function Quizzes() {
         skip: !user?.id
     });
 
-    const quizzes = quizzesData || [];
+    const quizzes = Array.isArray(quizzesData) ? quizzesData : (quizzesData?.data || []);
     const quizData = quizDataResults?.data || quizDataResults || { group: [], class: [], quiz: [] };
-    const groups = groupsData || [];
+    const groups = Array.isArray(groupsData) ? groupsData : (groupsData?.data || []);
 
     const filters = [
         { label: 'All', icon: LayoutGrid, color: 'from-indigo-500 to-purple-600' },
@@ -93,8 +93,8 @@ export default function Quizzes() {
                                             key={filter.label}
                                             onClick={() => setActiveFilter(filter.label)}
                                             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-300 ${isActive
-                                                    ? `bg-gradient-to-r ${filter.color} text-white shadow-lg shadow-black/20 scale-105`
-                                                    : 'text-white/40 hover:text-white/70 hover:bg-white/5'
+                                                ? `bg-gradient-to-r ${filter.color} text-white shadow-lg shadow-black/20 scale-105`
+                                                : 'text-white/40 hover:text-white/70 hover:bg-white/5'
                                                 }`}
                                         >
                                             <Icon size={14} className={isActive ? "animate-pulse" : ""} />
@@ -176,7 +176,7 @@ const PromotionalBanner = ({ quizzes, quizData, groups }) => {
                 title: "Ready for a Challenge?",
                 subtitle: "Join a quiz with a code or explore available challenges to earn XP.",
                 ctaText: "JOIN WITH CODE",
-                ctaAction: () => navigate('/dashboard/quizzes?join=true'),
+                ctaAction: () => navigate('/dashboard/quizzes/join'),
                 icon: Gamepad2
             };
         } else if (isTeacher || isAdmin) {

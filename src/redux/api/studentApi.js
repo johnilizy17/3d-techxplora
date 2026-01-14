@@ -89,7 +89,7 @@ export const studentApi = baseApi.injectEndpoints({
 
         // Get student profile
         getStudentProfile: builder.query({
-            query: () => '/students/profile',
+            query: () => `/students/${id}`,
             providesTags: ['Student'],
         }),
 
@@ -142,6 +142,34 @@ export const studentApi = baseApi.injectEndpoints({
             query: () => '/students/courses/difficulty-levels',
             providesTags: ['Course'],
         }),
+
+        verifyQuizCode: builder.query({
+            query: (code) => `/verify-quizzes/${code}`,
+            providesTags: ['Quiz'],
+        }),
+
+        joinQuiz: builder.mutation({
+            query: (payload) => ({
+                url: '/join-quizzes',
+                method: 'POST',
+                body: payload,
+            }),
+            invalidatesTags: ['Quiz', 'Student'],
+        }),
+
+        verifyGroupCode: builder.query({
+            query: (code) => `/groups/${code}`,
+            providesTags: ['Group'],
+        }),
+
+        joinGroup: builder.mutation({
+            query: (payload) => ({
+                url: '/join-group',
+                method: 'POST',
+                body: payload,
+            }),
+            invalidatesTags: ['Group', 'Student'],
+        }),
     }),
 });
 
@@ -157,4 +185,10 @@ export const {
     useCompleteCourseMutation,
     useGetCourseCategoriesQuery,
     useGetCourseDifficultyLevelsQuery,
+    useVerifyQuizCodeQuery,
+    useLazyVerifyQuizCodeQuery,
+    useJoinQuizMutation,
+    useVerifyGroupCodeQuery,
+    useLazyVerifyGroupCodeQuery,
+    useJoinGroupMutation,
 } = studentApi;

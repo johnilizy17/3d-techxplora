@@ -18,6 +18,10 @@ import Groups from "./Groups.jsx";
 import Quizzes from "./Quizzes.jsx";
 import Leaderboard from "./Leaderboard.jsx";
 import Syllabus from "./Syllabus.jsx";
+import Teachers from "./Teachers.jsx";
+import CreateQuiz from "./CreateQuiz.jsx";
+import JoinQuiz from './JoinQuiz.jsx';
+import JoinGroup from './JoinGroup.jsx';
 import Start from "./auth/Start.jsx";
 import Signup from "./auth/Signup.jsx";
 import PhoneVerify from "./auth/PhoneVerify.jsx";
@@ -31,6 +35,7 @@ import GroupCode from "./auth/GroupCode.jsx";
 import GroupInfo from "./auth/GroupInfo.jsx";
 import Options from "./auth/Options.jsx";
 import Option from "./auth/Option.jsx";
+import CreateGroupTeacher from "./CreateGroup.jsx";
 
 // Mapping of page names for Layout highlighting (optional)
 const PAGES = {
@@ -70,9 +75,14 @@ function PagesContent() {
         {/* Auth Routes */}
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/dashboard/groups" element={<Groups />} />
+        <Route path="/dashboard/groups/join" element={<JoinGroup />} />
+        <Route path="/dashboard/create_group" element={<CreateGroupTeacher />} />
         <Route path="/dashboard/quizzes" element={<Quizzes />} />
+        <Route path="/dashboard/quizzes/join" element={<JoinQuiz />} />
+        <Route path="/dashboard/teacher/quizzes" element={<CreateQuiz />} />
         <Route path="/dashboard/leaderboard" element={<Leaderboard />} />
         <Route path="/dashboard/syllabus" element={<Syllabus />} />
+        <Route path="/dashboard/teachers" element={<Teachers />} />
         <Route path="/dashboard/wallet" element={<Wallet />} />
         <Route path="/dashboard/profile" element={<Profile />} />
         <Route path="/dashboard/profile/edit" element={<UserProfile />} />

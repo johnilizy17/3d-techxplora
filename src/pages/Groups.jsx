@@ -29,8 +29,8 @@ export default function Groups() {
         skip: !user?.id
     });
 
-    const groups = groupsData || [];
-    const quizzes = quizzesData || [];
+    const groups = Array.isArray(groupsData) ? groupsData : (groupsData?.data || []);
+    const quizzes = Array.isArray(quizzesData) ? quizzesData : (quizzesData?.data || []);
     const quizData = quizDataResults?.data || quizDataResults || { group: [], class: [], quiz: [] };
 
     const handleGroupClick = (group) => {
@@ -106,7 +106,7 @@ const PromotionalBanner = ({ groups, quizzes, quizData }) => {
                 title: "Join a Group Today!",
                 subtitle: "Get instant access to the latest quizzes and compete with your peers.",
                 ctaText: "JOIN GROUP NOW",
-                ctaAction: () => navigate('/dashboard/join_group'),
+                ctaAction: () => navigate('/dashboard/groups/join'),
                 icon: Users
             };
         } else if (isTeacher || isAdmin) {
@@ -259,7 +259,7 @@ const PromotionalBanner = ({ groups, quizzes, quizData }) => {
                         {/* Total Quizzes */}
                         <motion.div
                             whileHover={{ scale: 1.05 }}
-                            onClick={() => navigate('/dashboard/quiz')}
+                            onClick={() => navigate('/dashboard/quizzes')}
                             className="bg-white/5 backdrop-blur-sm rounded-2xl p-3 sm:p-4 lg:p-5 border border-white/10 hover:border-[#a6b1ff]/30 transition-all cursor-pointer group"
                         >
                             <div className="flex flex-col items-center text-center">

@@ -22,7 +22,7 @@ export default function RecentGroups() {
     });
 
 
-    const groups = groupsData || [];
+    const groups = Array.isArray(groupsData) ? groupsData : (groupsData?.data || []);
     // Only show first 3 for the dashboard
     const displayGroups = groups.slice(0, 3);
 
@@ -50,7 +50,7 @@ export default function RecentGroups() {
                     <div className="h-1 w-12 bg-gradient-to-r from-[#a6b1ff] to-transparent rounded-full" />
                 </div>
                 <button
-                    onClick={() => navigate('/dashboard/group')}
+                    onClick={() => navigate('/dashboard/groups')}
                     className="group text-sm font-black text-[#a6b1ff] hover:text-white flex items-center gap-2 transition-all duration-300 uppercase tracking-widest"
                 >
                     Expand All

@@ -10,7 +10,8 @@ import {
     Sparkles,
     Trophy,
     Gamepad2,
-    BookOpen
+    BookOpen,
+    Users
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { selectCurrentUser } from '@/redux/slices/authSlice';
@@ -61,12 +62,20 @@ export default function QuizActionDrawer({ children }) {
         description: "Join a challenge or explore your history",
         options: [
             {
-                label: "Join with Code",
-                subtitle: "Enter a specific quiz code",
+                label: "Join Center",
+                subtitle: "Join a quiz with a code",
                 icon: UserPlus,
-                path: "/dashboard/quizzes?join=true",
+                path: "/dashboard/quizzes/join",
                 color: "bg-emerald-500/20 text-emerald-400",
                 gradient: "from-emerald-500/10 to-transparent"
+            },
+            {
+                label: "Join Group",
+                subtitle: "Enter a group access code",
+                icon: Users,
+                path: "/dashboard/groups/join",
+                color: "bg-blue-500/20 text-blue-400",
+                gradient: "from-blue-500/10 to-transparent"
             },
             {
                 label: "Explore All Quizzes",

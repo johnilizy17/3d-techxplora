@@ -4,16 +4,13 @@ export const teacherApi = baseApi.injectEndpoints({
     endpoints: (builder) => ({
         // Get all teachers
         getTeachers: builder.query({
-            query: (params) => ({
-                url: '/teachers',
-                params,
-            }),
-            providesTags: ['Teacher'],
+            query: (id) => `/get-teachers/${id}`,
+            providesTags: (result, error, id) => [{ type: 'Teacher', id }],
         }),
 
         // Get teacher by ID
         getTeacherById: builder.query({
-            query: (id) => `/teachers/${id}`,
+            query: (id) => `/get-teachers/${id}`,
             providesTags: (result, error, id) => [{ type: 'Teacher', id }],
         }),
 
@@ -160,6 +157,29 @@ export const teacherApi = baseApi.injectEndpoints({
             }),
             invalidatesTags: ['Syllabus'],
         }),
+
+        createGroup: builder.mutation({
+            query: (groupData) => ({
+                url: '/groups',
+                method: 'POST',
+                body: groupData,
+            }),
+            invalidatesTags: ['Teacher', 'Student'],
+        }),
+
+        getQuizModes: builder.query({
+            query: () => '/quiz-modes',
+            providesTags: ['Quiz'],
+        }),
+
+        createQuiz: builder.mutation({
+            query: (quizData) => ({
+                url: '/quizzes',
+                method: 'POST',
+                body: quizData,
+            }),
+            invalidatesTags: ['Quiz'],
+        }),
     }),
 });
 
@@ -185,4 +205,7 @@ export const {
     useCreateSyllabusMutation,
     useCreateSubTopicMutation,
     useDeleteSyllabusMutation,
+    useCreateGroupMutation,
+    useGetQuizModesQuery,
+    useCreateQuizMutation,
 } = teacherApi;

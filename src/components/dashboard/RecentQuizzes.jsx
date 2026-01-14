@@ -19,7 +19,7 @@ export default function RecentQuizzes() {
         skip: !user?.id
     });
 
-    const quizzes = quizzesData || [];
+    const quizzes = Array.isArray(quizzesData) ? quizzesData : (quizzesData?.data || []);
     // Only show first 3 for the dashboard
     const displayQuizzes = quizzes.slice(0, 3);
 

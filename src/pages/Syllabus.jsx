@@ -92,7 +92,7 @@ export default function Syllabus() {
         <DashboardLayout>
             <div className="min-h-screen pb-20 px-6 lg:px-12 pt-10 overflow-x-hidden">
                 {/* Header */}
-                <div className="flex items-center justify-between mb-12">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8 md:mb-12">
                     <div>
                         <h1 className="text-4xl font-black text-white italic tracking-tighter mb-2">
                             My Syllabus
