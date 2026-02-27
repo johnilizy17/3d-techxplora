@@ -47,44 +47,30 @@ export default function RecentQuizzes() {
         <div className="py-8 space-y-6">
             <div className="px-6 lg:px-0 flex justify-between items-end">
                 <div>
-                    <h2 className="text-2xl font-black text-white tracking-tight leading-none mb-2">RECENT QUIZZES</h2>
+                    <h2 className="text-2xl font-black text-foreground tracking-tight leading-none mb-2">RECENT QUIZZES</h2>
                     <div className="h-1 w-12 bg-gradient-to-r from-[#a6b1ff] to-transparent rounded-full" />
                 </div>
                 <button
                     onClick={() => navigate('/dashboard/quizzes')}
-                    className="group text-sm font-black text-[#a6b1ff] hover:text-white flex items-center gap-2 transition-all duration-300 uppercase tracking-widest"
+                    className="group text-sm font-black text-[#a6b1ff] hover:text-foreground flex items-center gap-2 transition-all duration-300 uppercase tracking-widest"
                 >
                     Expand All
-                    <div className="p-1 rounded-full bg-white/5 group-hover:bg-[#a6b1ff]/20 transition-colors">
+                    <div className="p-1 rounded-full bg-accent group-hover:bg-[#a6b1ff]/20 transition-colors">
                         <ChevronRight size={16} />
                     </div>
                 </button>
             </div>
 
             {quizzes.length === 0 ? (
-                <div className="bg-white/5 border border-white/10 rounded-[2rem] p-12">
+                <div className="bg-card border border-border rounded-[2rem] p-12 mx-6 lg:mx-0">
                     <EmptyState title="No Quizzes Found" description="Launch your first challenge or join one to see it here." />
                 </div>
             ) : (
-                <>
-                    {/* Grid for desktop, scroll for mobile */}
-                    <div className="hidden lg:grid lg:grid-cols-3 gap-8">
-                        {displayQuizzes.map((quiz, index) => (
-                            <QuizCard key={quiz.id || index} quiz={quiz} index={index} onClick={() => handleQuizClick(quiz)} />
-                        ))}
-                    </div>
-
-                    <div className="lg:hidden">
-                        <ScrollArea className="w-full whitespace-nowrap pb-6">
-                            <div className="flex gap-6 px-6">
-                                {displayQuizzes.map((quiz, index) => (
-                                    <QuizCard key={quiz.id || index} quiz={quiz} index={index} onClick={() => handleQuizClick(quiz)} />
-                                ))}
-                            </div>
-                            <ScrollBar orientation="horizontal" className="h-1.5 bg-white/5" />
-                        </ScrollArea>
-                    </div>
-                </>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 px-6 lg:px-0 pb-6">
+                    {displayQuizzes.map((quiz, index) => (
+                        <QuizCard key={quiz.id || index} quiz={quiz} index={index} onClick={() => handleQuizClick(quiz)} />
+                    ))}
+                </div>
             )}
         </div>
     );

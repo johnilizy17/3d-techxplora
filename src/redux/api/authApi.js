@@ -86,10 +86,10 @@ export const authApi = baseApi.injectEndpoints({
 
         // Reset password
         resetPassword: builder.mutation({
-            query: ({ token, password }) => ({
+            query: (payload) => ({
                 url: '/auth/reset-password',
                 method: 'POST',
-                body: { token, password },
+                body: payload,
             }),
         }),
 
@@ -155,10 +155,48 @@ export const authApi = baseApi.injectEndpoints({
             invalidatesTags: ['Auth'],
         }),
 
+        // Email Subscribe
+        emailSubscribe: builder.mutation({
+            query: (email) => ({
+                url: '/email-subscribe',
+                method: 'POST',
+                body: { email },
+            }),
+        }),
+
         // Get XP History
         getXpHistory: builder.mutation({
             query: (payload) => ({
                 url: '/xp-history',
+                method: 'POST',
+                body: payload,
+            }),
+        }),
+
+        // Deposit XP
+        depositXP: builder.mutation({
+            query: (payload) => ({
+                url: '/xp/add',
+                method: 'POST',
+                body: payload,
+            }),
+            invalidatesTags: ['Auth'],
+        }),
+
+        // Transfer XP
+        transferXP: builder.mutation({
+            query: (payload) => ({
+                url: '/xp/transfer',
+                method: 'POST',
+                body: payload,
+            }),
+            invalidatesTags: ['Auth'],
+        }),
+
+        // Verify Account by Email
+        verifyAccount: builder.mutation({
+            query: (payload) => ({
+                url: '/xp/verify',
                 method: 'POST',
                 body: payload,
             }),
@@ -184,5 +222,9 @@ export const {
     useSendSMSMutation,
     useUpdateTeacherMutation,
     useUpdateStudentMutation,
+    useEmailSubscribeMutation,
     useGetXpHistoryMutation,
+    useDepositXPMutation,
+    useTransferXPMutation,
+    useVerifyAccountMutation,
 } = authApi;

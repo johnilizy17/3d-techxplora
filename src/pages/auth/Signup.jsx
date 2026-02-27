@@ -27,7 +27,7 @@ import { cn } from "@/lib/utils";
 import AuthLayout from "./AuthLayout";
 import GoogleIcon from "@/components/icons/GoogleIcon";
 import { useDispatch } from "react-redux";
-import { useRegisterStudentMutation, useRegisterTeacherMutation } from "@/redux/api/authApi";
+import { useLoginMutation, useRegisterStudentMutation, useRegisterTeacherMutation } from "@/redux/api/authApi";
 import { setCredentials } from "@/redux/slices/authSlice";
 
 const GOOGLE_CLIENT_ID = "965781692825-d9242mpmjtqqk5svl8hvsnu000hh1f2m.apps.googleusercontent.com";
@@ -36,7 +36,7 @@ const GOOGLE_CLIENT_ID = "965781692825-d9242mpmjtqqk5svl8hvsnu000hh1f2m.apps.goo
 const signupSchema = z.object({
     first_name: z.string().min(2, "First name is required"),
     last_name: z.string().min(2, "Last name is required"),
-    other_name: z.string().optional(),
+    other_name: z.string().min(2, "other name is required"),
     email: z.string().email("Please enter a valid email address"),
     password: z.string()
         .min(8, "Password must be at least 8 characters")
@@ -57,6 +57,7 @@ function SignupContent() {
     // URL parameters detection
     const pageParam = searchParams.get("page");
     const codeParam = searchParams.get("code");
+    const [login, { isLoading: isLoginLoading }] = useLoginMutation();
 
     const [registerStudent, { isLoading: isStudentLoading }] = useRegisterStudentMutation();
     const [registerTeacher, { isLoading: isTeacherLoading }] = useRegisterTeacherMutation();
@@ -129,12 +130,21 @@ function SignupContent() {
                 message: `Registration successful! Welcome as a ${role}.`,
             });
 
+
+
+            const logged = await login(registrationData).unwrap();
+
+            // Save credentials to Redux
+            dispatch(setCredentials({
+                user: logged.data.user || logged.data,
+                token: logged.data.token,
+            }));
+
             toast({
                 title: "Welcome!",
                 description: "Your account has been created successfully.",
             });
-
-            setTimeout(() => navigate("/auth/login"), 1500);
+            setTimeout(() => navigate("/auth/kyc"), 1500);
 
         } catch (error) {
             console.error("Google Signup error:", error);
@@ -179,17 +189,19 @@ function SignupContent() {
             }
 
 
-            setAuthFeedback({
-                type: "success",
-                message: "Account created successfully! Redirecting...",
-            });
+            const logged = await login(registrationData).unwrap();
+
+            // Save credentials to Redux
+            dispatch(setCredentials({
+                user: logged.data.user || logged.data,
+                token: logged.data.token,
+            }));
 
             toast({
-                title: "Registration successful",
-                description: `Welcome to Techxplora as a ${role}!`,
+                title: "Welcome!",
+                description: "Your account has been created successfully.",
             });
-
-            setTimeout(() => navigate("/auth/login"), 1500);
+            setTimeout(() => navigate("/auth/kyc"), 1500);
 
         } catch (error) {
             console.error("Signup error:", error);
@@ -333,7 +345,7 @@ function SignupContent() {
                             </div>
 
                             <div className="space-y-2">
-                                <Label className="text-gray-400 ml-1">Other Name (Optional)</Label>
+                                <Label className="text-gray-400 ml-1">Other Name</Label>
                                 <div className="relative group">
                                     <User className="absolute left-4 top-3.5 h-5 w-5 text-gray-400 group-focus-within:text-[#A78BFA] transition-colors" />
                                     <Input

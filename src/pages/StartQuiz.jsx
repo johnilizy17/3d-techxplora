@@ -41,7 +41,7 @@ export default function StartQuiz() {
     const quiz = verifiedQuizData?.data || verifiedQuizData || tempStorage;
 
     // Pre-fetch questions to ensure zero-latency start
-    const { data: questionsData, isLoading: isLoadingQuestions } = useGetQuestionsByQuizIdQuery(quiz?.quiz_code, {
+    const { data: questionsData, isLoading: isLoadingQuestions } = useGetQuestionsByQuizIdQuery(quiz?.id, {
         skip: !quiz?.quiz_code
     });
 
@@ -91,14 +91,30 @@ export default function StartQuiz() {
             return;
         }
         dispatch(setTemporaryStorage(quiz));
-        navigate(`/dashboard/quizzes/competion?code=${quiz.quiz_code}`);
+        navigate(`/dashboard/quizzes/completion?code=${quiz.id}`);
     };
 
+    const getSecondsPerQuestion = () => {
+        if (quiz?.duration && questionsData?.data?.length > 0) {
+            const totalSeconds = parseInt(quiz.duration) * 60;
+            return Math.floor(totalSeconds / questionsData.data.length);
+        }
+        return 30;
+    };
+
+    const timePerQuestion = getSecondsPerQuestion();
+
+    const isLearningMode = quiz?.quiz_mode?.name?.toLowerCase() === 'learning' || quiz?.mode_name?.toLowerCase() === 'learning' || quiz?.mode?.toLowerCase() === 'learning';
+
     const instructions = [
-        { icon: Clock, label: "Timed Engagement", detail: "30 seconds allocated per question node." },
-        { icon: ShieldCheck, label: "Locked Sequence", detail: "Once started, the mission cannot be paused." },
-        { icon: Activity, label: "Live Logging", detail: "Your performance metrics are logged in real-time." },
-        { icon: Zap, label: "Zero Latency", detail: "Optimized for high-speed intellectual processing." }
+        { icon: Clock, label: "Time Limit", detail: `You have ${timePerQuestion} seconds for each question.` },
+        {
+            icon: isLearningMode ? Activity : ShieldCheck,
+            label: isLearningMode ? "Go at Your Pace" : "Can't Go Back",
+            detail: isLearningMode ? "You can go back to review questions if you need to." : "Once you answer, you can't change it. Think carefully!"
+        },
+        { icon: Activity, label: "Auto-Save", detail: "Your answers are saved automatically as you go." },
+        { icon: Zap, label: "Fast & Smooth", detail: "The quiz loads quickly so you can focus on learning!" }
     ];
 
     return (
@@ -121,11 +137,11 @@ export default function StartQuiz() {
                                 <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" />
                                 Abort Preparation
                             </motion.button>
-                            <h1 className="text-5xl lg:text-7xl font-black text-white italic tracking-tighter uppercase leading-none">
-                                Mission <span className="text-[#a6b1ff]">Prep</span>
+                            <h1 className="text-4xl md:text-5xl lg:text-7xl font-black text-white italic tracking-tighter uppercase leading-none">
+                                Get <span className="text-[#a6b1ff]">Ready!</span>
                             </h1>
                             <p className="text-white/40 font-medium max-w-lg italic">
-                                Final systems check before intellectual engagement. Confirm your readiness for session <span className="text-white/60 font-black tracking-widest">{quiz.quiz_code}</span>.
+                                Let's make sure everything is set before you start quiz <span className="text-white/60 font-black tracking-widest">{quiz.quiz_code}</span>.
                             </p>
                         </div>
 
@@ -134,8 +150,8 @@ export default function StartQuiz() {
                                 <Trophy size={32} />
                             </div>
                             <div className="space-y-1">
-                                <p className="text-[10px] font-black text-white/20 uppercase tracking-[0.2em]">Bounty</p>
-                                <p className="text-3xl font-black text-white leading-none italic">{quiz.xp || 0} XP</p>
+                                <p className="text-[10px] font-black text-white/20 uppercase tracking-[0.2em]">Prize</p>
+                                <p className="text-3xl font-black text-white leading-none italic">{quiz.xp || 0} Points</p>
                             </div>
                         </div>
                     </div>
@@ -146,7 +162,7 @@ export default function StartQuiz() {
                             initial={{ opacity: 0, y: 30 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.6 }}
-                            className="lg:col-span-3 bg-white/5 border border-white/10 rounded-[3rem] p-10 lg:p-12 relative overflow-hidden group"
+                            className="lg:col-span-3 bg-white/5 border border-white/10 rounded-[2rem] md:rounded-[3rem] p-6 md:p-10 lg:p-12 relative overflow-hidden group"
                         >
                             <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
 
@@ -154,11 +170,11 @@ export default function StartQuiz() {
                                 <div className="space-y-2">
                                     <div className="flex items-center gap-2 text-[#a6b1ff]">
                                         <Info size={16} />
-                                        <span className="text-[10px] font-black uppercase tracking-[0.2em]">Mission Briefing</span>
+                                        <span className="text-[10px] font-black uppercase tracking-[0.2em]">What to Expect</span>
                                     </div>
-                                    <h2 className="text-3xl font-black text-white uppercase italic tracking-tighter">{quiz.title}</h2>
+                                    <h2 className="text-2xl md:text-3xl font-black text-white uppercase italic tracking-tighter">{quiz.title}</h2>
                                     <p className="text-sm text-white/40 font-medium leading-relaxed italic">
-                                        You are about to enter a high-stakes assessment node. Success requires focus, precision, and rapid cognitive response.
+                                        You're about to start a quiz! Stay focused and do your best. Read each question carefully!
                                     </p>
                                 </div>
 
@@ -179,28 +195,28 @@ export default function StartQuiz() {
                                 <div className="pt-8 border-t border-white/5">
                                     <div className="flex items-center justify-between mb-6">
                                         <div className="space-y-1">
-                                            <p className="text-[10px] font-black text-white/20 uppercase tracking-[0.2em]">Synchronization</p>
+                                            <p className="text-[10px] font-black text-white/20 uppercase tracking-[0.2em]">Status</p>
                                             <div className="flex items-center gap-2">
                                                 {isLoadingQuestions ? (
                                                     <div className="flex items-center gap-2 text-amber-500">
                                                         <div className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
-                                                        <span className="text-[10px] font-black uppercase tracking-widest italic">Fetching Nodes...</span>
+                                                        <span className="text-[10px] font-black uppercase tracking-widest italic">Loading Questions...</span>
                                                     </div>
                                                 ) : isReady ? (
                                                     <div className="flex items-center gap-2 text-emerald-400">
                                                         <div className="w-2 h-2 rounded-full bg-emerald-400" />
-                                                        <span className="text-[10px] font-black uppercase tracking-widest italic">All Systems Go</span>
+                                                        <span className="text-[10px] font-black uppercase tracking-widest italic">Ready to Go!</span>
                                                     </div>
                                                 ) : (
                                                     <div className="flex items-center gap-2 text-white/20">
                                                         <Lock size={12} />
-                                                        <span className="text-[10px] font-black uppercase tracking-widest italic">Pending</span>
+                                                        <span className="text-[10px] font-black uppercase tracking-widest italic">Getting Ready...</span>
                                                     </div>
                                                 )}
                                             </div>
                                         </div>
                                         <div className="text-right space-y-1">
-                                            <p className="text-[10px] font-black text-white/20 uppercase tracking-[0.2em]">Target Load</p>
+                                            <p className="text-[10px] font-black text-white/20 uppercase tracking-[0.2em]">Total Questions</p>
                                             <p className="text-xl font-black text-white italic">{quiz.QuizQuestions || 0} Questions</p>
                                         </div>
                                     </div>
@@ -208,10 +224,10 @@ export default function StartQuiz() {
                                     <button
                                         onClick={handleEngage}
                                         disabled={!isReady}
-                                        className="w-full h-20 bg-[#a6b1ff] hover:bg-white text-black rounded-3xl font-black uppercase tracking-[0.2em] text-sm flex items-center justify-center gap-4 transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:grayscale group/btn relative overflow-hidden shadow-2xl shadow-[#a6b1ff]/20"
+                                        className="w-full h-16 md:h-20 bg-[#a6b1ff] hover:bg-white text-black rounded-2xl md:rounded-3xl font-black uppercase tracking-[0.2em] text-xs sm:text-sm flex items-center justify-center gap-4 transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:grayscale group/btn relative overflow-hidden shadow-2xl shadow-[#a6b1ff]/20"
                                     >
                                         <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/30 to-transparent -translate-x-full group-hover/btn:translate-x-full transition-transform duration-1000" />
-                                        {isLoadingQuestions ? "SYNCHRONIZING..." : "ENGAGE MISSION"}
+                                        {isLoadingQuestions ? "LOADING..." : "START QUIZ!"}
                                         <Play fill="currentColor" size={20} className="group-hover/btn:translate-x-1 transition-transform" />
                                     </button>
                                 </div>
@@ -228,9 +244,9 @@ export default function StartQuiz() {
                                 className="bg-white/5 border border-white/10 rounded-[2.5rem] p-8 space-y-8"
                             >
                                 <div className="flex items-center justify-between">
-                                    <h3 className="text-lg font-black text-white uppercase italic tracking-tighter">Arena Signal</h3>
+                                    <h3 className="text-lg font-black text-white uppercase italic tracking-tighter">Quiz Info</h3>
                                     <div className="px-3 py-1 bg-emerald-500/10 rounded-full border border-emerald-500/20">
-                                        <span className="text-[9px] font-black text-emerald-400 uppercase tracking-widest italic">Encrypted</span>
+                                        <span className="text-[9px] font-black text-emerald-400 uppercase tracking-widest italic">Secure</span>
                                     </div>
                                 </div>
 
@@ -244,12 +260,12 @@ export default function StartQuiz() {
                                     </div>
                                     <div className="grid grid-cols-2 gap-4">
                                         <div>
-                                            <p className="text-[9px] font-black text-white/20 uppercase tracking-[0.2em] mb-1">Latency</p>
-                                            <p className="text-xl font-black text-white italic tracking-widest leading-none">0.02ms</p>
+                                            <p className="text-[9px] font-black text-white/20 uppercase tracking-[0.2em] mb-1">Speed</p>
+                                            <p className="text-xl font-black text-white italic tracking-widest leading-none">Super Fast</p>
                                         </div>
                                         <div>
-                                            <p className="text-[9px] font-black text-white/20 uppercase tracking-[0.2em] mb-1">Protocol</p>
-                                            <p className="text-xl font-black text-white italic tracking-widest leading-none">S-QUZ</p>
+                                            <p className="text-[9px] font-black text-white/20 uppercase tracking-[0.2em] mb-1">Type</p>
+                                            <p className="text-xl font-black text-white italic tracking-widest leading-none">Quiz</p>
                                         </div>
                                     </div>
                                 </div>
@@ -260,8 +276,8 @@ export default function StartQuiz() {
                                             <Users size={18} />
                                         </div>
                                         <div>
-                                            <p className="text-[10px] font-black text-white/40 uppercase tracking-widest">Global Rank</p>
-                                            <p className="text-xs font-black text-white italic">Calculating Standing...</p>
+                                            <p className="text-[10px] font-black text-white/40 uppercase tracking-widest">Your Rank</p>
+                                            <p className="text-xs font-black text-white italic">Checking scores...</p>
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-4 p-4 bg-white/5 rounded-2xl border border-white/5 opacity-50">
@@ -269,8 +285,8 @@ export default function StartQuiz() {
                                             <Zap size={18} />
                                         </div>
                                         <div>
-                                            <p className="text-[10px] font-black text-white/40 uppercase tracking-widest">Multiplier</p>
-                                            <p className="text-xs font-black text-white italic">Base Rate (1.0x)</p>
+                                            <p className="text-[10px] font-black text-white/40 uppercase tracking-widest">Bonus</p>
+                                            <p className="text-xs font-black text-white italic">Normal (1.0x)</p>
                                         </div>
                                     </div>
                                 </div>
@@ -287,9 +303,11 @@ export default function StartQuiz() {
                                     <Lock size={18} />
                                 </div>
                                 <div className="space-y-1">
-                                    <p className="text-[10px] font-black text-rose-500/60 uppercase tracking-widest">Security Lock</p>
+                                    <p className="text-[10px] font-black text-rose-500/60 uppercase tracking-widest">{isLearningMode ? "Learning Mode" : "Important!"}</p>
                                     <p className="text-[10px] font-bold text-rose-500/40 uppercase tracking-tight leading-relaxed">
-                                        Attempting to exit the arena or switch browser nodes will result in immediate disqualification and loss of bounty.
+                                        {isLearningMode
+                                            ? "This quiz is for learning! You can go back to review questions and make sure you understand everything."
+                                            : "Once you start, you can't pause or go back. If you close the quiz or switch tabs, you might lose your progress!"}
                                     </p>
                                 </div>
                             </motion.div>

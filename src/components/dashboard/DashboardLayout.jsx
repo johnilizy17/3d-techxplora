@@ -68,7 +68,7 @@ export default function DashboardLayout({ children }) {
     else if (location.pathname.includes('/profile')) currentTab = 'Profile';
 
     return (
-        <div className="min-h-screen bg-[#0a0a0a] flex">
+        <div className="min-h-screen bg-background flex transition-colors duration-300">
             {/* Desktop Sidebar */}
             <Sidebar
                 onLogout={() => setIsLogoutModalOpen(true)}
@@ -83,13 +83,15 @@ export default function DashboardLayout({ children }) {
             </main>
 
             {/* Mobile Bottom Navigation */}
-            <div className="lg:hidden">
-                <DashboardBottomNav
-                    currentTab={currentTab}
-                    onLogout={() => setIsLogoutModalOpen(true)}
-                    onMoreToggle={() => setIsMoreOpen(true)}
-                />
-            </div>
+            {!location.pathname.includes('teacher/ai-review') && (
+                <div className="lg:hidden">
+                    <DashboardBottomNav
+                        currentTab={currentTab}
+                        onLogout={() => setIsLogoutModalOpen(true)}
+                        onMoreToggle={() => setIsMoreOpen(true)}
+                    />
+                </div>
+            )}
 
             {/* AI Chat Widget - Global Fixed Position
             <div className="fixed bottom-6 right-6 lg:bottom-10 lg:right-10 z-[100]">

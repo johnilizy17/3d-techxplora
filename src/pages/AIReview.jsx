@@ -22,7 +22,7 @@ import { useCreateQuestionMutation } from '@/redux/api/questionApi';
 import { model } from '@/utils/firebase';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import { toast } from 'sonner';
-import { saveDraft } from '@/utils/draftUtils';
+import { saveDraft, getDrafts } from '@/utils/draftUtils';
 
 export default function AIReview() {
     const dispatch = useDispatch();
@@ -38,9 +38,18 @@ export default function AIReview() {
         if (tempStorage?.questions) {
             setQuestions(tempStorage.questions);
         } else {
-            navigate('/dashboard/teacher/question');
+            // Try to restore from drafts if no session storage
+            const drafts = getDrafts();
+            if (drafts && drafts.length > 0) {
+                const latestDraft = drafts[0];
+                dispatch(setTemporaryStorage(latestDraft));
+                setQuestions(latestDraft.questions);
+                toast.success('Session restored from latest draft');
+            } else {
+                navigate('/dashboard/teacher/question');
+            }
         }
-    }, [tempStorage, navigate]);
+    }, [tempStorage, navigate, dispatch]);
 
     const activeQuestion = questions[activeIndex];
 
@@ -98,7 +107,11 @@ export default function AIReview() {
             }
         } catch (error) {
             console.error(error);
-            toast.error("Regeneration failed.");
+            if (error.message?.includes('429') || error.message?.includes('Quota exceeded') || error.status === 429) {
+                toast.error("AI usage limit reached. Please wait a moment before trying again.");
+            } else {
+                toast.error("Regeneration failed. Please try again later.");
+            }
         } finally {
             setIsRegenerating(false);
         }
@@ -113,6 +126,7 @@ export default function AIReview() {
         const success = saveDraft(draftData);
         if (success) {
             toast.success("Assessment node backed up to archives.");
+            navigate('/dashboard/teacher/draft');
         } else {
             toast.error("Failed to synchronize archive.");
         }

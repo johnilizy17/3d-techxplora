@@ -20,6 +20,7 @@ export default function OTPVerify() {
     const dispatch = useDispatch();
     const [searchParams] = useSearchParams();
     const type = searchParams.get("type") || "phone"; // 'email' or 'phone'
+    const mode = searchParams.get("mode"); // 'reset' or null
 
     const { user, tempVerification } = useSelector((state) => state.auth);
     const [otp, setOtp] = useState(["", "", "", "", "", ""]);
@@ -129,12 +130,23 @@ export default function OTPVerify() {
 
         setIsVerifying(true);
         try {
-            // Update user status in backend
-            const isTeacher = user.accountable_type?.includes("Teacher") || user.role === "teacher";
+            if (mode === "reset") {
+                // For password reset, we don't update profile yet, 
+                // just proceed to reset page where both email and token are sent
+                toast({
+                    title: "Code Verified",
+                    description: "Please set your new password.",
+                });
+                navigate("/auth/reset-password");
+                return;
+            }
+
+            // Update user status in backend (for standard verification)
+            const isTeacher = user?.accountable_type?.includes("Teacher") || user?.role === "teacher";
             const updateFn = isTeacher ? updateTeacher : updateStudent;
 
             await updateFn({
-                id: user.id,
+                id: user?.id,
                 is_verified: 1,
                 // If phone verification, also save the phone number
                 ...(type === "phone" && tempVerification.phone ? { phone_number: tempVerification.phone } : {})

@@ -1,8 +1,6 @@
 import React from 'react';
 import { Sparkles, Heart, Globe, Shield } from 'lucide-react';
-import ThreeErrorBoundary from "@/components/3d/ErrorBoundary";
-const Scene = React.lazy(() => import("@/components/3d/Scene"));
-const HeroExamples = React.lazy(() => import("@/components/3d/HeroExamples"));
+import VisualBackground from "@/components/collectors/VisualBackground";
 
 export default function About() {
     return (
@@ -10,13 +8,7 @@ export default function About() {
 
             {/* Background with 3D elements (dimmed) */}
             <div className="fixed inset-0 z-0 opacity-30 pointer-events-none">
-                <React.Suspense fallback={null}>
-                    <ThreeErrorBoundary>
-                        <Scene>
-                            <HeroExamples />
-                        </Scene>
-                    </ThreeErrorBoundary>
-                </React.Suspense>
+                <VisualBackground />
             </div>
 
             <div className="relative z-10 max-w-5xl mx-auto px-6 py-20">

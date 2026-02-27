@@ -35,13 +35,13 @@ export default function Dashboard() {
                             transition={{ delay: 0.2 }}
                         >
                             <div className="space-y-4 lg:space-y-8">
-                                <section className="bg-white/0 lg:bg-white/[0.02] lg:border lg:border-white/5 lg:rounded-[2.5rem] lg:p-8 lg:backdrop-blur-xl">
+                                <section className="bg-transparent lg:bg-card/50 lg:border lg:border-border lg:rounded-[2.5rem] lg:p-8 lg:backdrop-blur-xl">
                                     <RecentQuizzes />
                                 </section>
 
                                 <JoinRoomBanner />
 
-                                <section className="bg-white/0 lg:bg-white/[0.02] lg:border lg:border-white/5 lg:rounded-[2.5rem] lg:p-8 lg:backdrop-blur-xl">
+                                <section className="bg-transparent lg:bg-card/50 lg:border lg:border-border lg:rounded-[2.5rem] lg:p-8 lg:backdrop-blur-xl">
                                     <RecentGroups />
                                 </section>
                             </div>
@@ -50,6 +50,7 @@ export default function Dashboard() {
                     </div>
                 </div>
             </div>
-        </DashboardLayout>
+
+        </DashboardLayout >
     );
 }

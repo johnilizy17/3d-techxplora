@@ -22,9 +22,9 @@ export const teacherApi = baseApi.injectEndpoints({
 
         // Update teacher profile
         updateTeacherProfile: builder.mutation({
-            query: (profileData) => ({
-                url: '/teachers/profile',
-                method: 'PUT',
+            query: ({ id, ...profileData }) => ({
+                url: `/teachers/${id}`,
+                method: 'PATCH',
                 body: profileData,
             }),
             invalidatesTags: ['Teacher'],
@@ -110,6 +110,10 @@ export const teacherApi = baseApi.injectEndpoints({
             }),
             providesTags: ['Course'],
         }),
+        getCoursesByAdminCode: builder.query({
+            query: (admin_code) => `/get-courses-by-admin/${admin_code}`,
+            providesTags: ['Course'],
+        }),
 
         // Dashboard specific queries
         getQuizzes: builder.query({
@@ -180,6 +184,22 @@ export const teacherApi = baseApi.injectEndpoints({
             }),
             invalidatesTags: ['Quiz'],
         }),
+        updateQuiz: builder.mutation({
+            query: ({ id, ...quizData }) => ({
+                url: `/quizzes/${id}`,
+                method: 'PUT',
+                body: quizData,
+            }),
+            invalidatesTags: (result, error, { id }) => [{ type: 'Quiz', id }],
+        }),
+        getQuizzesByGroupId: builder.query({
+            query: (groupId) => `/quizzes/group/${groupId}`,
+            providesTags: ['Quiz'],
+        }),
+        getGroupStudents: builder.query({
+            query: (groupId) => `/students-groups/${groupId}`,
+            providesTags: ['Student'],
+        }),
     }),
 });
 
@@ -208,4 +228,8 @@ export const {
     useCreateGroupMutation,
     useGetQuizModesQuery,
     useCreateQuizMutation,
+    useUpdateQuizMutation,
+    useGetQuizzesByGroupIdQuery,
+    useGetGroupStudentsQuery,
+    useGetCoursesByAdminCodeQuery,
 } = teacherApi;

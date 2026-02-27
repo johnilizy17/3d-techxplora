@@ -10,6 +10,16 @@ import EmptyState from '@/components/dashboard/EmptyState';
 import QuizCard from '@/components/dashboard/QuizCard';
 import { hasDatePassed } from '@/utils/date';
 import { LayoutGrid, Timer, Clock, Calendar } from 'lucide-react';
+import {
+    Pagination,
+    PaginationContent,
+    PaginationItem,
+    PaginationLink,
+    PaginationNext,
+    PaginationPrevious,
+} from "@/components/ui/pagination";
+
+const ITEMS_PER_PAGE = 10;
 
 export default function Quizzes() {
     const navigate = useNavigate();
@@ -17,6 +27,7 @@ export default function Quizzes() {
     const user = useSelector(selectCurrentUser);
     const type = user?.accountable_type === "App\\Models\\Student" ? "student" : "teacher";
     const [activeFilter, setActiveFilter] = useState('All');
+    const [currentPage, setCurrentPage] = useState(1);
 
     const { data: quizzesData, isLoading } = useGetQuizzesQuery({ type, id: user?.id }, {
         skip: !user?.id
@@ -56,6 +67,16 @@ export default function Quizzes() {
     };
 
     const filteredQuizzes = getFilteredQuizzes();
+
+    // Pagination Logic
+    const totalPages = Math.ceil(filteredQuizzes.length / ITEMS_PER_PAGE);
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    const pagedQuizzes = filteredQuizzes.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+
+    // Reset page when filter changes
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [activeFilter]);
 
     const handleQuizClick = (quiz) => {
         dispatch(setTemporaryStorage(quiz));
@@ -135,16 +156,52 @@ export default function Quizzes() {
                                 )}
                             </motion.div>
                         ) : (
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                                {filteredQuizzes.map((quiz, index) => (
-                                    <QuizCard
-                                        key={quiz.id || index}
-                                        quiz={quiz}
-                                        index={index}
-                                        onClick={() => handleQuizClick(quiz)}
-                                    />
-                                ))}
-                            </div>
+                            <>
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                                    {pagedQuizzes.map((quiz, index) => (
+                                        <QuizCard
+                                            key={quiz.id || index}
+                                            quiz={quiz}
+                                            index={index}
+                                            onClick={() => handleQuizClick(quiz)}
+                                        />
+                                    ))}
+                                </div>
+
+                                {totalPages > 1 && (
+                                    <div className="mt-12">
+                                        <Pagination>
+                                            <PaginationContent>
+                                                <PaginationItem>
+                                                    <PaginationPrevious
+                                                        onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                                                        className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                                                    />
+                                                </PaginationItem>
+
+                                                {[...Array(totalPages)].map((_, i) => (
+                                                    <PaginationItem key={i + 1}>
+                                                        <PaginationLink
+                                                            onClick={() => setCurrentPage(i + 1)}
+                                                            isActive={currentPage === i + 1}
+                                                            className="cursor-pointer"
+                                                        >
+                                                            {i + 1}
+                                                        </PaginationLink>
+                                                    </PaginationItem>
+                                                ))}
+
+                                                <PaginationItem>
+                                                    <PaginationNext
+                                                        onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                                                        className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                                                    />
+                                                </PaginationItem>
+                                            </PaginationContent>
+                                        </Pagination>
+                                    </div>
+                                )}
+                            </>
                         )}
                     </div>
                 </div>
@@ -174,7 +231,7 @@ const PromotionalBanner = ({ quizzes, quizData, groups }) => {
                 badge: "CHALLENGER",
                 badgeColor: "from-blue-400 to-indigo-500",
                 title: "Ready for a Challenge?",
-                subtitle: "Join a quiz with a code or explore available challenges to earn XP.",
+                subtitle: "Join a quiz with a code or explore available quizzes to earn points.",
                 ctaText: "JOIN WITH CODE",
                 ctaAction: () => navigate('/dashboard/quizzes/join'),
                 icon: Gamepad2
@@ -184,7 +241,7 @@ const PromotionalBanner = ({ quizzes, quizData, groups }) => {
                 badge: isAdmin ? "ADMIN" : "CREATOR",
                 badgeColor: isAdmin ? "from-rose-500 to-orange-500" : "from-purple-500 to-indigo-600",
                 title: "Build Your Masterpiece!",
-                subtitle: "Create interactive quizzes and challenge your students in real-time.",
+                subtitle: "Create fun quizzes and challenge your students!",
                 ctaText: "CREATE NEW QUIZ",
                 ctaAction: () => navigate('/dashboard/teacher/quizzes'),
                 icon: Sparkles
@@ -214,15 +271,15 @@ const PromotionalBanner = ({ quizzes, quizData, groups }) => {
             <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 rounded-full blur-[100px]" />
             <div className="absolute bottom-0 left-0 w-48 h-48 bg-purple-500/10 rounded-full blur-[80px]" />
 
-            <div className="relative z-10 p-6 sm:p-8 lg:p-12">
+            <div className="relative z-10 p-5 sm:p-8 lg:p-12">
                 <div className="flex flex-col lg:flex-row items-center justify-between gap-6 lg:gap-8 mb-6 lg:mb-8">
                     <div className="flex-1 space-y-3 lg:space-y-4 w-full lg:w-auto text-center lg:text-left">
                         <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r ${content.badgeColor} border border-white/20 shadow-lg`}>
                             <IconComponent className="text-white" size={16} />
-                            <span className="text-white font-black text-sm uppercase tracking-wider italic">{content.badge}</span>
+                            <span className="text-white font-black text-xs sm:text-sm uppercase tracking-wider italic">{content.badge}</span>
                         </div>
 
-                        <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-white leading-tight uppercase italic tracking-tight">
+                        <h2 className="text-xl sm:text-3xl lg:text-4xl font-black text-white leading-tight uppercase italic tracking-tight">
                             {content.title}
                         </h2>
 
@@ -233,11 +290,11 @@ const PromotionalBanner = ({ quizzes, quizData, groups }) => {
                         <div className="hidden sm:flex flex-col gap-2 pt-2">
                             <div className="flex items-center gap-2 text-xs sm:text-sm text-white/50 italic">
                                 <div className="w-1.5 h-1.5 rounded-full bg-[#a6b1ff]" />
-                                <span>Total Challenges Hosted: {totalQuizzes}</span>
+                                <span>Total Quizzes: {totalQuizzes}</span>
                             </div>
                             <div className="flex items-center gap-2 text-xs sm:text-sm text-white/50 italic">
                                 <div className="w-1.5 h-1.5 rounded-full bg-[#a6b1ff]" />
-                                <span>Total Participants: {totalPlays}</span>
+                                <span>Total Students: {totalPlays}</span>
                             </div>
                         </div>
 
@@ -276,12 +333,12 @@ const PromotionalBanner = ({ quizzes, quizData, groups }) => {
                             <motion.div
                                 key={i}
                                 whileHover={{ scale: 1.05 }}
-                                className="bg-white/5 backdrop-blur-md rounded-2xl p-3 sm:p-4 lg:p-5 border border-white/5 hover:border-[#a6b1ff]/30 transition-all cursor-pointer group flex flex-col items-center text-center"
+                                className="bg-white/5 backdrop-blur-md rounded-2xl p-2 sm:p-4 lg:p-5 border border-white/5 hover:border-[#a6b1ff]/30 transition-all cursor-pointer group flex flex-col items-center text-center"
                             >
-                                <span className={`text-2xl sm:text-3xl lg:text-4xl font-black ${stat.highlight ? 'text-[#a6b1ff]' : 'text-white'} group-hover:scale-110 transition-transform`}>
+                                <span className={`text-xl sm:text-3xl lg:text-4xl font-black ${stat.highlight ? 'text-[#a6b1ff]' : 'text-white'} group-hover:scale-110 transition-transform`}>
                                     {stat.value}
                                 </span>
-                                <span className="text-[9px] sm:text-[10px] lg:text-xs text-white/40 font-bold uppercase tracking-[0.2em] mt-1 italic">
+                                <span className="text-[7px] sm:text-[10px] lg:text-xs text-white/40 font-bold uppercase tracking-[0.2em] mt-0.5 sm:mt-1 italic">
                                     {stat.label}
                                 </span>
                             </motion.div>

@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Camera } from 'lucide-react';
+import { ArrowLeft, Camera, Loader2, Save, User, MapPin, Mail, Phone, Calendar } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,99 +9,202 @@ import { Button } from "@/components/ui/button";
 import { useSelector } from 'react-redux';
 import { selectCurrentUser } from '@/redux/slices/authSlice';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
+import { useUpdateStudentProfileMutation } from '@/redux/api/studentApi';
+import { useUpdateTeacherProfileMutation } from '@/redux/api/teacherApi';
+import { uploadToCloudinary } from '@/lib/cloudinary';
+import { toast } from 'sonner';
 
 export default function UserProfile() {
     const navigate = useNavigate();
     const user = useSelector(selectCurrentUser);
+    const [updateStudent, { isLoading: isStudentUpdating }] = useUpdateStudentProfileMutation();
+    const [updateTeacher, { isLoading: isTeacherUpdating }] = useUpdateTeacherProfileMutation();
+
+    const isTeacher = user?.accountable_type === "App\\Models\\Teacher" || user?.role === 'teacher';
+    const isUpdating = isTeacher ? isTeacherUpdating : isStudentUpdating;
+
+    const [formData, setFormData] = useState({
+        first_name: '',
+        last_name: '',
+        email: '',
+        phone_number: '',
+        alternate_phone_number: '',
+        country: '',
+        state: '',
+        lga: '',
+        postal_code: '',
+        date_of_birth: '',
+        photo: ''
+    });
+
+    const [isUploading, setIsUploading] = useState(false);
+
+    useEffect(() => {
+        if (user) {
+            const fullName = user.name || user.fullname || '';
+            const names = fullName ? fullName.split(' ') : ['', ''];
+
+            setFormData({
+                first_name: names[0] || '',
+                last_name: names.slice(1).join(' ') || '',
+                email: user.email || '',
+                phone_number: user.phone_number || user.mobile || user.phone || '', // Handle different naming conventions
+                alternate_phone_number: user.alternate_phone_number || user.alternate_phone || '',
+                country: user.country || '',
+                state: user.state || '',
+                lga: user.lga || '',
+                postal_code: user.postal_code || '',
+                date_of_birth: user.date_of_birth || '',
+                photo: user.avatar || user.photo || ''
+            });
+        }
+    }, [user]);
+
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({ ...prev, [name]: value }));
+    };
+
+    const handleFileUpload = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        setIsUploading(true);
+        try {
+            const url = await uploadToCloudinary(file);
+            setFormData(prev => ({ ...prev, photo: url }));
+            toast.success("Avatar uploaded successfully");
+        } catch (error) {
+            toast.error("Failed to upload avatar");
+            console.error(error);
+        } finally {
+            setIsUploading(false);
+        }
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        try {
+            // Combine first and last name for the 'name' field if backend expects it, 
+            // or send them separately if backend supports it. 
+            // Based on template, it sends 'fullname' or creates it. 
+            // The API endpoints usually expect specific fields. 
+            // Assuming the backend handles 'name' or 'first_name'/'last_name' update via 'updateProfile' logic.
+            // Let's construct a payload that matches common patterns.
+
+            const payload = {
+                ...formData,
+                name: `${formData.first_name} ${formData.last_name}`.trim(),
+                first_name: formData.first_name,
+                last_name: formData.last_name,
+                id: user.id
+            };
+
+            if (isTeacher) {
+                await updateTeacher(payload).unwrap();
+            } else {
+                await updateStudent(payload).unwrap();
+            }
+            toast.success("Profile updated successfully");
+        } catch (error) {
+            toast.error(error?.data?.message || "Failed to update profile");
+            console.error(error);
+        }
+    };
 
     return (
         <DashboardLayout>
-            <div className="min-h-screen relative pb-10">
-                <div className="relative z-10 w-full max-w-2xl lg:px-10 mx-auto min-h-screen flex flex-col pt-8 lg:pt-12">
+            <div className="min-h-screen relative pb-24 lg:pb-10">
+                <div className="relative z-10 w-full max-w-4xl lg:px-10 mx-auto min-h-screen flex flex-col pt-8 lg:pt-12">
                     {/* Header */}
                     <div className="flex items-center gap-6 px-6 lg:px-0 mb-12">
-                        <button onClick={() => navigate(-1)} className="p-3 bg-white/5 hover:bg-white/10 rounded-2xl transition-all text-white border border-white/10 shadow-xl">
-                            <ArrowLeft size={24} />
+                        <button onClick={() => navigate("/dashboard/profile")} className="p-3 bg-white/5 hover:bg-white/10 rounded-2xl transition-all text-white border border-white/10 shadow-xl group">
+                            <ArrowLeft size={24} className="group-hover:-translate-x-1 transition-transform" />
                         </button>
                         <div>
                             <h1 className="text-3xl font-black uppercase tracking-tighter italic text-white leading-none">Edit Profile</h1>
-                            <p className="text-indigo-400 text-xs font-black uppercase tracking-[0.2em] mt-2">Manage your account details</p>
+                            <p className="text-[#a6b1ff] text-xs font-black uppercase tracking-[0.2em] mt-2">Manage your account details</p>
                         </div>
                     </div>
 
-                    <div className="bg-white/5 border border-white/10 rounded-[2.5rem] p-8 lg:p-12 backdrop-blur-xl shadow-2xl mx-6 lg:mx-0">
-                        {/* Avatar Upload */}
-                        <div className="flex justify-center mb-12">
-                            <div className="relative group">
-                                <Avatar className="w-32 h-32 lg:w-40 lg:h-40 border-4 border-indigo-500/30 shadow-2xl transition-all group-hover:scale-105">
-                                    <AvatarImage src={user?.avatar || "https://github.com/shadcn.png"} />
-                                    <AvatarFallback className="bg-gradient-to-br from-indigo-600 to-purple-700 text-white text-4xl font-black italic">
-                                        {user?.name?.charAt(0) || "U"}
-                                    </AvatarFallback>
-                                </Avatar>
-                                <motion.button
-                                    whileHover={{ scale: 1.1 }}
-                                    whileTap={{ scale: 0.9 }}
-                                    className="absolute bottom-1 right-1 lg:bottom-2 lg:right-2 p-3 bg-white text-indigo-700 rounded-2xl shadow-2xl border-4 border-[#0a0a0a] hover:bg-indigo-50 transition-colors"
+                    <div className="bg-white/5 border border-white/10 rounded-[2.5rem] p-8 lg:p-12 backdrop-blur-xl shadow-2xl mx-6 lg:mx-0 relative overflow-hidden">
+                        {/* Decorative Background */}
+                        <div className="absolute top-0 right-0 w-96 h-96 bg-[#a6b1ff]/5 rounded-full blur-[120px] pointer-events-none" />
+
+                        <form onSubmit={handleSubmit} className="relative z-10 space-y-12">
+
+                            {/* Avatar Section */}
+                            <div className="flex flex-col items-center justify-center space-y-6">
+                                <div className="relative group">
+                                    <Avatar className="w-32 h-32 lg:w-40 lg:h-40 border-4 border-white/10 shadow-2xl transition-all group-hover:border-[#a6b1ff]/50">
+                                        <AvatarImage src={formData.photo || "https://github.com/shadcn.png"} className="object-cover" />
+                                        <AvatarFallback className="bg-gradient-to-br from-[#1a1f4d] to-[#121431] text-white text-4xl font-black italic">
+                                            {formData.first_name?.charAt(0) || "U"}
+                                        </AvatarFallback>
+                                    </Avatar>
+                                    <label className={`absolute bottom-0 right-0 p-3 bg-white text-[#0a0a0a] rounded-2xl shadow-xl cursor-pointer hover:bg-[#a6b1ff] transition-colors border-4 border-[#0a0a0a] ${isUploading ? 'opacity-50 pointer-events-none' : ''}`}>
+                                        {isUploading ? <Loader2 size={20} className="animate-spin" /> : <Camera size={20} />}
+                                        <input type="file" className="hidden" accept="image/*" onChange={handleFileUpload} />
+                                    </label>
+                                </div>
+                                <div className="text-center">
+                                    <p className="text-sm font-black text-white uppercase tracking-widest">Profile Photo</p>
+                                    <p className="text-white/40 text-xs mt-1">Click the camera icon to update</p>
+                                </div>
+                            </div>
+
+                            {/* Personal Info Section */}
+                            <div className="space-y-6">
+                                <div className="flex items-center gap-3 mb-2">
+                                    <User className="text-[#a6b1ff]" size={18} />
+                                    <h3 className="text-sm font-black text-white uppercase tracking-widest">Personal Information</h3>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <InputField label="First Name" name="first_name" value={formData.first_name} onChange={handleChange} placeholder="First Name" />
+                                    <InputField label="Last Name" name="last_name" value={formData.last_name} onChange={handleChange} placeholder="Last Name" />
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <InputField label="Email Address" name="email" value={formData.email} onChange={handleChange} placeholder="Email" icon={Mail} readOnly className="opacity-60 cursor-not-allowed" />
+                                    <InputField label="Phone Number" name="phone_number" value={formData.phone_number} onChange={handleChange} placeholder="Phone Number" icon={Phone} />
+                                    <InputField label="Alternate Phone" name="alternate_phone_number" value={formData.alternate_phone_number} onChange={handleChange} placeholder="Alternate Phone" icon={Phone} />
+                                    <InputField label="Date of Birth" name="date_of_birth" value={formData.date_of_birth} onChange={handleChange} type="date" icon={Calendar} />
+                                </div>
+                            </div>
+
+                            {/* Address Section */}
+                            <div className="space-y-6 pt-6 border-t border-white/5">
+                                <div className="flex items-center gap-3 mb-2">
+                                    <MapPin className="text-[#a6b1ff]" size={18} />
+                                    <h3 className="text-sm font-black text-white uppercase tracking-widest">Location Details</h3>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <InputField label="Country" name="country" value={formData.country} onChange={handleChange} placeholder="Country" />
+                                    <InputField label="State" name="state" value={formData.state} onChange={handleChange} placeholder="State" />
+                                    <InputField label="LGA / City" name="lga" value={formData.lga} onChange={handleChange} placeholder="Local Govt Area" />
+                                    <InputField label="Postal Code" name="postal_code" value={formData.postal_code} onChange={handleChange} placeholder="Zip Code" />
+                                </div>
+                            </div>
+
+                            {/* Submit Button */}
+                            <div className="pt-8 flex justify-end gap-4">
+                                <Button
+                                    type="button"
+                                    onClick={() => navigate(-1)}
+                                    variant="ghost"
+                                    className="h-14 px-8 rounded-2xl text-white/60 hover:text-white hover:bg-white/5 font-black uppercase tracking-widest"
                                 >
-                                    <Camera size={20} />
-                                </motion.button>
-                            </div>
-                        </div>
-
-                        {/* Form Grid */}
-                        <form className="space-y-8">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                <div className="space-y-3">
-                                    <Label htmlFor="firstName" className="text-gray-400 font-black uppercase tracking-widest text-[10px] ml-1">First Name</Label>
-                                    <Input
-                                        id="firstName"
-                                        defaultValue={user?.name?.split(' ')[0] || "John"}
-                                        className="bg-black/20 border-white/10 h-16 text-white rounded-2xl focus:border-[#7c3aed] focus:ring-[#7c3aed]/10 px-6 text-lg font-bold placeholder:text-gray-600 transition-all"
-                                    />
-                                </div>
-
-                                <div className="space-y-3">
-                                    <Label htmlFor="lastName" className="text-gray-400 font-black uppercase tracking-widest text-[10px] ml-1">Last Name</Label>
-                                    <Input
-                                        id="lastName"
-                                        defaultValue={user?.name?.split(' ')[1] || "Doe"}
-                                        className="bg-black/20 border-white/10 h-16 text-white rounded-2xl focus:border-[#7c3aed] focus:ring-[#7c3aed]/10 px-6 text-lg font-bold placeholder:text-gray-600 transition-all"
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="space-y-3">
-                                <Label htmlFor="email" className="text-gray-400 font-black uppercase tracking-widest text-[10px] ml-1">Account Email</Label>
-                                <Input
-                                    id="email"
-                                    type="email"
-                                    defaultValue={user?.email || "johndoe@gmail.com"}
-                                    className="bg-black/20 border-white/10 h-16 text-white rounded-2xl focus:border-[#7c3aed] focus:ring-[#7c3aed]/10 px-6 text-lg font-bold placeholder:text-gray-600 transition-all opacity-60 cursor-not-allowed"
-                                    readOnly
-                                />
-                            </div>
-
-                            <div className="space-y-3">
-                                <Label htmlFor="mobile" className="text-gray-400 font-black uppercase tracking-widest text-[10px] ml-1">Phone Number</Label>
-                                <Input
-                                    id="mobile"
-                                    type="tel"
-                                    defaultValue={user?.mobile || "+91-123456789"}
-                                    className="bg-black/20 border-white/10 h-16 text-white rounded-2xl focus:border-[#7c3aed] focus:ring-[#7c3aed]/10 px-6 text-lg font-bold placeholder:text-gray-600 transition-all"
-                                />
-                            </div>
-
-                            <motion.div
-                                className="pt-8"
-                                initial={{ y: 20, opacity: 0 }}
-                                animate={{ y: 0, opacity: 1 }}
-                                transition={{ delay: 0.2 }}
-                            >
-                                <Button className="w-full h-16 bg-gradient-to-r from-[#5b21b6] to-[#7c3aed] hover:from-[#4c1d95] hover:to-[#6d28d9] text-white font-black rounded-2xl text-xl tracking-widest uppercase shadow-[0_10px_30px_rgba(124,58,237,0.3)] border border-white/10 transition-all active:scale-[0.98]">
+                                    Cancel
+                                </Button>
+                                <Button
+                                    type="submit"
+                                    disabled={isUpdating || isUploading}
+                                    className="h-14 px-10 bg-[#a6b1ff] text-[#0a0a0a] hover:bg-[#a6b1ff]/90 font-black uppercase tracking-widest rounded-2xl shadow-[0_0_30px_rgba(166,177,255,0.3)] transition-all flex items-center gap-3"
+                                >
+                                    {isUpdating ? <Loader2 size={20} className="animate-spin" /> : <Save size={20} />}
                                     Save Changes
                                 </Button>
-                            </motion.div>
+                            </div>
+
                         </form>
                     </div>
                 </div>
@@ -109,3 +212,17 @@ export default function UserProfile() {
         </DashboardLayout>
     );
 }
+
+// Helper Component for consistent input styling
+const InputField = ({ label, icon: Icon, className = "", ...props }) => (
+    <div className="space-y-2">
+        <Label className="text-[10px] font-black text-white/40 uppercase tracking-widest ml-1">{label}</Label>
+        <div className="relative">
+            <Input
+                {...props}
+                className={`bg-black/20 border-white/10 h-16 text-white rounded-2xl focus:border-[#a6b1ff] focus:ring-[#a6b1ff]/10 px-6 text-base font-bold placeholder:text-white/20 transition-all ${Icon ? 'pl-12' : ''} ${className}`}
+            />
+            {Icon && <Icon size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30" />}
+        </div>
+    </div>
+);

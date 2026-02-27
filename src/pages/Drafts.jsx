@@ -37,8 +37,11 @@ export default function Drafts() {
         loadDrafts();
     }, []);
 
-    const handleDeleteDraft = (id) => {
-        const updated = removeDraft(id);
+    const handleDeleteDraft = (draft) => {
+        const index = drafts.indexOf(draft);
+        if (index === -1) return;
+
+        const updated = removeDraft(index);
         setDrafts(updated);
         toast.success("Draft removed from storage");
     };
@@ -203,7 +206,7 @@ export default function Drafts() {
                                                 Resume
                                             </button>
                                             <button
-                                                onClick={() => handleDeleteDraft(draft.id || idx)}
+                                                onClick={() => handleDeleteDraft(draft)}
                                                 className="w-16 h-16 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-500 flex items-center justify-center hover:bg-rose-500 hover:text-white transition-all shadow-xl"
                                             >
                                                 <Trash2 size={20} />

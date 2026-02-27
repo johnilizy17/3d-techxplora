@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { NavLink, useLocation, useNavigate, Link } from 'react-router-dom';
-import { Sparkles, Menu, X, GraduationCap, Users, LayoutDashboard } from 'lucide-react';
+import { Sparkles, Menu, X, GraduationCap, Users, LayoutDashboard, Moon, Sun } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { selectIsAuthenticated } from '@/redux/slices/authSlice';
 import { Button } from "@/components/ui/button";
+import { useTheme } from '@/contexts/ThemeContext';
 import {
     Dialog,
     DialogContent,
@@ -13,13 +14,13 @@ import {
 
 const ModalCard = ({ icon: Icon, title, description, to, onClick }) => {
     const CardContent = (
-        <div className="group flex items-center gap-4 p-5 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-[#a6b1ff]/30 transition-all duration-300 cursor-pointer">
+        <div className="group flex items-center gap-4 p-5 rounded-2xl bg-card border border-border hover:bg-accent hover:border-[#a6b1ff]/30 transition-all duration-300 cursor-pointer">
             <div className="flex-shrink-0 w-14 h-14 rounded-xl bg-gradient-to-br from-[#a6b1ff]/20 to-[#c7aff8]/20 flex items-center justify-center border border-[#a6b1ff]/20 group-hover:scale-110 transition-transform">
                 <Icon className="w-7 h-7 text-[#a6b1ff]" />
             </div>
             <div className="text-left flex-1">
-                <h3 className="text-lg font-bold text-white group-hover:text-[#a6b1ff] transition-colors">{title}</h3>
-                <p className="text-sm text-gray-400 leading-snug">{description}</p>
+                <h3 className="text-lg font-bold text-foreground group-hover:text-[#a6b1ff] transition-colors">{title}</h3>
+                <p className="text-sm text-muted-foreground leading-snug">{description}</p>
             </div>
         </div>
     );
@@ -35,6 +36,7 @@ export default function Navbar() {
     const location = useLocation();
     const navigate = useNavigate();
     const isAuthenticated = useSelector(selectIsAuthenticated);
+    const { darkMode, toggleTheme } = useTheme();
 
     const isLoginPage = location.pathname.startsWith('/auth/login');
     const isSignupPage = location.pathname.startsWith('/auth/signup');
@@ -58,6 +60,7 @@ export default function Navbar() {
         { name: 'How To Use', path: '/how-to-use' },
         { name: 'About', path: '/about' },
         { name: 'Courses', path: '/courses' },
+        { name: 'Docs', path: '/docs' },
         { name: 'Chess', path: '/chess' },
     ];
 
@@ -78,7 +81,7 @@ export default function Navbar() {
     return (
         <nav
             className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled || isMobileMenuOpen
-                ? 'bg-[#0a0a0a]/80 backdrop-blur-md border-b border-white/10'
+                ? 'bg-background/80 backdrop-blur-md border-b border-border'
                 : 'bg-transparent'
                 }`}
         >
@@ -89,7 +92,7 @@ export default function Navbar() {
                         <img src="/favicon.ico" alt="Logo" className="w-8" />
                         <div className="absolute inset-0 bg-[#a6b1ff] blur-lg opacity-20 group-hover:opacity-50 transition-opacity" />
                     </div>
-                    <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-white/70 tracking-wide font-['Bricolage_Grotesque']">
+                    <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/70 tracking-wide font-['Bricolage_Grotesque']">
                         Techxplora
                     </span>
                 </NavLink>
@@ -101,7 +104,7 @@ export default function Navbar() {
                             key={link.path}
                             to={link.path}
                             className={({ isActive }) =>
-                                `relative text-sm font-medium tracking-wide transition-colors duration-300 hover:text-[#a6b1ff] ${isActive ? 'text-white' : 'text-gray-400'
+                                `relative text-sm font-medium tracking-wide transition-colors duration-300 hover:text-[#a6b1ff] ${isActive ? 'text-foreground' : 'text-muted-foreground'
                                 }`
                             }
                         >
@@ -115,6 +118,19 @@ export default function Navbar() {
                             )}
                         </NavLink>
                     ))}
+                    
+                    {/* Theme Toggle Button */}
+                    <button
+                        onClick={toggleTheme}
+                        className="p-2.5 rounded-xl bg-gradient-to-br from-accent to-accent/50 hover:from-accent/80 hover:to-accent/30 border border-border hover:border-[#a6b1ff]/30 transition-all duration-300 shadow-sm hover:shadow-md"
+                        aria-label="Toggle theme"
+                    >
+                        {darkMode ? (
+                            <Sun className="w-5 h-5 text-amber-500" />
+                        ) : (
+                            <Moon className="w-5 h-5 text-indigo-600" />
+                        )}
+                    </button>
 
                     {isAuthenticated ? (
                         <Button
@@ -122,7 +138,7 @@ export default function Navbar() {
                             size="sm"
                             onClick={() => navigate('/dashboard')}
                         >
-                            <LayoutDashboard className="w-4 h-4" />
+                            <LayoutDashboard className="w-3 h-3" />
                             Dashboard
                         </Button>
                     ) : (
@@ -138,6 +154,19 @@ export default function Navbar() {
 
                 {/* Mobile specific controls */}
                 <div className="flex md:hidden items-center gap-4">
+                    {/* Theme Toggle Button Mobile */}
+                    <button
+                        onClick={toggleTheme}
+                        className="p-2 rounded-xl bg-gradient-to-br from-accent to-accent/50 hover:from-accent/80 hover:to-accent/30 border border-border hover:border-[#a6b1ff]/30 transition-all duration-300 shadow-sm"
+                        aria-label="Toggle theme"
+                    >
+                        {darkMode ? (
+                            <Sun className="w-4 h-4 text-amber-500" />
+                        ) : (
+                            <Moon className="w-4 h-4 text-indigo-600" />
+                        )}
+                    </button>
+                    
                     {isAuthenticated ? (
                         <Button
                             onClick={() => navigate('/dashboard')}
@@ -157,7 +186,7 @@ export default function Navbar() {
 
                     {/* Mobile Menu Toggle */}
                     <button
-                        className="text-white p-1"
+                        className="text-foreground p-1"
                         onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                     >
                         {isMobileMenuOpen ? <X /> : <Menu />}
@@ -167,7 +196,7 @@ export default function Navbar() {
 
             {/* Mobile Menu */}
             <div
-                className={`md:hidden absolute top-20 left-0 right-0 bg-[#0a0a0a] border-b border-white/10 transition-all duration-300 overflow-hidden ${isMobileMenuOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
+                className={`md:hidden absolute top-20 left-0 right-0 bg-background border-b border-border transition-all duration-300 overflow-hidden ${isMobileMenuOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
                     }`}
             >
                 <div className="flex flex-col p-6 gap-4">
@@ -176,7 +205,7 @@ export default function Navbar() {
                             key={link.path}
                             to={link.path}
                             className={({ isActive }) =>
-                                `text-lg font-medium transition-colors ${isActive ? 'text-[#a6b1ff]' : 'text-gray-400'
+                                `text-lg font-medium transition-colors ${isActive ? 'text-[#a6b1ff]' : 'text-muted-foreground'
                                 }`
                             }
                         >
@@ -188,23 +217,23 @@ export default function Navbar() {
 
             {/* Student/Teacher Modal */}
             <Dialog open={isRegisterModalOpen} onOpenChange={setIsRegisterModalOpen}>
-                <DialogContent className="max-w-md bg-[#0d0d0d]/95 backdrop-blur-2xl border-white/10 rounded-3xl p-8 shadow-2xl">
+                <DialogContent className="max-w-md bg-card backdrop-blur-2xl border-border rounded-3xl p-8 shadow-2xl">
                     <DialogHeader className="mb-6">
-                        <DialogTitle className="text-2xl font-bold text-center text-white">Join as...</DialogTitle>
+                        <DialogTitle className="text-2xl font-bold text-center text-foreground">Join as...</DialogTitle>
                     </DialogHeader>
                     <div className="grid gap-4">
                         <ModalCard
                             icon={GraduationCap}
-                            title="Student"
-                            description="Learn, join quizzes and get great scores"
+                            title="I'm a Student"
+                            description="Play quizzes and earn rewards!"
                             to="/auth/signup"
                             onClick={() => setIsRegisterModalOpen(false)}
                         />
                         <ModalCard
                             icon={Users}
-                            title="Teacher"
-                            description="Create quizzes or manage results"
-                            to="/auth/signup/?page=3"
+                            title="I'm a Teacher"
+                            description="Create quizzes and see how students do"
+                            to="/auth/group"
                             onClick={() => setIsRegisterModalOpen(false)}
                         />
                     </div>

@@ -41,7 +41,7 @@ const QuizCard = ({ quiz, index, onClick }) => {
             <div className="absolute -bottom-24 left-1/2 -translate-x-1/2 w-48 h-48 bg-[#a6b1ff]/10 rounded-full blur-[80px] group-hover:bg-[#a6b1ff]/20 transition-all duration-700" />
 
             {/* Header Section */}
-            <div className="p-6 pb-2 flex justify-between items-start relative z-10">
+            <div className="p-4 md:p-6 pb-2 flex justify-between items-start relative z-10">
                 <div className="flex-1 min-w-0 pr-4">
                     <div className="flex items-center gap-2 mb-2">
                         <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r ${status.color} shadow-lg shadow-black/20`}>
@@ -64,14 +64,14 @@ const QuizCard = ({ quiz, index, onClick }) => {
             </div>
 
             {/* Middle Section - Description */}
-            <div className="px-6 relative z-10">
+            <div className="px-4 md:px-6 relative z-10">
                 <p className="text-xs text-white/40 line-clamp-2 font-medium leading-relaxed italic pr-4">
                     {quiz.description || "Challenge your knowledge in this interactive collectible hunt."}
                 </p>
             </div>
 
             {/* Footer Section */}
-            <div className="mt-auto p-6 space-y-4 relative z-10">
+            <div className="mt-auto p-4 md:p-6 space-y-4 relative z-10">
                 {/* Code and Copy */}
                 <div className="flex items-center gap-2">
                     <div className="flex-1 h-12 rounded-2xl bg-black/40 border border-white/5 flex items-center justify-between px-5 group/code hover:border-[#a6b1ff]/20 transition-colors">

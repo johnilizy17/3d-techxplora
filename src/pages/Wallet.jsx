@@ -8,11 +8,14 @@ import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import WithdrawModal from '@/components/dashboard/WithdrawModal';
 import { useSelector } from 'react-redux';
 import { selectCurrentUser, selectHistory } from '@/redux/slices/authSlice';
+import DepositModal from '@/components/dashboard/DepositModal';
+import TransferModal from '@/components/dashboard/TransferModal';
 
 export default function Wallet() {
     const navigate = useNavigate();
     const user = useSelector(selectCurrentUser);
     const history = useSelector(selectHistory);
+    const isTeacher = user?.accountable_type?.includes('Teacher') || user?.role === 'admin';
     // Access the data array, handling if history is the array itself or an object containing data
     const historyList = history?.data || (Array.isArray(history) ? history : []);
 
@@ -52,7 +55,7 @@ export default function Wallet() {
                             <ArrowLeft size={24} />
                         </button>
                         <h1 className="text-2xl font-black uppercase tracking-tighter italic">My Wallet</h1>
-                        <button className="p-3 lg:p-4 bg-white/5 hover:bg-white/10 rounded-2xl transition-all text-white border border-white/10 shadow-xl">
+                        <button onClick={() => navigate('/dashboard/profile')} className="p-3 lg:p-4 bg-white/5 hover:bg-white/10 rounded-2xl transition-all text-white border border-white/10 shadow-xl">
                             <Settings size={24} />
                         </button>
                     </div>
@@ -81,14 +84,35 @@ export default function Wallet() {
                                         </span>
                                     </h2>
 
-                                    <WithdrawModal
-                                        balance={user?.xp || 0}
-                                        trigger={
-                                            <Button className="w-full h-16 bg-white hover:bg-purple-50 text-purple-700 rounded-2xl font-black text-xl shadow-[0_8px_0_#9333ea] active:shadow-none active:translate-y-[8px] transition-all uppercase tracking-widest relative">
-                                                Withdraw
-                                            </Button>
-                                        }
-                                    />
+                                    <div className="w-full flex flex-col gap-3">
+                                        <WithdrawModal
+                                            balance={user?.xp || 0}
+                                            trigger={
+                                                <Button className="w-full h-14 bg-white hover:bg-purple-50 text-purple-700 rounded-2xl font-black text-lg shadow-[0_6px_0_#9333ea] active:shadow-none active:translate-y-[6px] transition-all uppercase tracking-widest">
+                                                    Withdraw
+                                                </Button>
+                                            }
+                                        />
+
+                                        {isTeacher && (
+                                            <div className="grid grid-cols-2 gap-3 w-full">
+                                                <DepositModal
+                                                    trigger={
+                                                        <Button className="h-14 bg-white/10 hover:bg-white/20 text-white border border-white/20 rounded-2xl font-black text-sm uppercase tracking-widest transition-all">
+                                                            Deposit
+                                                        </Button>
+                                                    }
+                                                />
+                                                <TransferModal
+                                                    trigger={
+                                                        <Button className="h-14 bg-white/10 hover:bg-white/20 text-white border border-white/20 rounded-2xl font-black text-sm uppercase tracking-widest transition-all">
+                                                            Transfer
+                                                        </Button>
+                                                    }
+                                                />
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                             </motion.div>
                         </div>

@@ -140,7 +140,7 @@ export default function ManualQuestion() {
                     quiz_code: tempStorage.quiz_code,
                     question: q.question,
                     options: q.options,
-                    duration: (tempStorage.duration || 60) / questions.length,
+                    duration: String(Math.floor((tempStorage.duration || 60) / questions.length)),
                     status: 1
                 }).unwrap();
             }

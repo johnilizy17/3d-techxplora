@@ -85,12 +85,12 @@ export default function QuizDetails() {
                     <div className="w-20 h-20 rounded-[2.5rem] bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-500">
                         <AlertCircle size={40} />
                     </div>
-                    <div className="space-y-2">
-                        <h2 className="text-2xl font-black text-white uppercase italic tracking-tighter">Node Not Found</h2>
-                        <p className="text-white/40 text-sm font-medium max-w-xs">The synchronized assessment record could not be located in our database.</p>
+                    <div className="text-center space-y-2">
+                        <h2 className="text-2xl font-black text-white uppercase italic tracking-tighter">Quiz Not Found</h2>
+                        <p className="text-white/40 text-sm font-medium max-w-xs">We couldn't find this quiz in our system.</p>
                     </div>
                     <button onClick={() => navigate('/dashboard/quizzes')} className="px-8 py-3 rounded-2xl bg-white text-black font-black uppercase text-xs tracking-widest hover:bg-[#a6b1ff] transition-all">
-                        Return to Lab
+                        Back to Quizzes
                     </button>
                 </div>
             </DashboardLayout>
@@ -105,6 +105,32 @@ export default function QuizDetails() {
             navigate(`/dashboard/quizzes/start?code=${quiz.quiz_code}`);
         } else {
             toast.info("The engagement window has not initialized yet.");
+        }
+    };
+
+    const handleShare = async () => {
+        const shareData = {
+            title: `Quiz: ${quiz.title}`,
+            text: `Join this quiz on TechXplora: ${quiz.title}`,
+            url: window.location.href,
+        };
+
+        if (navigator.share) {
+            try {
+                await navigator.share(shareData);
+                toast.success("Shared successfully");
+            } catch (err) {
+                if (err.name !== 'AbortError') {
+                    toast.error("Could not share");
+                }
+            }
+        } else {
+            try {
+                await navigator.clipboard.writeText(window.location.href);
+                toast.success("Link copied to clipboard");
+            } catch (err) {
+                toast.error("Failed to copy link");
+            }
         }
     };
 
@@ -136,16 +162,16 @@ export default function QuizDetails() {
                                     </div>
                                     <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10">
                                         <Target size={12} className="text-[#a6b1ff]" />
-                                        <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">Code: {quiz.quiz_code}</span>
+                                        <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">Quiz Code: {quiz.quiz_code}</span>
                                     </div>
                                 </div>
 
-                                <h1 className="text-5xl lg:text-7xl font-black text-white italic tracking-tighter uppercase leading-none">
+                                <h1 className="text-3xl md:text-5xl lg:text-7xl font-black text-white italic tracking-tighter uppercase leading-none">
                                     {quiz.title}
                                 </h1>
 
                                 <p className="text-xl font-medium text-white/40 leading-relaxed max-w-2xl">
-                                    {quiz.description || "Challenge your intelligence and earn XP in this interactive curriculum-aligned assessment."}
+                                    {quiz.description || "Test your knowledge and earn points in this fun quiz!"}
                                 </p>
                             </div>
 
@@ -156,30 +182,30 @@ export default function QuizDetails() {
                                 className="relative group"
                             >
                                 <div className="absolute inset-0 bg-gradient-to-r from-indigo-600/20 to-purple-600/20 rounded-[3rem] blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
-                                <div className="relative bg-white/[0.03] border border-white/10 rounded-[3rem] p-10 lg:p-14 overflow-hidden">
+                                <div className="relative bg-white/[0.03] border border-white/10 rounded-[2rem] md:rounded-[3rem] p-6 sm:p-10 lg:p-14 overflow-hidden">
                                     <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-[100px] -mr-32 -mt-32" />
 
-                                    <div className="flex flex-col md:flex-row items-center justify-between gap-12 relative z-10">
+                                    <div className="flex flex-col md:flex-row items-center justify-between gap-8 md:gap-12 relative z-10">
                                         <div className="space-y-8 flex-1 w-full">
                                             <div className="grid grid-cols-2 md:grid-cols-3 gap-8">
                                                 <div className="space-y-2">
                                                     <div className="flex items-center gap-2 text-white/20">
                                                         <Trophy size={14} />
-                                                        <span className="text-[10px] font-black uppercase tracking-[0.2em]">Rewards</span>
+                                                        <span className="text-[10px] font-black uppercase tracking-[0.2em]">Points</span>
                                                     </div>
-                                                    <p className="text-3xl font-black text-[#ffb585] italic">{quiz.xp || 0} XP</p>
+                                                    <p className="text-3xl font-black text-[#ffb585] italic">{quiz.xp || 0}</p>
                                                 </div>
                                                 <div className="space-y-2">
                                                     <div className="flex items-center gap-2 text-white/20">
                                                         <Clock size={14} />
-                                                        <span className="text-[10px] font-black uppercase tracking-[0.2em]">Duration</span>
+                                                        <span className="text-[10px] font-black uppercase tracking-[0.2em]">Time</span>
                                                     </div>
                                                     <p className="text-3xl font-black text-white italic">{quiz.duration || 0}m</p>
                                                 </div>
                                                 <div className="space-y-2">
                                                     <div className="flex items-center gap-2 text-white/20">
                                                         <Zap size={14} />
-                                                        <span className="text-[10px] font-black uppercase tracking-[0.2em]">Nodes</span>
+                                                        <span className="text-[10px] font-black uppercase tracking-[0.2em]">Questions</span>
                                                     </div>
                                                     <p className="text-3xl font-black text-white italic">{quiz.QuizQuestions || 0}</p>
                                                 </div>
@@ -187,24 +213,24 @@ export default function QuizDetails() {
 
                                             <div className="space-y-4 pt-8 border-t border-white/5">
                                                 <div className="flex items-center justify-between">
-                                                    <span className="text-[10px] font-black text-white/20 uppercase tracking-[0.2em]">Synchronization Timeline</span>
+                                                    <span className="text-[10px] font-black text-white/20 uppercase tracking-[0.2em]">Quiz Timeline</span>
                                                     {!isEnded && (
                                                         <span className={`text-[10px] font-black ${isStarted ? 'text-emerald-400' : 'text-amber-400'} uppercase tracking-widest flex items-center gap-2`}>
                                                             <div className={`w-1.5 h-1.5 rounded-full ${isStarted ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'}`} />
-                                                            {isStarted ? "Assessment Active" : "Initializing Sequence"}
+                                                            {isStarted ? "Quiz is Live" : "Starting Soon"}
                                                         </span>
                                                     )}
                                                 </div>
                                                 <div className="flex items-baseline gap-4">
                                                     {isEnded ? (
-                                                        <p className="text-4xl font-black text-rose-500 italic uppercase">Closed Session</p>
+                                                        <p className="text-4xl font-black text-rose-500 italic uppercase">Quiz Ended</p>
                                                     ) : (
                                                         <>
-                                                            <p className="text-5xl lg:text-7xl font-mono font-black text-[#a6b1ff] italic tracking-tighter">
+                                                            <p className="text-3xl sm:text-5xl lg:text-7xl font-mono font-black text-[#a6b1ff] italic tracking-tighter">
                                                                 {countdown}
                                                             </p>
                                                             <span className="text-sm font-black text-white/20 uppercase italic tracking-widest">
-                                                                Remaining
+                                                                Left
                                                             </span>
                                                         </>
                                                     )}
@@ -214,23 +240,23 @@ export default function QuizDetails() {
 
                                         <button
                                             onClick={handleAction}
-                                            className={`shrink-0 w-full md:w-56 h-56 rounded-[3rem] ${isEnded ? 'bg-white hover:bg-[#a6b1ff]' : 'bg-[#a6b1ff] hover:bg-white'} text-black flex flex-col items-center justify-center gap-4 transition-all hover:scale-105 active:scale-95 shadow-2xl relative overflow-hidden group/btn`}
+                                            className={`shrink-0 w-full md:w-56 h-32 md:h-56 rounded-2xl md:rounded-[3rem] ${isEnded ? 'bg-white hover:bg-[#a6b1ff]' : 'bg-[#a6b1ff] hover:bg-white'} text-black flex flex-col items-center justify-center gap-3 md:gap-4 transition-all hover:scale-105 active:scale-95 shadow-2xl relative overflow-hidden group/btn`}
                                         >
                                             <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/20 to-transparent -translate-x-full group-hover/btn:translate-x-full transition-transform duration-1000" />
                                             {isEnded ? (
                                                 <>
-                                                    <Trophy size={48} />
-                                                    <span className="font-black uppercase tracking-[0.2em] text-xs">Review Results</span>
+                                                    <Trophy size={32} />
+                                                    <span className="font-black uppercase tracking-[0.2em] text-[10px]">Review Results</span>
                                                 </>
                                             ) : isStarted ? (
                                                 <>
-                                                    <Play size={48} fill="currentColor" />
-                                                    <span className="font-black uppercase tracking-[0.2em] text-xs">Join Mission</span>
+                                                    <Play size={32} fill="currentColor" />
+                                                    <span className="font-black uppercase tracking-[0.2em] text-[10px]">Start Quiz</span>
                                                 </>
                                             ) : (
                                                 <>
-                                                    <Timer size={48} />
-                                                    <span className="font-black uppercase tracking-[0.2em] text-xs">Locked</span>
+                                                    <Timer size={32} />
+                                                    <span className="font-black uppercase tracking-[0.2em] text-[10px]">Locked</span>
                                                 </>
                                             )}
                                         </button>
@@ -245,7 +271,7 @@ export default function QuizDetails() {
                                         <Calendar size={24} />
                                     </div>
                                     <div>
-                                        <p className="text-[10px] font-black text-white/20 uppercase tracking-widest">Window Open</p>
+                                        <p className="text-[10px] font-black text-white/20 uppercase tracking-widest">Starts At</p>
                                         <p className="text-lg font-black text-white italic">{formatDate(quiz.start_at)}</p>
                                     </div>
                                 </div>
@@ -254,7 +280,7 @@ export default function QuizDetails() {
                                         <CheckCircle2 size={24} />
                                     </div>
                                     <div>
-                                        <p className="text-[10px] font-black text-white/20 uppercase tracking-widest">Window Close</p>
+                                        <p className="text-[10px] font-black text-white/20 uppercase tracking-widest">Ends At</p>
                                         <p className="text-lg font-black text-white italic">{formatDate(quiz.end_at)}</p>
                                     </div>
                                 </div>
@@ -315,7 +341,7 @@ export default function QuizDetails() {
                                                 <div className="w-16 h-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-white/10">
                                                     <Trophy size={32} />
                                                 </div>
-                                                <p className="text-[10px] font-black text-white/20 uppercase tracking-[0.2em]">No results synchronized for this node yet.</p>
+                                                <p className="text-[10px] font-black text-white/20 uppercase tracking-[0.2em]">No results yet for this quiz.</p>
                                             </div>
                                         )
                                     ) : (
@@ -323,21 +349,21 @@ export default function QuizDetails() {
                                             <div className="w-16 h-16 rounded-2xl bg-[#a6b1ff]/10 border border-[#a6b1ff]/20 flex items-center justify-center text-[#a6b1ff]">
                                                 <Users size={32} />
                                             </div>
-                                            <p className="text-[10px] font-black text-white/20 uppercase tracking-[0.2em]">Synchronization will begin once the session starts.</p>
+                                            <p className="text-[10px] font-black text-white/20 uppercase tracking-[0.2em]">The quiz will start soon. Come back when it begins!</p>
                                         </div>
                                     )}
                                 </div>
 
                                 {/* Quick Tools */}
                                 <div className="mt-8 pt-8 border-t border-white/5 space-y-4">
-                                    <button className="w-full py-4 rounded-2xl bg-white/5 border border-white/10 text-white/40 font-black uppercase tracking-widest text-[9px] hover:bg-white/10 transition-all flex items-center justify-center gap-2 group">
+                                    <button
+                                        onClick={handleShare}
+                                        className="w-full py-4 rounded-2xl bg-white/5 border border-white/10 text-white/40 font-black uppercase tracking-widest text-[9px] hover:bg-white/10 transition-all flex items-center justify-center gap-2 group"
+                                    >
                                         <Share2 size={14} className="group-hover:rotate-12 transition-transform" />
                                         Share Node Bridge
                                     </button>
-                                    <button className="w-full py-4 rounded-2xl bg-white/5 border border-white/10 text-white/40 font-black uppercase tracking-widest text-[9px] hover:bg-rose-500/10 hover:text-rose-500 transition-all flex items-center justify-center gap-2 group border-none">
-                                        <Heart size={14} className="group-hover:scale-125 transition-transform" />
-                                        Add to Favorites
-                                    </button>
+
                                 </div>
                             </div>
                         </div>

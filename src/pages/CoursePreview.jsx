@@ -1,9 +1,14 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+import { selectIsAuthenticated } from '@/redux/slices/authSlice';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
     Play, Pause, CheckCircle, Lock, MonitorPlay,
     FileText, Download, Share2, Bookmark, Star,
-    MessageSquare, Loader2, Captions
+    MessageSquare, Loader2, Captions, ChevronRight,
+    Send, BookOpen, Lightbulb, Target, AlertCircle,
+    CheckSquare, Circle, Type
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -12,15 +17,44 @@ import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
+import { Textarea } from "@/components/ui/textarea";
+import {
+    Drawer,
+    DrawerClose,
+    DrawerContent,
+    DrawerDescription,
+    DrawerFooter,
+    DrawerHeader,
+    DrawerTitle,
+    DrawerTrigger,
+} from "@/components/ui/drawer";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
 import {
     useGetStudentCourseByIdQuery,
     useGetCourseProgressQuery,
     useUpdateCourseProgressMutation
 } from '@/redux/api/studentApi';
 
+// Helper to format time in MM:SS
+const formatTime = (seconds) => {
+    if (!seconds) return '0:00';
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+};
+
 export default function CoursePreview() {
     const { courseId } = useParams();
+    const navigate = useNavigate();
     const { toast } = useToast();
+    const isAuthenticated = useSelector(selectIsAuthenticated);
 
     // Fetch Course Details
     const { data: courseData, isLoading: isCourseLoading, error: courseError } = useGetStudentCourseByIdQuery(courseId);
@@ -37,10 +71,48 @@ export default function CoursePreview() {
 
     const [isPlaying, setIsPlaying] = useState(false);
     const [showSubtitles, setShowSubtitles] = useState(false);
-    const [courseStarted, setCourseStarted] = useState(false);
+    const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
     const videoRef = useRef(null);
 
     const [videoProgress, setVideoProgress] = useState(0);
+    const [isQuizDrawerOpen, setIsQuizDrawerOpen] = useState(false);
+    const [isCaseStudyDrawerOpen, setIsCaseStudyDrawerOpen] = useState(false);
+    const [showRegModal, setShowRegModal] = useState(false);
+    const [showEnrollModal, setShowEnrollModal] = useState(false);
+    const [reflection, setReflection] = useState('');
+
+    // Case Study State
+    const [caseStudies, setCaseStudies] = useState([]);
+    const [currentCaseStudyIndex, setCurrentCaseStudyIndex] = useState(0);
+    const [currentSegmentIndex, setCurrentSegmentIndex] = useState(0);
+    const [userAnswers, setUserAnswers] = useState({});
+    const [caseStudyCompleted, setCaseStudyCompleted] = useState(false);
+    const [caseStudyScore, setCaseStudyScore] = useState(0);
+
+    // Parse case studies from JSON
+    useEffect(() => {
+        if (course?.case_study) {
+            try {
+                const parsed = JSON.parse(course.case_study);
+                if (Array.isArray(parsed) && parsed.length > 0) {
+                    setCaseStudies(parsed);
+                }
+            } catch (e) {
+                console.error('Failed to parse case studies:', e);
+                setCaseStudies([]);
+            }
+        }
+    }, [course]);
+
+    // Prepare playlist: Main video + Other videos
+    // Map titles from 'learn' array if available
+    const playlist = [
+        { url: course?.video_url, title: course?.learn?.[0] || 'Introduction' },
+        ...(course?.other?.map((url, index) => ({
+            url,
+            title: course?.learn?.[index + 1] || `Lesson ${index + 2}`
+        })) || [])
+    ].filter(v => v.url);
 
     const handlePlayVideo = () => {
         setIsPlaying(true);
@@ -64,6 +136,19 @@ export default function CoursePreview() {
                 const percent = (current / duration) * 100;
                 setVideoProgress(percent);
             }
+        }
+    };
+
+    const handleProgressClick = (e) => {
+        const progressBar = e.currentTarget;
+        const rect = progressBar.getBoundingClientRect();
+        const clickPosition = e.clientX - rect.left;
+        const totalWidth = rect.width;
+        const percentage = clickPosition / totalWidth;
+
+        if (videoRef.current) {
+            videoRef.current.currentTime = percentage * videoRef.current.duration;
+            setVideoProgress(percentage * 100);
         }
     };
 
@@ -108,18 +193,159 @@ export default function CoursePreview() {
     };
 
     const handleVideoEnded = () => {
-        setIsPlaying(false);
-        // Put logic here to mark lesson as complete or update progress
-        toast({
-            title: "Lesson Completed! 🎉",
-            description: "Great job! You've finished this video.",
-            className: "bg-green-500 text-white border-none",
-            duration: 3000,
-        });
+        if (currentVideoIndex < playlist.length - 1) {
+            setCurrentVideoIndex(prev => prev + 1);
+            setIsPlaying(true);
+            toast({
+                title: "Next Video Playing",
+                description: `Moving to ${playlist[currentVideoIndex + 1].title}`,
+            });
+        } else {
+            setIsPlaying(false);
+            toast({
+                title: "Lesson Completed! 🎉",
+                description: "Great job! You've finished this section.",
+                className: "bg-green-500 text-white border-none",
+                duration: 3000,
+            });
 
-        // Example: Update progress (mock implementation since backend logic depends on specifics)
-        // In a real app, you might send which lesson ID was completed:
-        // updateProgress({ courseId, progressData: { percentage: 100, completedLessonId: ... } });
+            // Logic for when whole video series finishes
+            if (!isAuthenticated) {
+                setShowRegModal(true);
+            } else if (caseStudies.length > 0) {
+                // Trigger case study drawer if case studies exist
+                setIsCaseStudyDrawerOpen(true);
+                setCurrentCaseStudyIndex(0);
+                setCurrentSegmentIndex(0);
+                setUserAnswers({});
+                setCaseStudyCompleted(false);
+            } else if (course?.quiz_id) {
+                navigate(`/dashboard/quizzes/details?code=${course.quiz.quiz_code}`);
+            } else {
+                setIsQuizDrawerOpen(true);
+            }
+        }
+    };
+
+    // Auto-play next video when index changes
+    useEffect(() => {
+        if (videoRef.current && isPlaying) {
+            videoRef.current.play();
+        }
+    }, [currentVideoIndex, isPlaying]);
+
+    const handleActionButtonClick = () => {
+        if (!isAuthenticated) {
+            setShowRegModal(true);
+            return;
+        }
+
+        if (!isPlaying && videoProgress === 0) {
+            // Requirement: Ask user if they want to register for this specific course
+            setShowEnrollModal(true);
+        } else {
+            if (course?.quiz_id) {
+                navigate(`/dashboard/quizzes/details?code=${course.quiz.quiz_code}`);
+            } else {
+                setIsQuizDrawerOpen(true);
+            }
+        }
+    };
+
+    const QUESTION_TYPES = {
+        SINGLE_CHOICE: 'single_choice',
+        MULTIPLE_CHOICE: 'multiple_choice',
+        SHORT_ANSWER: 'short_answer'
+    };
+
+    const handleCaseStudyAnswer = (answer) => {
+        const currentCaseStudy = caseStudies[currentCaseStudyIndex];
+        const currentSegment = currentCaseStudy.segments[currentSegmentIndex];
+
+        if (currentSegment.questionType === QUESTION_TYPES.MULTIPLE_CHOICE) {
+            const currentAnswers = userAnswers[currentSegment.id] || [];
+            if (currentAnswers.includes(answer)) {
+                setUserAnswers(prev => ({
+                    ...prev,
+                    [currentSegment.id]: currentAnswers.filter(a => a !== answer)
+                }));
+            } else {
+                setUserAnswers(prev => ({
+                    ...prev,
+                    [currentSegment.id]: [...currentAnswers, answer]
+                }));
+            }
+        } else {
+            setUserAnswers(prev => ({
+                ...prev,
+                [currentSegment.id]: answer
+            }));
+        }
+    };
+
+    const handleNextSegment = () => {
+        const currentCaseStudy = caseStudies[currentCaseStudyIndex];
+        if (currentSegmentIndex < currentCaseStudy.segments.length - 1) {
+            setCurrentSegmentIndex(prev => prev + 1);
+        } else {
+            // Case study finished - calculate score
+            let score = 0;
+            currentCaseStudy.segments.forEach(segment => {
+                const answer = userAnswers[segment.id];
+                if (segment.questionType === QUESTION_TYPES.SHORT_ANSWER) {
+                    if (answer?.toLowerCase().trim() === segment.correctAnswer?.toLowerCase().trim()) {
+                        score++;
+                    }
+                } else if (segment.questionType === QUESTION_TYPES.MULTIPLE_CHOICE) {
+                    const correctOptions = segment.options.filter(o => o.isCorrect).map(o => o.text);
+                    const userSelectedOptions = answer || [];
+                    const isCorrect = correctOptions.length === userSelectedOptions.length &&
+                        correctOptions.every(o => userSelectedOptions.includes(o));
+                    if (isCorrect) score++;
+                } else {
+                    const selectedOption = segment.options.find(o => o.text === answer);
+                    if (selectedOption?.isCorrect) score++;
+                }
+            });
+
+            setCaseStudyScore(Math.round((score / currentCaseStudy.segments.length) * 100));
+            setCaseStudyCompleted(true);
+        }
+    };
+
+    const handleFinishCaseStudy = () => {
+        if (currentCaseStudyIndex < caseStudies.length - 1) {
+            setCurrentCaseStudyIndex(prev => prev + 1);
+            setCurrentSegmentIndex(0);
+            setUserAnswers({});
+            setCaseStudyCompleted(false);
+        } else {
+            setIsCaseStudyDrawerOpen(false);
+            // If there's a quiz, maybe go to it?
+            if (course?.quiz_id) {
+                navigate(`/dashboard/quizzes/details?code=${course.quiz.quiz_code}`);
+            }
+        }
+    };
+
+    const handleReflectionSubmit = () => {
+        if (!reflection.trim()) {
+            toast({
+                title: "Empty reflection",
+                description: "Please enter what you've learned.",
+                variant: "destructive"
+            });
+            return;
+        }
+
+        // Visual feedback for submission
+        toast({
+            title: "Reflection Submitted! 🎯",
+            description: "Your insights have been recorded for this course.",
+            className: "bg-green-500 text-white border-none",
+        });
+        setIsQuizDrawerOpen(false);
+        setReflection('');
     };
 
     if (isCourseLoading) {
@@ -183,14 +409,17 @@ export default function CoursePreview() {
 
                         <video
                             ref={videoRef}
-                            className={`w-full h-full object-contain bg-black ${!isPlaying ? 'hidden' : 'block'}`}
-                            src={course.video_url}
-                            poster={course.banner_url}
-                            controls={isPlaying} // Show native controls only when playing to avoid clutter
+                            className="w-full h-full object-contain bg-black cursor-pointer"
+                            src={playlist[currentVideoIndex]?.url}
                             onPause={() => setIsPlaying(false)}
                             onPlay={() => setIsPlaying(true)}
                             onTimeUpdate={handleTimeUpdate}
                             onEnded={handleVideoEnded}
+                            onClick={() => {
+                                if (isPlaying) handlePauseVideo();
+                                else handlePlayVideo();
+                            }}
+                            controls={isPlaying}
                         >
                             {/* Subtitle track - using instruction_url or a placeholder if available */}
                             {course.instruction_url && (
@@ -204,6 +433,29 @@ export default function CoursePreview() {
                             )}
                             Your browser does not support the video tag.
                         </video>
+
+                        {/* Custom Interactive Progress Bar */}
+                        {isPlaying && (
+                            <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent group-hover:opacity-100 transition-opacity">
+                                <div
+                                    className="h-1.5 w-full bg-white/20 rounded-full cursor-pointer relative group/progress overflow-hidden"
+                                    onClick={handleProgressClick}
+                                >
+                                    <div
+                                        className="absolute h-full bg-[#a6b1ff] transition-all duration-100"
+                                        style={{ width: `${videoProgress}%` }}
+                                    />
+                                    <div
+                                        className="absolute h-full bg-white/30 opacity-0 group-hover/progress:opacity-100 transition-opacity"
+                                        style={{ width: '100%' }}
+                                    />
+                                </div>
+                                <div className="flex justify-between mt-2 text-[10px] text-gray-400 font-medium">
+                                    <span>{videoRef.current ? formatTime(videoRef.current.currentTime) : '0:00'}</span>
+                                    <span>{videoRef.current ? formatTime(videoRef.current.duration) : '0:00'}</span>
+                                </div>
+                            </div>
+                        )}
 
                         {/* Custom Overlay Controls (Only when paused/not playing) */}
                         {!isPlaying && (
@@ -232,6 +484,67 @@ export default function CoursePreview() {
                             </div>
                         )}
                     </div>
+
+                    {/* Video Switcher (Visible only when multiple videos exist) */}
+                    {playlist.length > 1 && (
+                        <div className="space-y-4 animate-in fade-in duration-700">
+                            <div className="flex items-center justify-between">
+                                <h3 className="text-sm font-black text-white uppercase tracking-widest flex items-center gap-2">
+                                    <MonitorPlay size={16} className="text-[#a6b1ff]" />
+                                    Video Library
+                                </h3>
+                                <Badge variant="secondary" className="bg-white/5 text-white/40 border-none text-[10px]">
+                                    {playlist.length} Videos Available
+                                </Badge>
+                            </div>
+                            <div className="flex gap-4 overflow-x-auto pb-4 custom-scrollbar snap-x">
+                                {playlist.map((v, index) => (
+                                    <button
+                                        key={index}
+                                        onClick={() => {
+                                            setCurrentVideoIndex(index);
+                                            setIsPlaying(true);
+                                        }}
+                                        className={`relative flex-shrink-0 w-48 aspect-video rounded-2xl border-2 transition-all duration-300 overflow-hidden snap-start group ${currentVideoIndex === index
+                                            ? 'border-[#a6b1ff] shadow-[0_0_20px_rgba(166,177,255,0.2)]'
+                                            : 'border-white/5 hover:border-white/20'
+                                            }`}
+                                    >
+                                        <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-colors" />
+
+                                        {/* Activity Indicator */}
+                                        {currentVideoIndex === index && (
+                                            <div className="absolute top-2 right-2 z-10">
+                                                <div className="flex gap-0.5 items-end h-3">
+                                                    <div className="w-0.5 bg-[#a6b1ff] animate-[bounce_0.6s_infinite] h-full" />
+                                                    <div className="w-0.5 bg-[#a6b1ff] animate-[bounce_0.8s_infinite] h-2/3" />
+                                                    <div className="w-0.5 bg-[#a6b1ff] animate-[bounce_0.4s_infinite] h-full" />
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        <div className="absolute inset-0 flex flex-col justify-end p-3 text-left">
+                                            <p className={`text-[10px] font-black uppercase tracking-wider mb-0.5 ${currentVideoIndex === index ? 'text-[#a6b1ff]' : 'text-white/40'}`}>
+                                                {index === 0 ? 'Introduction' : `Lesson ${index + 1}`}
+                                            </p>
+                                            <h4 className="text-xs font-bold text-white truncate group-hover:text-[#a6b1ff] transition-colors">
+                                                {v.title}
+                                            </h4>
+                                        </div>
+
+                                        {/* Play Overlay on Hover */}
+                                        {currentVideoIndex !== index && (
+                                            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/40 backdrop-blur-[2px]">
+                                                <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
+                                                    <Play size={14} className="text-white fill-current ml-0.5" />
+                                                </div>
+                                            </div>
+                                        )}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    )}
 
                     {/* Instructor & Metadata */}
                     <div className="flex items-center justify-between border-b border-white/10 pb-6">
@@ -280,13 +593,21 @@ export default function CoursePreview() {
                                 {course.description || "No description available for this course."}
                             </p>
 
-                            {/* Static motivational content for now */}
-                            <h4 className="text-lg font-bold text-white mt-6 mb-2">What you'll learn</h4>
-                            <ul className="list-disc pl-5 space-y-2 text-gray-400">
-                                <li>Comprehensive understanding of the subject matter.</li>
-                                <li>Practical skills applied through real-world examples.</li>
-                                <li>Expert tips and best practices.</li>
-                            </ul>
+                            {caseStudies.length > 0 && (
+                                <div className="mt-6 p-6 bg-gradient-to-br from-indigo-500/10 to-transparent border border-indigo-500/20 rounded-2xl">
+                                    <div className="flex items-start gap-3">
+                                        <div className="w-10 h-10 rounded-xl bg-indigo-500/10 flex items-center justify-center shrink-0">
+                                            <BookOpen size={18} className="text-indigo-400" />
+                                        </div>
+                                        <div className="flex-1">
+                                            <h4 className="text-sm font-black text-white uppercase mb-1">Interactive Case Studies</h4>
+                                            <p className="text-xs text-white/60 leading-relaxed">
+                                                {caseStudies.length} scenario-based assessment{caseStudies.length > 1 ? 's' : ''} will appear after completing all videos
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
                         </TabsContent>
 
                         <TabsContent value="attachments" className="mt-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -330,39 +651,61 @@ export default function CoursePreview() {
                         </p>
                     </Card>
 
-                    {/* Syllabus List */}
+                    {/* Playlist / Videos */}
                     <div>
                         <div className="flex justify-between items-center mb-4">
-                            <h3 className="font-bold text-white">Course Content</h3>
-                            <span className="text-sm text-gray-400">{lessons.length} Lessons</span>
+                            <h3 className="font-bold text-white">What you'll learn</h3>
+                            <span className="text-sm text-gray-400">{playlist.length} Lessons</span>
                         </div>
 
                         <div className="space-y-3">
-                            {lessons.length > 0 ? (
-                                lessons.map((lesson, index) => (
+                            {playlist.length > 0 ? (
+                                playlist.map((v, index) => (
                                     <div
-                                        key={lesson.id || index}
-                                        className="p-4 rounded-xl border bg-white/5 border-white/10 hover:bg-white/10 transition-all duration-300 flex items-center gap-4 group cursor-pointer"
+                                        key={index}
+                                        onClick={() => {
+                                            setCurrentVideoIndex(index);
+                                            setIsPlaying(true);
+                                        }}
+                                        className={`p-4 rounded-xl border transition-all duration-300 flex items-center gap-4 group cursor-pointer ${currentVideoIndex === index
+                                            ? 'bg-[#a6b1ff]/10 border-[#a6b1ff]/30 shadow-[0_0_20px_rgba(166,177,255,0.1)]'
+                                            : 'bg-white/5 border-white/10 hover:bg-white/10'
+                                            }`}
                                     >
                                         {/* Icon Box */}
-                                        <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 bg-white/10 text-gray-500">
-                                            <Play className="w-5 h-5 ml-1 fill-current" />
+                                        <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${currentVideoIndex === index
+                                            ? 'bg-[#a6b1ff] text-black'
+                                            : 'bg-white/10 text-gray-500'
+                                            }`}>
+                                            {currentVideoIndex === index && isPlaying ? (
+                                                <div className="flex gap-0.5 items-end justify-center h-3">
+                                                    <div className="w-0.5 bg-black animate-[bounce_0.6s_infinite] h-full" />
+                                                    <div className="w-0.5 bg-black animate-[bounce_0.8s_infinite] h-2/3" />
+                                                    <div className="w-0.5 bg-black animate-[bounce_0.4s_infinite] h-full" />
+                                                </div>
+                                            ) : (
+                                                <Play className={`w-4 h-4 ml-0.5 ${currentVideoIndex === index ? 'fill-current' : ''}`} />
+                                            )}
                                         </div>
 
                                         {/* Text Info */}
                                         <div className="flex-1">
-                                            <h4 className="font-bold text-sm text-gray-200">
-                                                {lesson.question_text || `Lesson ${index + 1}`}
+                                            <h4 className={`font-bold text-sm ${currentVideoIndex === index ? 'text-[#a6b1ff]' : 'text-gray-200'}`}>
+                                                {v.title}
                                             </h4>
-                                            <p className="text-xs text-gray-500">
-                                                {lesson.points ? `${lesson.points} points` : '10 mins'}
+                                            <p className="text-[10px] text-gray-500 uppercase tracking-wider">
+                                                {currentVideoIndex === index ? 'Now Playing' : 'Lesson video'}
                                             </p>
                                         </div>
+
+                                        {currentVideoIndex === index && (
+                                            <div className="w-2 h-2 rounded-full bg-[#a6b1ff] animate-pulse" />
+                                        )}
                                     </div>
                                 ))
                             ) : (
                                 <div className="text-center text-gray-500 py-4">
-                                    No lessons added yet.
+                                    No videos available.
                                 </div>
                             )}
                         </div>
@@ -376,13 +719,288 @@ export default function CoursePreview() {
                     <Button
                         size="lg"
                         className="bg-gradient-to-r from-[#a6b1ff] via-[#c7aff8] to-[#ffb585] text-[#0a0a0a] shadow-[0_6px_0_#8b95cc,0_15px_20px_rgba(166,177,255,0.4)] active:shadow-[0_0_0_#8b95cc] active:translate-y-[6px] font-bold text-lg h-14 px-8 rounded-2xl transition-all duration-150 border-none hover:brightness-110"
-                        onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                        onClick={handleActionButtonClick}
                     >
-                        Enroll Now
+                        {isPlaying || videoProgress > 0 ? 'Take Quiz' : 'Enroll Now'}
                         <Play className="w-5 h-5 ml-2 fill-current" />
                     </Button>
                 </div>
             </div>
+
+            {/* Case Study Drawer */}
+            <Drawer open={isCaseStudyDrawerOpen} onOpenChange={setIsCaseStudyDrawerOpen}>
+                <DrawerContent className="bg-[#0a0a0a]/95 backdrop-blur-2xl border-white/10 text-white min-h-[70vh] pb-10">
+                    <div className="mx-auto w-full max-w-4xl px-6">
+                        <DrawerHeader className="text-center">
+                            <div className="mx-auto w-12 h-12 bg-indigo-500/20 rounded-2xl flex items-center justify-center mb-4 border border-indigo-500/20">
+                                <BookOpen className="w-6 h-6 text-indigo-400" />
+                            </div>
+                            <DrawerTitle className="text-2xl font-black italic tracking-tighter uppercase">
+                                Case Study: <span className="text-indigo-400">{caseStudies[currentCaseStudyIndex]?.title}</span>
+                            </DrawerTitle>
+                            <DrawerDescription className="text-gray-400 font-medium capitalize">
+                                Assessment Segment {currentSegmentIndex + 1} of {caseStudies[currentCaseStudyIndex]?.segments?.length}
+                            </DrawerDescription>
+                        </DrawerHeader>
+
+                        {!caseStudyCompleted ? (
+                            <div className="mt-8 space-y-8">
+                                <AnimatePresence mode="wait">
+                                    <motion.div
+                                        key={`${currentCaseStudyIndex}-${currentSegmentIndex}`}
+                                        initial={{ opacity: 0, x: 20 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        exit={{ opacity: 0, x: -20 }}
+                                        className="space-y-6"
+                                    >
+                                        {/* Scenario Text */}
+                                        <div className="p-6 rounded-3xl bg-white/5 border border-white/10 leading-relaxed text-gray-300">
+                                            <div className="flex items-center gap-2 mb-3 text-indigo-400 font-black uppercase text-xs tracking-widest">
+                                                <MonitorPlay size={14} />
+                                                Scenario
+                                            </div>
+                                            {caseStudies[currentCaseStudyIndex]?.segments[currentSegmentIndex]?.scenario}
+                                        </div>
+
+                                        {/* Question */}
+                                        <div className="space-y-4">
+                                            <h3 className="text-xl font-bold text-white flex items-center gap-3">
+                                                <div className="w-8 h-8 rounded-lg bg-indigo-500/10 flex items-center justify-center shrink-0">
+                                                    <Target size={18} className="text-indigo-400" />
+                                                </div>
+                                                {caseStudies[currentCaseStudyIndex]?.segments[currentSegmentIndex]?.question}
+                                            </h3>
+
+                                            {/* Answers */}
+                                            <div className="grid gap-3">
+                                                {caseStudies[currentCaseStudyIndex]?.segments[currentSegmentIndex]?.questionType === QUESTION_TYPES.SHORT_ANSWER ? (
+                                                    <div className="space-y-4">
+                                                        <Textarea
+                                                            value={userAnswers[caseStudies[currentCaseStudyIndex].segments[currentSegmentIndex].id] || ''}
+                                                            onChange={(e) => handleCaseStudyAnswer(e.target.value)}
+                                                            placeholder="Type your answer here..."
+                                                            className="min-h-[120px] bg-white/5 border-white/10 rounded-2xl p-4 text-white focus:border-indigo-400"
+                                                        />
+                                                    </div>
+                                                ) : (
+                                                    caseStudies[currentCaseStudyIndex]?.segments[currentSegmentIndex]?.options.map((option, idx) => {
+                                                        const isSelected = caseStudies[currentCaseStudyIndex].segments[currentSegmentIndex].questionType === QUESTION_TYPES.MULTIPLE_CHOICE
+                                                            ? (userAnswers[caseStudies[currentCaseStudyIndex].segments[currentSegmentIndex].id] || []).includes(option.text)
+                                                            : userAnswers[caseStudies[currentCaseStudyIndex].segments[currentSegmentIndex].id] === option.text;
+
+                                                        return (
+                                                            <button
+                                                                key={idx}
+                                                                onClick={() => handleCaseStudyAnswer(option.text)}
+                                                                className={`w-full p-5 rounded-2xl border-2 text-left transition-all duration-300 flex items-center gap-4 group ${isSelected
+                                                                    ? 'border-indigo-400 bg-indigo-400/10'
+                                                                    : 'border-white/5 bg-white/5 hover:border-white/20'
+                                                                    }`}
+                                                            >
+                                                                <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-all ${isSelected ? 'bg-indigo-400 text-black' : 'bg-white/5 text-white/40 group-hover:bg-white/10'}`}>
+                                                                    {caseStudies[currentCaseStudyIndex].segments[currentSegmentIndex].questionType === QUESTION_TYPES.MULTIPLE_CHOICE ? (
+                                                                        <CheckSquare size={18} />
+                                                                    ) : (
+                                                                        <Circle size={18} />
+                                                                    )}
+                                                                </div>
+                                                                <span className={`font-bold ${isSelected ? 'text-white' : 'text-gray-400'}`}>
+                                                                    {option.text}
+                                                                </span>
+                                                            </button>
+                                                        );
+                                                    })
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        <Button
+                                            onClick={handleNextSegment}
+                                            disabled={!userAnswers[caseStudies[currentCaseStudyIndex]?.segments[currentSegmentIndex]?.id] ||
+                                                (caseStudies[currentCaseStudyIndex]?.segments[currentSegmentIndex]?.questionType === QUESTION_TYPES.MULTIPLE_CHOICE &&
+                                                    userAnswers[caseStudies[currentCaseStudyIndex]?.segments[currentSegmentIndex]?.id]?.length === 0)}
+                                            className="w-full h-16 bg-indigo-400 hover:bg-white text-black font-black uppercase tracking-widest rounded-2xl shadow-xl transition-all"
+                                        >
+                                            {currentSegmentIndex < caseStudies[currentCaseStudyIndex]?.segments?.length - 1 ? 'Next Segment' : 'Finish Case Study'}
+                                            <ChevronRight className="ml-2 w-5 h-5" />
+                                        </Button>
+                                    </motion.div>
+                                </AnimatePresence>
+                            </div>
+                        ) : (
+                            <motion.div
+                                initial={{ opacity: 0, scale: 0.95 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                className="mt-12 text-center space-y-8"
+                            >
+                                <div className="space-y-4">
+                                    <div className="w-24 h-24 rounded-full bg-emerald-500/20 border-2 border-emerald-500/20 flex items-center justify-center mx-auto mb-6">
+                                        <CheckCircle className="w-12 h-12 text-emerald-400" />
+                                    </div>
+                                    <h2 className="text-3xl font-black text-white italic tracking-tighter uppercase">
+                                        Case Study <span className="text-emerald-400">Completed!</span>
+                                    </h2>
+                                    <p className="text-gray-400 font-medium text-lg">
+                                        Excellent progress! You've analyzed the scenarios.
+                                    </p>
+                                </div>
+
+                                <div className="p-8 rounded-[2.5rem] bg-white/5 border border-white/10 max-w-md mx-auto space-y-6">
+                                    <div className="flex items-center justify-between text-white/40 uppercase tracking-widest font-black text-xs">
+                                        <span>Overall Insight Score</span>
+                                        <span className="text-emerald-400">{caseStudyScore}%</span>
+                                    </div>
+                                    <div className="h-3 bg-white/5 rounded-full overflow-hidden border border-white/10 p-0.5">
+                                        <div
+                                            className="h-full bg-emerald-400 rounded-full transition-all duration-1000"
+                                            style={{ width: `${caseStudyScore}%` }}
+                                        />
+                                    </div>
+
+                                    <div className="space-y-2 text-left bg-white/5 p-4 rounded-2xl">
+                                        <div className="flex items-center gap-2 text-indigo-400 font-black uppercase text-[10px] tracking-widest">
+                                            <Lightbulb size={12} />
+                                            Key Takeaway
+                                        </div>
+                                        <p className="text-sm italic text-gray-300">
+                                            {caseStudies[currentCaseStudyIndex]?.learningTakeaway}
+                                        </p>
+                                    </div>
+
+                                    <div className="p-4 rounded-2xl bg-indigo-500/5 border border-indigo-500/10 text-left">
+                                        <p className="text-sm text-indigo-300 leading-relaxed">
+                                            {caseStudyScore >= 70
+                                                ? caseStudies[currentCaseStudyIndex]?.outcomes?.success
+                                                : caseStudies[currentCaseStudyIndex]?.outcomes?.failure}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <Button
+                                    onClick={handleFinishCaseStudy}
+                                    className="px-12 h-16 bg-white hover:bg-emerald-400 text-black font-black uppercase tracking-widest rounded-2xl shadow-2xl transition-all hover:scale-105 active:scale-95"
+                                >
+                                    {currentCaseStudyIndex < caseStudies.length - 1 ? 'Next Case Study' : 'Return to Course'}
+                                </Button>
+                            </motion.div>
+                        )}
+                    </div>
+                </DrawerContent>
+            </Drawer>
+
+            {/* Reflection Quiz Drawer */}
+            <Drawer open={isQuizDrawerOpen} onOpenChange={setIsQuizDrawerOpen}>
+                <DrawerContent className="bg-[#0a0a0a]/95 backdrop-blur-2xl border-white/10 text-white pb-10">
+                    <div className="mx-auto w-full max-w-lg px-6">
+                        <DrawerHeader className="text-center">
+                            <div className="mx-auto w-12 h-12 bg-[#a6b1ff]/20 rounded-2xl flex items-center justify-center mb-4 border border-[#a6b1ff]/20">
+                                <FileText className="w-6 h-6 text-[#a6b1ff]" />
+                            </div>
+                            <DrawerTitle className="text-2xl font-black italic tracking-tighter uppercase">
+                                Course <span className="text-[#a6b1ff]">Reflection</span>
+                            </DrawerTitle>
+                            <DrawerDescription className="text-gray-400 font-medium">
+                                Share your insights on "the techxplora course?"
+                            </DrawerDescription>
+                        </DrawerHeader>
+
+                        <div className="mt-8 space-y-6">
+                            <div className="space-y-4">
+                                <label className="text-sm font-bold text-[#a6b1ff] uppercase tracking-widest pl-1">
+                                    What did you learn from this video?
+                                </label>
+                                <Textarea
+                                    value={reflection}
+                                    onChange={(e) => setReflection(e.target.value)}
+                                    placeholder="Enter your insights here..."
+                                    className="min-h-[150px] bg-white/5 border-white/10 rounded-2xl focus:border-[#a6b1ff] focus:ring-1 focus:ring-[#a6b1ff] text-white placeholder:text-gray-600 p-6 transition-all"
+                                />
+                            </div>
+
+                            <Button
+                                onClick={handleReflectionSubmit}
+                                className="w-full h-16 bg-[#a6b1ff] hover:bg-white text-black font-black uppercase tracking-[0.2em] rounded-2xl flex items-center justify-center gap-3 transition-all hover:scale-[1.02] active:scale-95 shadow-2xl shadow-[#a6b1ff]/10"
+                            >
+                                Submit Reflection
+                                <Send className="w-5 h-5" />
+                            </Button>
+                        </div>
+
+                        <DrawerFooter className="mt-4 pt-4 border-t border-white/5">
+                            <DrawerClose asChild>
+                                <Button variant="ghost" className="text-gray-500 hover:text-white font-bold">
+                                    Cancel
+                                </Button>
+                            </DrawerClose>
+                        </DrawerFooter>
+                    </div>
+                </DrawerContent>
+            </Drawer>
+
+            {/* Registration Modal */}
+            <Dialog open={showRegModal} onOpenChange={setShowRegModal}>
+                <DialogContent className="bg-[#0a0a0a] border-white/10 text-white max-w-md rounded-2xl">
+                    <DialogHeader>
+                        <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-[#a6b1ff] to-[#ffb585] bg-clip-text text-transparent italic">
+                            Registration Required
+                        </DialogTitle>
+                        <DialogDescription className="text-gray-400 mt-2">
+                            To take the quiz and track your progress, you need to be registered for this course. Do you want to sign in or register now?
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter className="flex gap-3 mt-6">
+                        <Button
+                            variant="ghost"
+                            onClick={() => setShowRegModal(false)}
+                            className="flex-1 text-gray-400 hover:text-white hover:bg-white/5 border border-white/10"
+                        >
+                            Later
+                        </Button>
+                        <Button
+                            onClick={() => navigate('/auth/login')}
+                            className="flex-1 bg-[#a6b1ff] hover:bg-[#a6b1ff]/90 text-black font-bold"
+                        >
+                            Yes, Sign In
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Enrollment Modal for Registered Users */}
+            <Dialog open={showEnrollModal} onOpenChange={setShowEnrollModal}>
+                <DialogContent className="bg-[#0a0a0a] border-white/10 text-white max-w-md rounded-2xl">
+                    <DialogHeader>
+                        <div className="mx-auto w-12 h-12 bg-[#a6b1ff]/20 rounded-2xl flex items-center justify-center mb-4 border border-[#a6b1ff]/20">
+                            <MonitorPlay className="w-6 h-6 text-[#a6b1ff]" />
+                        </div>
+                        <DialogTitle className="text-2xl font-bold text-center bg-gradient-to-r from-[#a6b1ff] to-[#ffb585] bg-clip-text text-transparent italic">
+                            Course Registration
+                        </DialogTitle>
+                        <DialogDescription className="text-gray-400 mt-2 text-center">
+                            Would you like to register and start learning "the techxplora course"?
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter className="flex gap-3 mt-6">
+                        <Button
+                            variant="ghost"
+                            onClick={() => setShowEnrollModal(false)}
+                            className="flex-1 text-gray-400 hover:text-white hover:bg-white/5 border border-white/10 h-12 rounded-xl"
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            onClick={() => {
+                                setShowEnrollModal(false);
+                                window.scrollTo({ top: 0, behavior: 'smooth' });
+                                handlePlayVideo();
+                            }}
+                            className="flex-1 bg-[#a6b1ff] hover:bg-[#a6b1ff]/90 text-black font-bold h-12 rounded-xl"
+                        >
+                            Yes, Start Now
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }

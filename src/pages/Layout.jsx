@@ -21,16 +21,17 @@ export default function Layout({ children }) {
 
     const location = useLocation();
     const isDashboard = location.pathname.startsWith('/dashboard');
+    const isSupport = location.pathname === '/support';
 
     return (
-        <div className="min-h-screen bg-[#0a0a0a] text-white selection:bg-[#a6b1ff]/30">
-            <CustomCursor />
-            <ScrollProgress progress={scrollProgress} />
-            {!isDashboard && <Navbar />}
+        <div className="min-h-screen bg-background text-foreground selection:bg-[#a6b1ff]/30 transition-colors duration-300">
+            {!isSupport && <CustomCursor />}
+            {!isSupport && <ScrollProgress progress={scrollProgress} />}
+            {!isDashboard && !isSupport && <Navbar />}
             <main>
                 {children}
             </main>
-            <ChatBot />
+            {!isSupport && <ChatBot />}
         </div>
     )
 }

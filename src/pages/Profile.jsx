@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -9,7 +9,8 @@ import {
     MessageCircle,
     LogOut,
     Bell,
-    Settings
+    Moon,
+    Sun
 } from 'lucide-react';
 import { Switch } from "@/components/ui/switch";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -20,11 +21,13 @@ import ChangePasswordModal from '@/components/profile/ChangePasswordModal';
 import LogoutModal from '@/components/profile/LogoutModal';
 import { useDispatch } from 'react-redux';
 import { logout } from '@/redux/slices/authSlice';
+import { useTheme } from '@/contexts/ThemeContext';
 
 export default function Profile() {
     const navigate = useNavigate();
     const user = useSelector(selectCurrentUser);
     const dispatch = useDispatch();
+    const { darkMode, toggleTheme } = useTheme();
     const [pushEnabled, setPushEnabled] = useState(true);
     const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
     const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
@@ -34,19 +37,23 @@ export default function Profile() {
         navigate('/auth/login');
     };
 
-    const MenuItem = ({ icon: Icon, label, onClick, showArrow = true, color = "text-white" }) => (
+    useEffect(() => {
+        console.log(user, "user");
+    }, []);
+
+    const MenuItem = ({ icon: Icon, label, onClick, showArrow = true, color = "text-foreground" }) => (
         <motion.button
             whileTap={{ scale: 0.98 }}
             onClick={onClick}
-            className="w-full flex items-center justify-between p-4 bg-white/5 rounded-2xl hover:bg-white/10 transition-colors border border-white/5 group"
+            className="w-full flex items-center justify-between p-4 bg-accent/50 rounded-2xl hover:bg-accent transition-colors border border-border group"
         >
             <div className="flex items-center gap-4">
-                <div className={`p-3 rounded-full bg-white/5 group-hover:bg-white/10 ${color}`}>
+                <div className={`p-3 rounded-full bg-accent group-hover:bg-accent/80 ${color}`}>
                     <Icon size={20} />
                 </div>
-                <span className="text-white font-medium">{label}</span>
+                <span className="text-foreground font-medium">{label}</span>
             </div>
-            {showArrow && <ChevronRight className="text-gray-500" size={20} />}
+            {showArrow && <ChevronRight className="text-muted-foreground" size={20} />}
         </motion.button>
     );
 
@@ -55,19 +62,19 @@ export default function Profile() {
             <div className="min-h-screen relative pb-10">
                 <div className="relative z-10 w-full max-w-md lg:max-w-none lg:px-10 mx-auto min-h-screen flex flex-col">
                     {/* Header */}
-                    <div className="px-6 lg:px-0 pt-8 lg:pt-12 pb-6 bg-gradient-to-b from-[#1a1520] to-transparent lg:from-transparent lg:to-transparent lg:mb-10">
-                        <h1 className="text-3xl font-black uppercase tracking-tighter italic text-white mb-8">Settings</h1>
+                    <div className="px-6 lg:px-0 pt-8 lg:pt-12 pb-6 lg:mb-10">
+                        <h1 className="text-3xl font-black uppercase tracking-tighter italic text-foreground mb-8">Settings</h1>
 
-                        <div className="flex items-center gap-6 p-6 lg:p-8 bg-white/5 border border-white/10 rounded-[2.5rem] backdrop-blur-xl shadow-2xl">
+                        <div className="flex items-center gap-6 p-6 lg:p-8 bg-card border border-border rounded-[2.5rem] backdrop-blur-xl shadow-2xl">
                             <Avatar className="w-20 h-20 border-4 border-[#a6b1ff]/30 shadow-2xl">
                                 <AvatarImage src={user?.avatar || "https://github.com/shadcn.png"} />
                                 <AvatarFallback className="bg-indigo-500 text-white text-2xl font-black italic">
-                                    {user?.name?.charAt(0) || "U"}
+                                    {user?.fullname?.charAt(0) || "U"}
                                 </AvatarFallback>
                             </Avatar>
                             <div>
                                 <p className="text-indigo-400 text-xs font-black uppercase tracking-[0.2em] mb-1">Authenticated Account</p>
-                                <h2 className="text-1xl lg:text-3xl font-black text-white italic tracking-tighter uppercase">{user?.name || "Mr. John Doe"}</h2>
+                                <h2 className="text-1xl lg:text-3xl font-black text-foreground italic tracking-tighter uppercase">{user?.fullname || "Mr. John Doe"}</h2>
                             </div>
                             <button
                                 onClick={() => setIsLogoutModalOpen(true)}
@@ -82,7 +89,7 @@ export default function Profile() {
                         {/* Menu Section */}
                         <div className="space-y-4">
                             <div className="px-2 mb-2">
-                                <span className="text-[10px] font-black text-gray-500 uppercase tracking-[0.3em]">Account Settings</span>
+                                <span className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em]">Account Settings</span>
                             </div>
                             <MenuItem
                                 icon={User}
@@ -96,15 +103,15 @@ export default function Profile() {
                             />
 
                             <div className="px-2 mt-8 mb-2">
-                                <span className="text-[10px] font-black text-gray-500 uppercase tracking-[0.3em]">Notifications</span>
+                                <span className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em]">Notifications</span>
                             </div>
                             {/* Push Notification Toggle */}
-                            <div className="w-full flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/10 hover:bg-white/10 transition-colors">
+                            <div className="w-full flex items-center justify-between p-4 bg-accent/50 rounded-2xl border border-border hover:bg-accent transition-colors">
                                 <div className="flex items-center gap-4">
-                                    <div className="p-3 rounded-xl bg-white/5 text-white">
+                                    <div className="p-3 rounded-xl bg-accent text-foreground">
                                         <Bell size={20} />
                                     </div>
-                                    <span className="text-white font-bold uppercase tracking-tight text-sm">Push Notifications</span>
+                                    <span className="text-foreground font-bold uppercase tracking-tight text-sm">Push Notifications</span>
                                 </div>
                                 <Switch
                                     checked={pushEnabled}
@@ -112,12 +119,36 @@ export default function Profile() {
                                     className="data-[state=checked]:bg-[#7c3aed]"
                                 />
                             </div>
+
+                            <div className="px-2 mt-8 mb-2">
+                                <span className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em]">Appearance</span>
+                            </div>
+                            {/* Dark Mode Toggle */}
+                            <div className="w-full flex items-center justify-between p-4 bg-accent/50 rounded-2xl border border-border hover:bg-accent transition-colors">
+                                <div className="flex items-center gap-4">
+                                    <div className={`p-3 rounded-xl transition-colors ${
+                                        darkMode 
+                                            ? 'bg-indigo-500/20 text-indigo-400 border border-indigo-500/30' 
+                                            : 'bg-amber-500/20 text-amber-600 border border-amber-500/30'
+                                    }`}>
+                                        {darkMode ? <Moon size={20} /> : <Sun size={20} />}
+                                    </div>
+                                    <span className="text-foreground font-bold uppercase tracking-tight text-sm">
+                                        {darkMode ? 'Dark Mode' : 'Light Mode'}
+                                    </span>
+                                </div>
+                                <Switch
+                                    checked={darkMode}
+                                    onCheckedChange={toggleTheme}
+                                    className="data-[state=checked]:bg-indigo-600 data-[state=unchecked]:bg-amber-500"
+                                />
+                            </div>
                         </div>
 
                         {/* Support & Community Section */}
                         <div className="space-y-6">
                             <div className="px-2 mb-2">
-                                <span className="text-[10px] font-black text-gray-500 uppercase tracking-[0.3em]">Support</span>
+                                <span className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em]">Support</span>
                             </div>
 
                             <MenuItem
@@ -127,18 +158,23 @@ export default function Profile() {
                             />
 
                             {/* Premium Support Card */}
-                            <div className="bg-gradient-to-br from-indigo-600 to-purple-800 rounded-[2.5rem] p-8 relative overflow-hidden shadow-[0_20px_50px_rgba(79,70,229,0.3)] group cursor-pointer transition-all hover:scale-[1.02]">
+                            <div className="bg-gradient-to-br from-green-500 to-green-700 rounded-[2.5rem] p-8 relative overflow-hidden shadow-[0_20px_50px_rgba(34,197,94,0.3)] group cursor-pointer transition-all hover:scale-[1.02]">
                                 <div className="relative z-10">
                                     <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center mb-6 backdrop-blur-md">
                                         <MessageCircle className="text-white" size={24} />
                                     </div>
                                     <h3 className="text-white font-black text-xl uppercase tracking-tighter mb-2 italic">Need Assistance?</h3>
-                                    <p className="text-indigo-100 font-medium mb-6 text-sm leading-relaxed opacity-80 uppercase tracking-tight">
-                                        Join our official Discord community for real-time support and community events.
+                                    <p className="text-green-100 font-medium mb-6 text-sm leading-relaxed opacity-80 uppercase tracking-tight">
+                                        Chat with us on WhatsApp for real-time support and assistance.
                                     </p>
-                                    <button className="h-12 px-8 bg-white text-indigo-700 font-black uppercase tracking-widest text-xs rounded-xl shadow-xl transition-all active:scale-95 group-hover:bg-indigo-50">
-                                        Discord Server
-                                    </button>
+                                    <a 
+                                        href="https://wa.me/080xxxxxxxx" 
+                                        target="_blank" 
+                                        rel="noopener noreferrer"
+                                        className="inline-block h-12 px-8 bg-white text-green-700 font-black uppercase tracking-widest text-xs rounded-xl shadow-xl transition-all active:scale-95 group-hover:bg-green-50 leading-[3rem]"
+                                    >
+                                        Chat on WhatsApp
+                                    </a>
                                 </div>
                                 {/* Decorative elements */}
                                 <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-3xl translate-x-12 -translate-y-12"></div>

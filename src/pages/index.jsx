@@ -25,6 +25,9 @@ import AIReview from "./AIReview.jsx";
 import Drafts from "./Drafts.jsx";
 import QuizDetails from "./QuizDetails.jsx";
 import StartQuiz from "./StartQuiz.jsx";
+import QuizCompletion from "./QuizCompletion.jsx";
+import QuizResult from "./QuizResult.jsx";
+import TeacherGroupDetails from "./TeacherGroupDetails.jsx";
 import JoinQuiz from './JoinQuiz.jsx';
 import JoinGroup from './JoinGroup.jsx';
 import Start from "./auth/Start.jsx";
@@ -41,6 +44,16 @@ import GroupInfo from "./auth/GroupInfo.jsx";
 import Options from "./auth/Options.jsx";
 import Option from "./auth/Option.jsx";
 import CreateGroupTeacher from "./CreateGroup.jsx";
+import ManageCourses from "./ManageCourses.jsx";
+import CreateCourse from "./CreateCourse.jsx";
+import ViewManagedCourse from "./ViewManagedCourse.jsx";
+import EditCourse from './EditCourse';
+import Docs from './Docs.jsx';
+import Pin from "./auth/Pin.jsx";
+import EditQuiz from "./EditQuiz.jsx";
+import AddManual from "./AddManual.jsx";
+import KYC from "./auth/KYC.jsx";
+import Support from "./Support.jsx";
 
 // Mapping of page names for Layout highlighting (optional)
 const PAGES = {
@@ -76,6 +89,7 @@ function PagesContent() {
         <Route path="/chess/game" element={<ChessGame />} />
         <Route path="/courses" element={<Courses />} />
         <Route path="/courses/:courseId" element={<CoursePreview />} />
+        <Route path="/docs" element={<Docs />} />
 
         {/* Auth Routes */}
         <Route path="/dashboard" element={<Dashboard />} />
@@ -85,8 +99,13 @@ function PagesContent() {
         <Route path="/dashboard/quizzes" element={<Quizzes />} />
         <Route path="/dashboard/quizzes/details" element={<QuizDetails />} />
         <Route path="/dashboard/quizzes/start" element={<StartQuiz />} />
+        <Route path="/dashboard/quizzes/completion" element={<QuizCompletion />} />
+        <Route path="/dashboard/quizzes/result" element={<QuizResult />} />
+        <Route path="/dashboard/teacher/groups" element={<TeacherGroupDetails />} />
         <Route path="/dashboard/quizzes/join" element={<JoinQuiz />} />
         <Route path="/dashboard/teacher/quizzes" element={<CreateQuiz />} />
+        <Route path="/dashboard/teacher/editquiz" element={<EditQuiz />} />
+        <Route path="/dashboard/teacher/add-manual" element={<AddManual />} />
         <Route path="/dashboard/teacher/question" element={<Questions />} />
         <Route path="/dashboard/teacher/draft" element={<Drafts />} />
         <Route path="/dashboard/teacher/ai-review" element={<AIReview />} />
@@ -96,11 +115,20 @@ function PagesContent() {
         <Route path="/dashboard/wallet" element={<Wallet />} />
         <Route path="/dashboard/profile" element={<Profile />} />
         <Route path="/dashboard/profile/edit" element={<UserProfile />} />
+        <Route path="/support" element={<Support />} />
+
+        {/* Course Directed Routes */}
+        <Route path="/dashboard/courses" element={<ManageCourses />} />
+        <Route path="/dashboard/courses/create" element={<CreateCourse />} />
+        <Route path="/dashboard/courses/view/:courseId" element={<ViewManagedCourse />} />
+        <Route path="/dashboard/courses/edit/:courseId" element={<EditCourse />} />
         <Route path="/auth/login" element={<Auth />} />
         <Route path="/auth/start" element={<Start />} />
         <Route path="/auth/signup" element={<Signup />} />
+        <Route path="/auth/kyc" element={<KYC />} />
         <Route path="/auth/phone" element={<PhoneVerify />} />
         <Route path="/auth/otp" element={<OTPVerify />} />
+        <Route path="/auth/otp_verify" element={<Pin />} />
         <Route path="/auth/pin" element={<PinCreate />} />
         <Route path="/auth/forgot-password" element={<ForgotPassword />} />
         <Route path="/auth/reset-password" element={<ResetPassword />} />

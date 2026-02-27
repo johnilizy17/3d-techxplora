@@ -13,14 +13,14 @@ export const questionApi = baseApi.injectEndpoints({
 
         // Get question by ID
         getQuestionById: builder.query({
-            query: (id) => `/questions/${id}`,
+            query: (id) => `/get-questions/${id}`,
             providesTags: (result, error, id) => [{ type: 'Question', id }],
         }),
 
         // Create question
         createQuestion: builder.mutation({
             query: (questionData) => ({
-                url: '/questions',
+                url: '/create-question',
                 method: 'POST',
                 body: questionData,
             }),
@@ -30,8 +30,8 @@ export const questionApi = baseApi.injectEndpoints({
         // Update question
         updateQuestion: builder.mutation({
             query: ({ id, ...questionData }) => ({
-                url: `/questions/${id}`,
-                method: 'PUT',
+                url: `/upate-questions/${id}`,
+                method: 'POST',
                 body: questionData,
             }),
             invalidatesTags: (result, error, { id }) => [{ type: 'Question', id }],
@@ -73,12 +73,12 @@ export const questionApi = baseApi.injectEndpoints({
 
         // Submit quiz
         submitQuiz: builder.mutation({
-            query: ({ quizId, answers }) => ({
-                url: `/quizzes/${quizId}/submit`,
+            query: (payload) => ({
+                url: `/answers/submit`,
                 method: 'POST',
-                body: { answers },
+                body: payload,
             }),
-            invalidatesTags: (result, error, { quizId }) => [{ type: 'Quiz', id: quizId }],
+            invalidatesTags: (result, error) => ['Quiz'],
         }),
 
         // Get quiz results
@@ -91,6 +91,11 @@ export const questionApi = baseApi.injectEndpoints({
         getQuestionsByQuizId: builder.query({
             query: (quizId) => `/get-questions/${quizId}`,
             providesTags: ['Question'],
+        }),
+        // Verify/Get quiz by code
+        verifyQuiz: builder.query({
+            query: (code) => `/verify-quizzes/${code}`,
+            providesTags: (result, error, code) => [{ type: 'Quiz', id: code }],
         }),
     }),
 });
@@ -107,4 +112,5 @@ export const {
     useSubmitQuizMutation,
     useGetQuizResultsQuery,
     useGetQuestionsByQuizIdQuery,
+    useVerifyQuizQuery,
 } = questionApi;

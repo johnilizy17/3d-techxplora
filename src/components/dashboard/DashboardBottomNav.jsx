@@ -9,7 +9,7 @@ import { selectCurrentUser, logout } from '@/redux/slices/authSlice';
 const NavItem = ({ icon: Icon, label, isActive, onClick }) => (
     <button
         onClick={onClick}
-        className={`flex flex-col items-center gap-1 ${isActive ? 'text-white' : 'text-gray-500 hover:text-gray-300'}`}
+        className={`flex flex-col items-center gap-1 transition-colors ${isActive ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
     >
         <Icon size={24} className={isActive ? "fill-current" : ""} />
         <span className="text-[10px] font-medium">{label}</span>
@@ -21,7 +21,7 @@ export default function DashboardBottomNav({ currentTab = 'Home', onLogout, onMo
 
     return (
         <div className="fixed bottom-0 left-0 right-0 z-50 flex justify-center">
-            <div className="w-full max-w-md bg-[#0a0a0a]/95 backdrop-blur-xl border-t border-white/10 px-6 py-4 rounded-t-[2.5rem] shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.5)] flex items-end justify-between relative translate-y-[-1px]">
+            <div className="w-full max-w-md bg-background/95 backdrop-blur-xl border-t border-border px-6 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))] rounded-t-[2.5rem] shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.5)] flex items-end justify-between relative transition-colors duration-300">
 
                 <NavItem icon={Home} label="Home" isActive={currentTab === 'Home'} onClick={() => navigate('/dashboard')} />
                 <NavItem icon={LayoutGrid} label="Groups" isActive={currentTab === 'groups'} onClick={() => navigate('/dashboard/groups')} />
@@ -45,7 +45,7 @@ export default function DashboardBottomNav({ currentTab = 'Home', onLogout, onMo
                             }}
                             className="w-20 h-20 rounded-full bg-gradient-to-br from-[#6366f1] via-[#8b5cf6] to-[#d946ef] flex items-center justify-center text-white p-1 relative z-20 shadow-[0_0_30px_rgba(139,92,246,0.5)]"
                         >
-                            <div className="w-full h-full rounded-full bg-[#0a0a0a]/20 flex items-center justify-center backdrop-blur-sm border-2 border-white/20">
+                            <div className="w-full h-full rounded-full bg-background/20 flex items-center justify-center backdrop-blur-sm border-2 border-white/20">
                                 <Play size={36} fill="white" className="ml-1" />
                             </div>
                         </motion.div>

@@ -10,12 +10,24 @@ import EmptyState from '@/components/dashboard/EmptyState';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { timeAgo } from '@/utils/date';
 import CopyIcon from '@/components/dashboard/CopyIcon';
+import {
+    Pagination,
+    PaginationContent,
+    PaginationItem,
+    PaginationLink,
+    PaginationNext,
+    PaginationPrevious,
+} from "@/components/ui/pagination";
+
+const ITEMS_PER_PAGE = 10;
 
 export default function Groups() {
     const navigate = useNavigate();
     const dispatch = useDispatch();
     const user = useSelector(selectCurrentUser);
     const type = user?.accountable_type === "App\\Models\\Student" ? "student" : "teacher";
+
+    const [currentPage, setCurrentPage] = useState(1);
 
     const { data: groupsData, isLoading } = useGetGroupsQuery({ type, id: user?.id }, {
         skip: !user?.id
@@ -32,6 +44,11 @@ export default function Groups() {
     const groups = Array.isArray(groupsData) ? groupsData : (groupsData?.data || []);
     const quizzes = Array.isArray(quizzesData) ? quizzesData : (quizzesData?.data || []);
     const quizData = quizDataResults?.data || quizDataResults || { group: [], class: [], quiz: [] };
+
+    // Pagination Logic
+    const totalPages = Math.ceil(groups.length / ITEMS_PER_PAGE);
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    const pagedGroups = groups.slice(startIndex, startIndex + ITEMS_PER_PAGE);
 
     const handleGroupClick = (group) => {
         dispatch(setTemporaryStorage(group));
@@ -66,16 +83,52 @@ export default function Groups() {
                                 <EmptyState title="No Groups Found" description="You haven't joined or created any groups yet." />
                             </div>
                         ) : (
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                                {groups.map((group, index) => (
-                                    <GroupCard
-                                        key={group.id || index}
-                                        group={group}
-                                        index={index}
-                                        onClick={() => handleGroupClick(group)}
-                                    />
-                                ))}
-                            </div>
+                            <>
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                                    {pagedGroups.map((group, index) => (
+                                        <GroupCard
+                                            key={group.id || index}
+                                            group={group}
+                                            index={index}
+                                            onClick={() => handleGroupClick(group)}
+                                        />
+                                    ))}
+                                </div>
+
+                                {totalPages > 1 && (
+                                    <div className="mt-12">
+                                        <Pagination>
+                                            <PaginationContent>
+                                                <PaginationItem>
+                                                    <PaginationPrevious
+                                                        onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                                                        className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                                                    />
+                                                </PaginationItem>
+
+                                                {[...Array(totalPages)].map((_, i) => (
+                                                    <PaginationItem key={i + 1}>
+                                                        <PaginationLink
+                                                            onClick={() => setCurrentPage(i + 1)}
+                                                            isActive={currentPage === i + 1}
+                                                            className="cursor-pointer"
+                                                        >
+                                                            {i + 1}
+                                                        </PaginationLink>
+                                                    </PaginationItem>
+                                                ))}
+
+                                                <PaginationItem>
+                                                    <PaginationNext
+                                                        onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                                                        className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                                                    />
+                                                </PaginationItem>
+                                            </PaginationContent>
+                                        </Pagination>
+                                    </div>
+                                )}
+                            </>
                         )}
                     </div>
                 </div>

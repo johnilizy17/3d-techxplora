@@ -59,7 +59,7 @@ export default function JoinQuiz() {
                             animate={{ opacity: 1, scale: 1 }}
                             className="w-full max-w-lg"
                         >
-                            <div className="relative p-8 sm:p-12 bg-white/5 border border-white/10 rounded-[3rem] overflow-hidden shadow-2xl shadow-indigo-500/5">
+                            <div className="relative p-6 sm:p-12 bg-white/5 border border-white/10 rounded-3xl md:rounded-[3rem] overflow-hidden shadow-2xl shadow-indigo-500/5">
                                 {/* Decorative Elements */}
                                 <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-[100px] -mr-32 -mt-32" />
                                 <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-500/10 rounded-full blur-[100px] -ml-32 -mb-32" />
@@ -70,11 +70,11 @@ export default function JoinQuiz() {
                                     </div>
 
                                     <div>
-                                        <h1 className="text-3xl sm:text-4xl font-black text-white italic tracking-tight uppercase mb-4">
-                                            Join <span className="text-[#a6b1ff]">Challenge</span>
+                                        <h1 className="text-2xl sm:text-4xl font-black text-white italic tracking-tight uppercase mb-4">
+                                            Join a <span className="text-[#a6b1ff]">Quiz</span>
                                         </h1>
                                         <p className="text-white/40 text-sm font-medium leading-relaxed max-w-xs mx-auto">
-                                            Enter the special access code provided by your teacher to unlock your next mission.
+                                            Enter the code your teacher gave you to start playing!
                                         </p>
                                     </div>
 
@@ -88,7 +88,7 @@ export default function JoinQuiz() {
                                                 value={code}
                                                 onChange={(e) => setCode(e.target.value.toUpperCase())}
                                                 placeholder="ENTER CODE (e.g. QZ-123)"
-                                                className="w-full bg-white/5 border border-white/10 rounded-2xl py-6 pl-16 pr-6 text-white placeholder:text-white/20 focus:outline-none focus:border-indigo-400/50 transition-all font-black tracking-widest text-xl italic text-center"
+                                                className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 sm:py-6 pl-14 sm:pl-16 pr-6 text-white placeholder:text-white/20 focus:outline-none focus:border-indigo-400/50 transition-all font-black tracking-widest text-lg sm:text-xl italic text-center"
                                                 autoFocus
                                             />
                                         </div>
@@ -107,7 +107,7 @@ export default function JoinQuiz() {
                                     <div className="flex items-center gap-4 py-4 px-6 bg-white/5 rounded-2xl border border-white/5">
                                         <Info className="text-[#a6b1ff] shrink-0" size={20} />
                                         <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest text-left leading-relaxed">
-                                            Codes are usually 6-8 characters long. If you don't have one, ask your teacher.
+                                            Quiz codes are usually 6-8 letters and numbers. Ask your teacher if you don't have one!
                                         </p>
                                     </div>
                                 </div>
@@ -117,11 +117,11 @@ export default function JoinQuiz() {
                             <div className="mt-12 grid grid-cols-2 gap-4">
                                 <Link to="/dashboard/quizzes" className="flex flex-col items-center gap-2 p-6 rounded-[2rem] bg-white/5 border border-white/5 hover:bg-white/10 transition-all group">
                                     <Gamepad2 className="text-white/20 group-hover:text-amber-400 transition-colors" size={24} />
-                                    <span className="text-[10px] font-black text-white/40 uppercase tracking-widest italic group-hover:text-white transition-colors">Browse Quizzes</span>
+                                    <span className="text-[10px] font-black text-white/40 uppercase tracking-widest italic group-hover:text-white transition-colors">See All Quizzes</span>
                                 </Link>
                                 <Link to="/dashboard/leaderboard" className="flex flex-col items-center gap-2 p-6 rounded-[2rem] bg-white/5 border border-white/5 hover:bg-white/10 transition-all group">
                                     <Trophy className="text-white/20 group-hover:text-indigo-400 transition-colors" size={24} />
-                                    <span className="text-[10px] font-black text-white/40 uppercase tracking-widest italic group-hover:text-white transition-colors">Hall of Fame</span>
+                                    <span className="text-[10px] font-black text-white/40 uppercase tracking-widest italic group-hover:text-white transition-colors">Top Scores</span>
                                 </Link>
                             </div>
                         </motion.div>

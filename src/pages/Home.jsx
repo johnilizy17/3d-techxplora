@@ -23,12 +23,12 @@ export default function Home() {
   };
 
   return (
-    <div className="relative bg-[#0a0a0a] overflow-hidden">
+    <div className="relative bg-background overflow-hidden transition-colors duration-300">
       {/* HERO 3D RENDER PLACEHOLDER - Replace with actual 3D scene or hero image */}
       <HeroSection />
 
       {/* PRODUCT IMAGE PLACEHOLDERS - Replace with actual product photography */}
-      <FeaturedGallery products={products} />
+      {/* <FeaturedGallery products={products} /> */}
 
       <HowItWorks />
 

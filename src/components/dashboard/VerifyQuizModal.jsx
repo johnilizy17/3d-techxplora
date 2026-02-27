@@ -72,7 +72,7 @@ export default function VerifyQuizModal({ isOpen, onClose, quiz }) {
                     </button>
 
                     {/* Scrollable Content Area */}
-                    <div className="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar relative z-10 px-8 sm:px-12 py-12">
+                    <div className="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar relative z-10 px-6 sm:px-12 py-8 sm:py-12">
                         <div className="flex items-center gap-4 mb-10">
                             <div className="w-14 h-14 bg-emerald-500/20 rounded-2xl flex items-center justify-center border border-emerald-500/30">
                                 <CheckCircle2 className="text-emerald-400" size={28} />
@@ -96,7 +96,7 @@ export default function VerifyQuizModal({ isOpen, onClose, quiz }) {
                                     <div className="text-[10px] font-black text-emerald-400 uppercase tracking-widest mb-2 flex items-center gap-2">
                                         <Trophy size={12} /> Mission Profile
                                     </div>
-                                    <h3 className="text-3xl font-black text-white uppercase italic leading-tight">{quiz?.title}</h3>
+                                    <h3 className="text-2xl sm:text-3xl font-black text-white uppercase italic leading-tight">{quiz?.title}</h3>
                                 </div>
 
                                 <p className="text-white/40 text-sm font-medium leading-relaxed">

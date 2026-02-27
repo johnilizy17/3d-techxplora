@@ -1,12 +1,15 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Mail, Send, Sparkles } from "lucide-react";
+import { Mail, Send, Sparkles, Loader2 } from "lucide-react";
+import { useEmailSubscribeMutation } from "@/redux/api/authApi";
+import { toast } from "../ui/use-toast";
 
 export default function ContactSection() {
   const [email, setEmail] = useState("");
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const sectionRef = useRef();
+  const [emailSubscribe, { isLoading }] = useEmailSubscribeMutation();
 
   useEffect(() => {
     const handleMouseMove = (e) => {
@@ -26,16 +29,32 @@ export default function ContactSection() {
     }
   }, []);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Newsletter signup:", email);
-    setEmail("");
+
+    try {
+      await emailSubscribe(email).unwrap();
+
+      toast({
+        title: "Email successful",
+        description: "Welcome to the Circle! 🚀 Check your inbox soon for updates."
+      });
+      setEmail("");
+    } catch (error) {
+      console.error("Newsletter signup error:", error);
+      const errorMessage = error?.data?.message || "Oops! We couldn't sign you up right now. Please check your connection.";
+      toast({
+        title: "Email failed",
+        description: errorMessage,
+        variant: "destructive"
+      });
+    }
   };
 
   return (
     <div
       ref={sectionRef}
-      className="relative py-32 px-6 overflow-hidden bg-gradient-to-b from-[#0a0a0a] to-[#1a1a1a]"
+      className="relative py-32 px-6 overflow-hidden bg-gradient-to-b from-background to-muted transition-colors duration-300"
     >
       <div className="absolute inset-0 overflow-hidden">
         <div
@@ -59,53 +78,62 @@ export default function ContactSection() {
       <div className="relative max-w-4xl mx-auto text-center">
         <div className="mb-8 inline-flex items-center gap-2 glass-effect px-4 py-2 rounded-full">
           <Sparkles className="w-4 h-4 text-[#a6b1ff]" />
-          <span className="text-sm text-gray-300 tracking-widest uppercase font-medium">Community</span>
+          <span className="text-sm text-muted-foreground tracking-widest uppercase font-medium">Community</span>
         </div>
 
-        <h2 className="text-4xl md:text-6xl font-bold mb-6 text-white tracking-tight font-['Bricolage_Grotesque']">
-          Join the Challenger's Circle
+        <h2 className="text-4xl md:text-6xl font-bold mb-6 text-foreground tracking-tight font-['Bricolage_Grotesque']">
+          Join the Fun!
         </h2>
 
-        <p className="text-xl text-gray-400 mb-12 max-w-2xl mx-auto font-light leading-relaxed">
-          Get new quizzes, upcoming challenges, and reward updates — plus school and sponsor competitions you can join.
+        <p className="text-xl text-muted-foreground mb-12 max-w-2xl mx-auto font-light leading-relaxed">
+          Get updates about new quizzes, fun challenges, and cool rewards. 
+          Find out about competitions you can join from your school or other sponsors!
         </p>
 
         <form onSubmit={handleSubmit} className="max-w-md mx-auto mb-6">
           <div className="relative group">
-            <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-[#a6b1ff] transition-colors" />
+            <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground group-focus-within:text-[#a6b1ff] transition-colors" />
             <Input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Enter your email"
-              className="interactive w-full pl-12 pr-36 py-7 glass-morphism border-white/20 text-white placeholder:text-gray-500 rounded-2xl focus:border-[#a6b1ff] focus:ring-2 focus:ring-[#a6b1ff]/50 transition-all text-base"
+              className="interactive w-full pl-12 pr-36 py-7 glass-morphism border-border text-foreground placeholder:text-muted-foreground rounded-2xl focus:border-[#a6b1ff] focus:ring-2 focus:ring-[#a6b1ff]/50 transition-all text-base"
               required
             />
             <Button
               type="submit"
-              className="interactive absolute right-2 top-1/2 transform -translate-y-1/2 px-6 py-5 bg-gradient-to-r from-[#a6b1ff] to-[#c7aff8] text-[#0a0a0a] hover:scale-105 transition-transform rounded-xl font-bold"
+              disabled={isLoading}
+              className="interactive absolute right-2 top-1/2 transform -translate-y-1/2 px-6 py-5 bg-gradient-to-r from-[#a6b1ff] to-[#c7aff8] text-[#0a0a0a] hover:scale-105 transition-transform rounded-xl font-bold disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Get Updates
+              {isLoading ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Subscribing...
+                </>
+              ) : (
+                "Get Updates"
+              )}
             </Button>
           </div>
-          <p className="mt-4 text-[11px] text-gray-500 font-medium tracking-wide">
-            "No spam. Unsubscribe anytime"
+          <p className="mt-4 text-[11px] text-muted-foreground font-medium tracking-wide">
+            We won't spam you. You can unsubscribe anytime!
           </p>
         </form>
 
         <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3 mb-16">
           <button
             onClick={() => window.location.href = "/auth/signup"}
-            className="text-sm text-gray-400 hover:text-[#a6b1ff] transition-colors flex items-center gap-2 group"
+            className="text-sm text-muted-foreground hover:text-[#a6b1ff] transition-colors flex items-center gap-2 group"
           >
             I'm a Student/Teacher
             <span className="group-hover:translate-x-1 transition-transform">→</span>
           </button>
-          <div className="w-1 h-1 rounded-full bg-white/10 hidden md:block" />
+          <div className="w-1 h-1 rounded-full bg-border hidden md:block" />
           <button
             onClick={() => window.location.href = "/auth/signup/?page=3"
             }
-            className="text-sm text-gray-400 hover:text-[#ffb585] transition-colors flex items-center gap-2 group"
+            className="text-sm text-muted-foreground hover:text-[#ffb585] transition-colors flex items-center gap-2 group"
           >
             I'm a Sponsor/Partner
             <span className="group-hover:translate-x-1 transition-transform">→</span>
@@ -118,11 +146,11 @@ export default function ContactSection() {
             { label: "Partner Schools", value: "40+" },
             { label: "Challenges Played", value: "5K+" }
           ].map((stat, index) => (
-            <div key={index} className="glass-morphism rounded-2xl p-8 border border-white/10 group hover:border-[#a6b1ff]/30 transition-all duration-500">
-              <div className="text-4xl font-bold bg-gradient-to-r from-white to-white/70 bg-clip-text text-transparent mb-3 group-hover:scale-110 transition-transform duration-500">
+            <div key={index} className="glass-morphism rounded-2xl p-8 border border-border group hover:border-[#a6b1ff]/30 transition-all duration-500">
+              <div className="text-4xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent mb-3 group-hover:scale-110 transition-transform duration-500">
                 {stat.value}
               </div>
-              <div className="text-gray-500 font-medium text-sm tracking-widest uppercase">{stat.label}</div>
+              <div className="text-muted-foreground font-medium text-sm tracking-widest uppercase">{stat.label}</div>
             </div>
           ))}
         </div>

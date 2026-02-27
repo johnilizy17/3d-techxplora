@@ -1,23 +1,41 @@
 import React, { useState } from 'react';
-import { BookOpen, GraduationCap, Trophy, ChevronRight, X } from 'lucide-react';
-import ThreeErrorBoundary from "@/components/3d/ErrorBoundary";
-const Scene = React.lazy(() => import("@/components/3d/Scene"));
-const HeroExamples = React.lazy(() => import("@/components/3d/HeroExamples"));
+import { BookOpen, GraduationCap, Trophy, ChevronRight, X, Users, Handshake, Building } from 'lucide-react';
+import VisualBackground from "@/components/collectors/VisualBackground";
+import { Link } from 'react-router-dom';
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
+
+const ModalCard = ({ icon: Icon, title, description, to, onClick }) => {
+    const CardContent = (
+        <div className="group flex items-center gap-4 p-5 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-[#a6b1ff]/30 transition-all duration-300 cursor-pointer">
+            <div className="flex-shrink-0 w-14 h-14 rounded-xl bg-gradient-to-br from-[#a6b1ff]/20 to-[#c7aff8]/20 flex items-center justify-center border border-[#a6b1ff]/20 group-hover:scale-110 transition-transform">
+                <Icon className="w-7 h-7 text-[#a6b1ff]" />
+            </div>
+            <div className="text-left">
+                <h3 className="text-lg font-bold text-white group-hover:text-[#a6b1ff] transition-colors">{title}</h3>
+                <p className="text-sm text-gray-400 leading-snug">{description}</p>
+            </div>
+        </div>
+    );
+
+    if (to) return <Link to={to} onClick={onClick}>{CardContent}</Link>;
+    return <div onClick={onClick}>{CardContent}</div>;
+};
 
 export default function HowToUse() {
     const [showVideo, setShowVideo] = useState(false);
+    const [isStudentTeacherOpen, setIsStudentTeacherOpen] = useState(false);
+    const [isPartnerOpen, setIsPartnerOpen] = useState(false);
 
     return (
         <div className="relative min-h-screen pt-20 overflow-hidden">
             {/* Background with 3D elements (dimmed) */}
             <div className="fixed inset-0 z-0 opacity-40 pointer-events-none">
-                <React.Suspense fallback={null}>
-                    <ThreeErrorBoundary>
-                        <Scene>
-                            <HeroExamples />
-                        </Scene>
-                    </ThreeErrorBoundary>
-                </React.Suspense>
+                <VisualBackground />
             </div>
 
             {/* Video Modal */}
@@ -117,7 +135,10 @@ export default function HowToUse() {
                                 ))}
                             </ul>
 
-                            <button className="flex items-center gap-2 text-[#c7aff8] font-semibold group-hover:gap-4 transition-all">
+                            <button
+                                onClick={() => setIsPartnerOpen(true)}
+                                className="flex items-center gap-2 text-[#c7aff8] font-semibold group-hover:gap-4 transition-all"
+                            >
                                 Start Teaching <ChevronRight className="w-5 h-5" />
                             </button>
                         </div>
@@ -150,7 +171,10 @@ export default function HowToUse() {
                                 ))}
                             </ul>
 
-                            <button className="flex items-center gap-2 text-[#a6b1ff] font-semibold group-hover:gap-4 transition-all">
+                            <button
+                                onClick={() => setIsStudentTeacherOpen(true)}
+                                className="flex items-center gap-2 text-[#a6b1ff] font-semibold group-hover:gap-4 transition-all"
+                            >
                                 Start Learning <ChevronRight className="w-5 h-5" />
                             </button>
                         </div>
@@ -159,6 +183,72 @@ export default function HowToUse() {
                 </div>
 
             </div>
+
+            {/* Student/Teacher Modal */}
+            <Dialog open={isStudentTeacherOpen} onOpenChange={setIsStudentTeacherOpen}>
+                <DialogContent className="max-w-md bg-[#0d0d0d]/95 backdrop-blur-2xl border-white/10 rounded-3xl p-8 shadow-2xl">
+                    <DialogHeader className="mb-6">
+                        <DialogTitle className="text-2xl font-bold text-center text-white">Join as...</DialogTitle>
+                    </DialogHeader>
+                    <div className="grid gap-4">
+                        <ModalCard
+                            icon={GraduationCap}
+                            title="Student"
+                            description="Learn, join quizzes and get great scores"
+                            to="/auth/signup"
+                            onClick={() => setIsStudentTeacherOpen(false)}
+                        />
+                        <ModalCard
+                            icon={Users}
+                            title="Teacher"
+                            description="Create quizzes or manage results"
+                            to="/auth/group"
+                            onClick={() => setIsStudentTeacherOpen(false)}
+                        />
+                    </div>
+                    <div className="mt-8 flex justify-center">
+                        <button
+                            onClick={() => setIsStudentTeacherOpen(false)}
+                            className="text-white hover:text-white/80 transition-colors text-sm font-semibold tracking-wide uppercase"
+                        >
+                            Cancel
+                        </button>
+                    </div>
+                </DialogContent>
+            </Dialog>
+
+            {/* Partner Modal */}
+            <Dialog open={isPartnerOpen} onOpenChange={setIsPartnerOpen}>
+                <DialogContent className="max-w-md bg-[#0d0d0d]/95 backdrop-blur-2xl border-white/10 rounded-3xl p-8 shadow-2xl">
+                    <DialogHeader className="mb-6">
+                        <DialogTitle className="text-2xl font-bold text-center text-white">Partner with us...</DialogTitle>
+                    </DialogHeader>
+                    <div className="grid gap-4">
+                        <ModalCard
+                            icon={Handshake}
+                            title="Teacher Admin"
+                            description="Support education and gain visibility"
+                            to="/auth/signup/?page=3"
+                            onClick={() => setIsPartnerOpen(false)}
+                        />
+                        <ModalCard
+                            icon={Building}
+                            title="Partner"
+                            description="Collaborate with us for deeper integration"
+                            to="/auth/signup/?page=3"
+                            onClick={() => setIsPartnerOpen(false)}
+                        />
+                    </div>
+                    <div className="mt-8 flex justify-center">
+                        <button
+                            onClick={() => setIsPartnerOpen(false)}
+                            className="text-white hover:text-white/80 transition-colors text-sm font-semibold tracking-wide uppercase"
+                        >
+                            Cancel
+                        </button>
+                    </div>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }

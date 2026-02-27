@@ -44,7 +44,10 @@ export const saveDraft = (draft) => {
 export const getDrafts = () => {
     try {
         const existing = localStorage.getItem(DRAFTS_KEY);
-        return existing ? JSON.parse(existing) : [];
+        if (!existing) return [];
+
+        const parsed = JSON.parse(existing);
+        return Array.isArray(parsed) ? parsed : [];
     } catch (error) {
         console.error("Error retrieving drafts:", error);
         return [];

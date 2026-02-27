@@ -16,20 +16,100 @@ import {
 } from 'lucide-react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { toast } from 'sonner';
-import { selectTempStorage } from '@/redux/slices/authSlice';
+import { toast } from '../ui/use-toast';
+import { selectTempStorage, setTemporaryStorage, selectCurrentUser } from '@/redux/slices/authSlice';
 import { useGetQuizResultsQuery } from '@/redux/api/questionApi';
+import { useUpdateQuizMutation } from '@/redux/api/teacherApi';
 import { calculateQuizResultsStats } from '@/utils/excelUtils';
-import { formatDistanceToNow } from 'date-fns';
+import { formatDistanceToNow, format } from 'date-fns';
+import {
+    Drawer,
+    DrawerClose,
+    DrawerContent,
+    DrawerDescription,
+    DrawerFooter,
+    DrawerHeader,
+    DrawerTitle,
+    DrawerTrigger,
+} from "@/components/ui/drawer";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Loader2, Settings2 } from 'lucide-react';
 
 export default function QuizResults() {
     const navigate = useNavigate();
+    const dispatch = useDispatch();
     const tempStorage = useSelector(selectTempStorage);
+    const user = useSelector(selectCurrentUser);
     const quizId = tempStorage?.id;
 
     const { data: resultsResults, isLoading } = useGetQuizResultsQuery(quizId, {
         skip: !quizId
     });
+
+    const [updateQuiz, { isLoading: isUpdating }] = useUpdateQuizMutation();
+
+    const [isDrawerOpen, setIsDrawerOpen] = React.useState(false);
+    const [formData, setFormData] = React.useState({
+        start_at: '',
+        end_at: '',
+        xp: 0,
+        p_xp: 0
+    });
+
+    React.useEffect(() => {
+        if (tempStorage) {
+            setFormData({
+                start_at: tempStorage.start_at ? format(new Date(tempStorage.start_at), "yyyy-MM-dd'T'HH:mm") : '',
+                end_at: tempStorage.end_at ? format(new Date(tempStorage.end_at), "yyyy-MM-dd'T'HH:mm") : '',
+                xp: tempStorage.xp || 0,
+                p_xp: tempStorage.p_xp || 0
+            });
+        }
+    }, [tempStorage]);
+
+    const handleInputChange = (e) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({
+            ...prev,
+            [name]: name === 'xp' || name === 'p_xp' ? Number(value) : value
+        }));
+    };
+
+    const handleUpdate = async () => {
+        const projectedBalance = (user?.xp || 0) + (tempStorage?.xp || 0) - formData.xp;
+
+        if (projectedBalance < 0) {
+            toast({
+                title: "Insufficient XP",
+                description: "You don't have enough XP to increase the pool by this amount.",
+                variant: "destructive"
+            });
+            return;
+        }
+
+        try {
+            const updatedQuiz = await updateQuiz({
+                ...tempStorage, id: quizId,
+                ...formData
+            }).unwrap();
+
+            dispatch(setTemporaryStorage(updatedQuiz));
+            setIsDrawerOpen(false);
+
+            toast({
+                title: "Quiz updated",
+                description: "Parameters synchronized successfully."
+            });
+        } catch (error) {
+            console.error('Update failed:', error);
+            toast({
+                title: "Update failed",
+                description: error?.data?.message || "Could not synchronize parameters.",
+                variant: "destructive"
+            });
+        }
+    };
 
     const results = resultsResults?.data || resultsResults || [];
     const stats = calculateQuizResultsStats(results);
@@ -37,7 +117,10 @@ export default function QuizResults() {
     const copyCode = () => {
         if (tempStorage?.quiz_code) {
             navigator.clipboard.writeText(tempStorage.quiz_code);
-            toast.success("Quiz code copied to clipboard!");
+            toast({
+                title: "Code copied",
+                description: "Quiz code copied to clipboard."
+            });
         }
     };
 
@@ -128,6 +211,102 @@ export default function QuizResults() {
                                 <Copy size={14} />
                                 Copy Code
                             </button>
+
+                            <Drawer open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
+                                <DrawerTrigger asChild>
+                                    <button
+                                        className="w-full mt-3 py-3 rounded-xl bg-white/10 hover:bg-white text-white hover:text-indigo-600 font-black uppercase tracking-widest text-[10px] flex items-center justify-center gap-2 transition-all"
+                                    >
+                                        <Settings2 size={14} />
+                                        Configure Quiz
+                                    </button>
+                                </DrawerTrigger>
+                                <DrawerContent className="bg-[#0d0d0d]/95 backdrop-blur-2xl border-white/10 text-white">
+                                    <div className="mx-auto w-full max-w-lg p-8">
+                                        <DrawerHeader>
+                                            <DrawerTitle className="text-2xl font-black italic uppercase tracking-tight text-white">Quiz Configuration</DrawerTitle>
+                                            <DrawerDescription className="text-white/40 font-medium">Calibrate synchronization parameters for this assessment node.</DrawerDescription>
+                                        </DrawerHeader>
+                                        <div className="grid gap-6 py-6">
+                                            <div className="p-4 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-between">
+                                                <div>
+                                                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40 mb-1">XP Balance Status</p>
+                                                    <p className={`text-lg font-black italic ${(user?.xp || 0) + (tempStorage?.xp || 0) - formData.xp < 0 ? 'text-rose-400' : 'text-indigo-400'}`}>
+                                                        {(user?.xp || 0) + (tempStorage?.xp || 0) - formData.xp} XP Remaining
+                                                    </p>
+                                                </div>
+                                                <div className="w-10 h-10 rounded-xl bg-indigo-500/20 flex items-center justify-center">
+                                                    <Trophy size={18} className="text-indigo-400" />
+                                                </div>
+                                            </div>
+
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <div className="space-y-2 text-left">
+                                                    <Label htmlFor="start_at" className="text-[10px] font-black uppercase tracking-widest text-white/40 pl-1">Start Activation</Label>
+                                                    <Input
+                                                        id="start_at"
+                                                        name="start_at"
+                                                        type="datetime-local"
+                                                        value={formData.start_at}
+                                                        onChange={handleInputChange}
+                                                        className="bg-white/5 border-white/10 rounded-xl"
+                                                    />
+                                                </div>
+                                                <div className="space-y-2 text-left">
+                                                    <Label htmlFor="end_at" className="text-[10px] font-black uppercase tracking-widest text-white/40 pl-1">End Deactivation</Label>
+                                                    <Input
+                                                        id="end_at"
+                                                        name="end_at"
+                                                        type="datetime-local"
+                                                        value={formData.end_at}
+                                                        onChange={handleInputChange}
+                                                        className="bg-white/5 border-white/10 rounded-xl"
+                                                    />
+                                                </div>
+                                            </div>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <div className="space-y-2 text-left">
+                                                    <Label htmlFor="xp" className="text-[10px] font-black uppercase tracking-widest text-white/40 pl-1">Total XP Pool</Label>
+                                                    <Input
+                                                        id="xp"
+                                                        name="xp"
+                                                        type="number"
+                                                        value={formData.xp}
+                                                        onChange={handleInputChange}
+                                                        className="bg-white/5 border-white/10 rounded-xl"
+                                                    />
+                                                </div>
+                                                <div className="space-y-2 text-left">
+                                                    <Label htmlFor="p_xp" className="text-[10px] font-black uppercase tracking-widest text-white/40 pl-1">XP Per Question</Label>
+                                                    <Input
+                                                        id="p_xp"
+                                                        name="p_xp"
+                                                        type="number"
+                                                        value={formData.p_xp}
+                                                        onChange={handleInputChange}
+                                                        className="bg-white/5 border-white/10 rounded-xl"
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <DrawerFooter className="flex-col sm:flex-row gap-4 pt-4">
+                                            <button
+                                                onClick={handleUpdate}
+                                                disabled={isUpdating}
+                                                className="w-full sm:flex-1 py-4 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-black uppercase tracking-widest text-xs shadow-xl flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50"
+                                            >
+                                                {isUpdating ? <Loader2 className="animate-spin" size={16} /> : <Target size={16} />}
+                                                Save Parameters
+                                            </button>
+                                            <DrawerClose asChild>
+                                                <button className="w-full sm:flex-1 py-4 rounded-xl bg-white/5 border border-white/10 text-white/40 font-black uppercase tracking-widest text-xs hover:bg-white/10 transition-all">
+                                                    Abort Sync
+                                                </button>
+                                            </DrawerClose>
+                                        </DrawerFooter>
+                                    </div>
+                                </DrawerContent>
+                            </Drawer>
                         </div>
                     </div>
                 </div>
@@ -196,8 +375,8 @@ export default function QuizResults() {
                                             </td>
                                             <td className="px-8 py-6">
                                                 <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border ${item.score >= 50
-                                                        ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
-                                                        : 'bg-rose-500/10 border-rose-500/30 text-rose-400'
+                                                    ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+                                                    : 'bg-rose-500/10 border-rose-500/30 text-rose-400'
                                                     }`}>
                                                     {item.score >= 50 ? 'Promoted' : 'Sub-optimal'}
                                                 </span>
@@ -237,7 +416,7 @@ export default function QuizResults() {
                                 icon={PlusCircle}
                                 label="Incorporate Questions"
                                 color="teal"
-                                onClick={() => navigate('/dashboard/teacher/question?manual=true')}
+                                onClick={() => navigate('/dashboard/teacher/add-manual')}
                             />
                         </div>
                     </motion.div>
@@ -250,10 +429,10 @@ export default function QuizResults() {
                         {results.length > 0 ? (
                             <div className="space-y-3">
                                 <p className="text-xl font-black text-white italic uppercase tracking-tight">
-                                    {results.sort((a, b) => b.score - a.score)[0].student.first_name} {results.sort((a, b) => b.score - a.score)[0].student.last_name}
+                                    {results[0]?.student?.first_name || "Unknown"} {results[0]?.student?.last_name || "Student"}
                                 </p>
                                 <div className="flex items-center gap-2">
-                                    <span className="text-2xl font-black text-blue-400 italic font-mono">{Math.max(...results.map(r => r.score))}%</span>
+                                    <span className="text-2xl font-black text-blue-400 italic font-mono">{Math.max(...results.map(r => r.score || 0))}%</span>
                                     <Trophy size={16} className="text-amber-400" />
                                 </div>
                             </div>

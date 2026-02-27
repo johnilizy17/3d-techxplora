@@ -13,7 +13,8 @@ import {
     BookOpen,
     CheckCircle2,
     Gamepad2,
-    Info
+    Info,
+    AlertTriangle
 } from 'lucide-react';
 import {
     useCreateQuizMutation,
@@ -25,11 +26,21 @@ import { useSelector } from 'react-redux';
 import { selectCurrentUser } from '@/redux/slices/authSlice';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import { toast } from 'sonner';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const STEPS = [
     { title: 'Basic Info', icon: BookOpen },
-    { title: 'Quiz Details', icon: Target },
-    { title: 'Success', icon: CheckCircle2 }
+    { title: 'Quiz Settings', icon: Target },
+    { title: 'Done!', icon: CheckCircle2 }
 ];
 
 export default function CreateQuiz() {
@@ -38,6 +49,7 @@ export default function CreateQuiz() {
     const type = user?.accountable_type === "App\\Models\\Student" ? "student" : "teacher";
     const [currentStep, setCurrentStep] = useState(1);
     const [createQuiz, { isLoading: isSubmitting }] = useCreateQuizMutation();
+    const [showXpAlert, setShowXpAlert] = useState(false);
 
     // Fetch individual data sources
     const { data: quizModesResults } = useGetQuizModesQuery();
@@ -95,6 +107,24 @@ export default function CreateQuiz() {
         if (formData.xp < 0) newErrors.xp = 'XP must be non-negative';
         if (formData.p_xp < 0) newErrors.p_xp = 'XP per question must be non-negative';
 
+        // Validation: XP must be an integer (no decimals)
+        if (!Number.isInteger(Number(formData.xp))) {
+            newErrors.xp = 'Total XP must be a whole number';
+        }
+        if (!Number.isInteger(Number(formData.p_xp))) {
+            newErrors.p_xp = 'XP per question must be a whole number';
+        }
+
+        // Validation: XP per question cannot be greater than total XP
+        if (Number(formData.p_xp) > Number(formData.xp)) {
+            newErrors.p_xp = 'XP per question cannot exceed Total XP';
+        }
+
+        // Validation: User must have enough XP
+        if ((user?.xp || 0) - Number(formData.xp) < 0) {
+            newErrors.xp = 'Insufficient XP balance';
+        }
+
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
@@ -115,10 +145,7 @@ export default function CreateQuiz() {
         }
     };
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        if (!validateStep2()) return;
-
+    const handleConfirmSubmit = async () => {
         try {
             const payload = {
                 ...formData,
@@ -133,11 +160,29 @@ export default function CreateQuiz() {
 
             await createQuiz(payload).unwrap();
             toast.success('Quiz created successfully!');
+            setShowXpAlert(false);
             setCurrentStep(3);
         } catch (error) {
             console.error('Failed to create quiz:', error);
             toast.error(error?.data?.message || 'Failed to create quiz');
+            setShowXpAlert(false);
         }
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        if (!validateStep2()) return;
+
+        // Check if XP fields are 0 or empty
+        const totalXp = Number(formData.xp);
+        const xpPerQuestion = Number(formData.p_xp);
+
+        if (!totalXp || !xpPerQuestion) {
+            setShowXpAlert(true);
+            return;
+        }
+
+        await handleConfirmSubmit();
     };
 
     return (
@@ -209,6 +254,31 @@ export default function CreateQuiz() {
                             />
                         )}
                     </AnimatePresence>
+
+                    <AlertDialog open={showXpAlert} onOpenChange={setShowXpAlert}>
+                        <AlertDialogContent className="bg-[#0d0d0d] border border-white/10 rounded-[2rem]">
+                            <AlertDialogHeader>
+                                <AlertDialogTitle className="text-xl font-black text-white flex items-center gap-2 uppercase italic">
+                                    <AlertTriangle className="text-amber-500" />
+                                    No XP Assigned?
+                                </AlertDialogTitle>
+                                <AlertDialogDescription className="text-white/60 font-medium">
+                                    Are you sure you want to create the quiz without XP? Students won't earn any rewards for completing this quiz.
+                                </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                                <AlertDialogCancel className="bg-white/5 border-white/10 text-white hover:bg-white/10 hover:text-white rounded-xl">
+                                    Cancel
+                                </AlertDialogCancel>
+                                <AlertDialogAction
+                                    onClick={handleConfirmSubmit}
+                                    className="bg-gradient-to-r from-amber-500 to-orange-600 text-white font-bold rounded-xl"
+                                >
+                                    Yes, Create Anyway
+                                </AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
                 </div>
             </div>
         </DashboardLayout >
@@ -220,16 +290,16 @@ const Step1 = ({ formData, handleChange, errors, handleNext, quizModes, groups, 
         initial={{ opacity: 0, x: 20 }}
         animate={{ opacity: 1, x: 0 }}
         exit={{ opacity: 0, x: -20 }}
-        className="bg-white/5 backdrop-blur-3xl border border-white/10 rounded-[2.5rem] p-8 lg:p-12 shadow-2xl relative overflow-hidden"
+        className="bg-white/5 backdrop-blur-3xl border border-white/10 rounded-3xl md:rounded-[2.5rem] p-6 md:p-12 shadow-2xl relative overflow-hidden"
     >
         <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/5 rounded-full blur-[100px]" />
 
         <div className="relative z-10">
             <div className="mb-10 text-center lg:text-left">
-                <h1 className="text-3xl lg:text-4xl font-black text-white tracking-tight uppercase italic mb-2">
-                    Basic <span className="text-[#a6b1ff]">Information</span>
+                <h1 className="text-2xl lg:text-4xl font-black text-white tracking-tight uppercase italic mb-2">
+                    Basic <span className="text-[#a6b1ff]">Info</span>
                 </h1>
-                <p className="text-white/60 font-medium">Set the foundation for your learning challenge</p>
+                <p className="text-white/60 font-medium">Tell us about your quiz</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -250,7 +320,7 @@ const Step1 = ({ formData, handleChange, errors, handleNext, quizModes, groups, 
                             value={formData.description}
                             onChange={handleChange}
                             rows={4}
-                            placeholder="Briefly describe what students will learn..."
+                            placeholder="Tell students what this quiz is about..."
                             className={`w-full bg-white/5 border ${errors.description ? 'border-rose-500/50' : 'border-white/10'} rounded-2xl px-5 py-4 text-white placeholder:text-white/20 focus:outline-none focus:border-[#a6b1ff]/50 transition-all resize-none font-medium`}
                         />
                         {errors.description && <p className="text-rose-400 text-[10px] font-bold mt-1 uppercase tracking-wider">{errors.description}</p>}
@@ -274,7 +344,7 @@ const Step1 = ({ formData, handleChange, errors, handleNext, quizModes, groups, 
                         name="model_id"
                         value={formData.model_id}
                         onChange={handleChange}
-                        options={quizModes?.map(q => ({ value: q.id, label: q.name })) || []}
+                        options={quizModes?.map(q => ({ value: q.id, label: q.mode })) || []}
                         icon={Sparkles}
                     />
 
@@ -293,7 +363,7 @@ const Step1 = ({ formData, handleChange, errors, handleNext, quizModes, groups, 
                             name="class"
                             value={formData.class}
                             onChange={handleChange}
-                            options={classes?.map(c => ({ value: c.id, label: c.name })) || []}
+                            options={classes?.map(c => ({ value: c.id, label: c.class })) || []}
                             icon={Gamepad2}
                         />
                     </div>
@@ -315,148 +385,158 @@ const Step1 = ({ formData, handleChange, errors, handleNext, quizModes, groups, 
     </motion.div>
 );
 
-const Step2 = ({ formData, handleChange, errors, handleSubmit, isSubmitting, userXp }) => (
-    <motion.div
-        initial={{ opacity: 0, x: 20 }}
-        animate={{ opacity: 1, x: 0 }}
-        exit={{ opacity: 0, x: -20 }}
-        className="bg-white/5 backdrop-blur-3xl border border-white/10 rounded-[2.5rem] p-8 lg:p-12 shadow-2xl relative overflow-hidden"
-    >
-        <div className="absolute top-0 left-0 w-64 h-64 bg-purple-500/5 rounded-full blur-[100px]" />
+const Step2 = ({ formData, handleChange, errors, handleSubmit, isSubmitting, userXp }) => {
+    const remainingXp = (userXp || 0) - (Number(formData.xp) || 0);
+    const isOverBudget = remainingXp < 0;
 
-        <div className="relative z-10 text-center mb-10">
-            <h1 className="text-3xl lg:text-4xl font-black text-white tracking-tight uppercase italic mb-2">
-                Advanced <span className="text-purple-400">Settings</span>
-            </h1>
-            <p className="text-white/60 font-medium">Fine-tune the rewards and requirements</p>
-        </div>
+    return (
+        <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            className="bg-white/5 backdrop-blur-3xl border border-white/10 rounded-3xl md:rounded-[2.5rem] p-6 md:p-12 shadow-2xl relative overflow-hidden"
+        >
+            <div className="absolute top-0 left-0 w-64 h-64 bg-purple-500/5 rounded-full blur-[100px]" />
 
-        <form onSubmit={handleSubmit} className="space-y-10">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div className="space-y-6">
-                    <div className="p-6 rounded-3xl bg-white/5 border border-white/10 space-y-6">
-                        <h3 className="text-sm font-black text-white/80 uppercase tracking-widest flex items-center gap-2">
-                            <Calendar size={18} className="text-purple-400" />
-                            Schedule
-                        </h3>
-                        <InputField
-                            label="Start Date & Time"
-                            name="start_at"
-                            type="datetime-local"
-                            value={formData.start_at}
-                            onChange={handleChange}
-                            error={errors.start_at}
-                        />
-                        <InputField
-                            label="End Date & Time"
-                            name="end_at"
-                            type="datetime-local"
-                            value={formData.end_at}
-                            onChange={handleChange}
-                            error={errors.end_at}
-                        />
+            <div className="relative z-10 text-center mb-10">
+                <h1 className="text-2xl lg:text-4xl font-black text-white tracking-tight uppercase italic mb-2">
+                    Quiz <span className="text-purple-400">Settings</span>
+                </h1>
+                <p className="text-white/60 font-medium">Set up rewards and time limits</p>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-10">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div className="space-y-6">
+                        <div className="p-6 rounded-3xl bg-white/5 border border-white/10 space-y-6">
+                            <h3 className="text-sm font-black text-white/80 uppercase tracking-widest flex items-center gap-2">
+                                <Calendar size={18} className="text-purple-400" />
+                                When to Start & End
+                            </h3>
+                            <InputField
+                                label="Start Date & Time"
+                                name="start_at"
+                                type="datetime-local"
+                                value={formData.start_at}
+                                onChange={handleChange}
+                                error={errors.start_at}
+                            />
+                            <InputField
+                                label="End Date & Time"
+                                name="end_at"
+                                type="datetime-local"
+                                value={formData.end_at}
+                                onChange={handleChange}
+                                error={errors.end_at}
+                            />
+                        </div>
+
+                        <div className={`p-6 rounded-3xl border transition-colors ${isOverBudget ? 'bg-rose-500/10 border-rose-500/20' : 'bg-indigo-500/10 border-indigo-500/20'}`}>
+                            <div className="flex gap-4">
+                                <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${isOverBudget ? 'bg-rose-500/20' : 'bg-indigo-500/20'}`}>
+                                    <Info size={20} className={isOverBudget ? 'text-rose-400' : 'text-indigo-400'} />
+                                </div>
+                                <div>
+                                    <h4 className={`text-sm font-black uppercase tracking-wider mb-1 ${isOverBudget ? 'text-rose-400' : 'text-white'}`}>
+                                        {isOverBudget ? 'Not Enough Points' : 'Points Info'}
+                                    </h4>
+                                    <p className="text-xs text-white/50 font-medium leading-relaxed">
+                                        Points Left: <span className={`${isOverBudget ? 'text-rose-400' : 'text-indigo-400'} font-bold`}>{remainingXp} Points</span>.
+                                        {isOverBudget
+                                            ? " You don't have enough points to create this quiz."
+                                            : " These points will be saved for this quiz until it ends."
+                                        }
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
-                    <div className="p-6 rounded-3xl bg-indigo-500/10 border border-indigo-500/20">
-                        <div className="flex gap-4">
-                            <div className="w-10 h-10 rounded-xl bg-indigo-500/20 flex items-center justify-center shrink-0">
-                                <Info size={20} className="text-indigo-400" />
+                    <div className="space-y-6">
+                        <div className="p-6 rounded-3xl bg-white/5 border border-white/10 space-y-6">
+                            <h3 className="text-sm font-black text-white/80 uppercase tracking-widest flex items-center gap-2">
+                                <Trophy size={18} className="text-amber-400" />
+                                Points & Age Limits
+                            </h3>
+                            <div className="grid grid-cols-2 gap-4">
+                                <InputField
+                                    label="Total Points"
+                                    name="xp"
+                                    type="number"
+                                    value={formData.xp}
+                                    onChange={handleChange}
+                                    error={errors.xp}
+                                    placeholder="Total Points"
+                                />
+                                <InputField
+                                    label="Points Per Question"
+                                    name="p_xp"
+                                    type="number"
+                                    value={formData.p_xp}
+                                    onChange={handleChange}
+                                    error={errors.p_xp}
+                                    placeholder="Per Question"
+                                />
                             </div>
-                            <div>
-                                <h4 className="text-sm font-black text-white uppercase tracking-wider mb-1">XP System</h4>
-                                <p className="text-xs text-white/50 font-medium leading-relaxed">
-                                    Your current balance: <span className="text-indigo-400 font-bold">{userXp} XP</span>.
-                                    Allocating XP will freeze that amount until the quiz concludes.
-                                </p>
+                            <div className="grid grid-cols-2 gap-4 pt-2">
+                                <InputField
+                                    label="Min Age"
+                                    name="min_age"
+                                    type="number"
+                                    value={formData.min_age}
+                                    onChange={handleChange}
+                                    placeholder="Any"
+                                    icon={Users}
+                                />
+                                <InputField
+                                    label="Max Age"
+                                    name="max_age"
+                                    type="number"
+                                    value={formData.max_age}
+                                    onChange={handleChange}
+                                    placeholder="Any"
+                                    icon={Users}
+                                />
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div className="space-y-6">
-                    <div className="p-6 rounded-3xl bg-white/5 border border-white/10 space-y-6">
-                        <h3 className="text-sm font-black text-white/80 uppercase tracking-widest flex items-center gap-2">
-                            <Trophy size={18} className="text-amber-400" />
-                            Rewards & Limits
-                        </h3>
-                        <div className="grid grid-cols-2 gap-4">
-                            <InputField
-                                label="Total XP Pool"
-                                name="xp"
-                                type="number"
-                                value={formData.xp}
-                                onChange={handleChange}
-                                error={errors.xp}
-                                placeholder="Total XP"
-                            />
-                            <InputField
-                                label="XP Per Answer"
-                                name="p_xp"
-                                type="number"
-                                value={formData.p_xp}
-                                onChange={handleChange}
-                                error={errors.p_xp}
-                                placeholder="Per Q"
-                            />
-                        </div>
-                        <div className="grid grid-cols-2 gap-4 pt-2">
-                            <InputField
-                                label="Min Age"
-                                name="min_age"
-                                type="number"
-                                value={formData.min_age}
-                                onChange={handleChange}
-                                placeholder="Any"
-                                icon={Users}
-                            />
-                            <InputField
-                                label="Max Age"
-                                name="max_age"
-                                type="number"
-                                value={formData.max_age}
-                                onChange={handleChange}
-                                placeholder="Any"
-                                icon={Users}
-                            />
-                        </div>
-                    </div>
+                <div className="flex items-center justify-between pt-6 border-t border-white/5">
+                    <button
+                        type="button"
+                        onClick={() => navigate(-1)}
+                        className="text-white/40 hover:text-white font-black uppercase text-xs tracking-widest transition-colors"
+                    >
+                        Cancel
+                    </button>
+
+                    <motion.button
+                        type="submit"
+                        disabled={isSubmitting}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        className={`relative px-12 py-4 rounded-2xl bg-gradient-to-r from-purple-500 to-indigo-600 text-white font-black uppercase tracking-wider shadow-xl group overflow-hidden ${isSubmitting ? 'opacity-70 cursor-not-allowed' : ''}`}
+                    >
+                        <span className="relative z-10 flex items-center gap-3">
+                            {isSubmitting ? (
+                                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                            ) : 'Create Quiz'}
+                            {!isSubmitting && <Sparkles size={20} className="group-hover:rotate-12 transition-transform" />}
+                        </span>
+                        <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
+                    </motion.button>
                 </div>
-            </div>
-
-            <div className="flex items-center justify-between pt-6 border-t border-white/5">
-                <button
-                    type="button"
-                    onClick={() => navigate(-1)}
-                    className="text-white/40 hover:text-white font-black uppercase text-xs tracking-widest transition-colors"
-                >
-                    Discard Changes
-                </button>
-
-                <motion.button
-                    type="submit"
-                    disabled={isSubmitting}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    className={`relative px-12 py-4 rounded-2xl bg-gradient-to-r from-purple-500 to-indigo-600 text-white font-black uppercase tracking-wider shadow-xl group overflow-hidden ${isSubmitting ? 'opacity-70 cursor-not-allowed' : ''}`}
-                >
-                    <span className="relative z-10 flex items-center gap-3">
-                        {isSubmitting ? (
-                            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        ) : 'Launch Quiz'}
-                        {!isSubmitting && <Sparkles size={20} className="group-hover:rotate-12 transition-transform" />}
-                    </span>
-                    <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
-                </motion.button>
-            </div>
-        </form>
-    </motion.div>
-);
+            </form>
+        </motion.div>
+    );
+};
 
 const SuccessStep = ({ navigate }) => (
     <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="bg-white/5 backdrop-blur-3xl border border-white/10 rounded-[2.5rem] p-12 text-center shadow-2xl relative overflow-hidden"
+        className="bg-white/5 backdrop-blur-3xl border border-white/10 rounded-3xl md:rounded-[2.5rem] p-6 md:p-12 text-center shadow-2xl relative overflow-hidden"
     >
         <div className="absolute inset-0 bg-emerald-500/5 blur-[100px]" />
 
@@ -470,11 +550,11 @@ const SuccessStep = ({ navigate }) => (
                 <CheckCircle2 size={64} className="text-white" />
             </motion.div>
 
-            <h1 className="text-4xl lg:text-5xl font-black text-white tracking-tight uppercase italic mb-4">
-                Mission <span className="text-emerald-400">Accomplished!</span>
+            <h1 className="text-2xl lg:text-5xl font-black text-white tracking-tight uppercase italic mb-4">
+                Quiz <span className="text-emerald-400">Created!</span>
             </h1>
             <p className="text-white/60 text-lg font-medium max-w-md mx-auto mb-12 leading-relaxed">
-                Your quiz has been published successfully. Get ready to witness your students' brilliance!
+                Your quiz is ready! Students can now join and start playing.
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">

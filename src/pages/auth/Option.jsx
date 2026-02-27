@@ -133,12 +133,12 @@ export default function Option() {
                 ...user,
                 // Override visible name with the selected profile
                 current_profile: profile,
-                display_name: `${profile.first_name} ${profile.last_name}`
+                display_name: `${profile.fullname}`
             }
         }));
 
         toast({
-            title: `Switched to ${profile.first_name}`,
+            title: `Switched to ${profile.fullname}`,
             description: "Heading to your dashboard...",
         });
 

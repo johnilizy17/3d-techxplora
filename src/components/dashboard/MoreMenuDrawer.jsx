@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import {
     User, Settings, Users, FileText, Wallet,
-    LogOut, X, Zap, ChevronRight
+    LogOut, X, Zap, ChevronRight, Play, BookOpen, Home
 } from 'lucide-react';
 import { selectCurrentUser, logout, updateUser } from '@/redux/slices/authSlice';
 import { useGetStudentProfileQuery } from '@/redux/api/studentApi';
@@ -50,9 +50,11 @@ export default function MoreMenuDrawer({ isOpen, onClose, onLogoutTrigger }) {
     const isTeacher = user?.role === 'teacher' || user?.accountable_type === "App\\Models\\Teacher";
 
     const menuItems = [
+        { icon: Home, label: "Home", path: "/", show: true },
         { icon: User, label: "Profile", path: "/dashboard/profile", show: true },
-        { icon: Settings, label: "Setting", path: "/dashboard/options", show: isAdmin },
         { icon: Users, label: "All Teacher", path: "/dashboard/teachers", show: isAdmin },
+        { icon: Play, label: "Courses", path: isStudent ? "/courses" : "/dashboard/courses", show: true },
+        { icon: BookOpen, label: "Docs", path: "/docs", show: true },
         { icon: FileText, label: "Syllabus", path: "/dashboard/syllabus", show: isTeacher },
         { icon: Wallet, label: "Wallet", path: "/dashboard/wallet", show: true },
     ];
@@ -77,7 +79,7 @@ export default function MoreMenuDrawer({ isOpen, onClose, onLogoutTrigger }) {
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         onClick={onClose}
-                        className="fixed inset-0 bg-[#0a0a0a]/80 backdrop-blur-md z-[100]"
+                        className="fixed inset-0 bg-black/80 dark:bg-[#0a0a0a]/80 backdrop-blur-md z-[100]"
                     />
 
                     {/* Drawer / Modal Container */}
@@ -87,14 +89,14 @@ export default function MoreMenuDrawer({ isOpen, onClose, onLogoutTrigger }) {
                             animate={window.innerWidth >= 1024 ? { scale: 1, opacity: 1, y: 0 } : { y: 0 }}
                             exit={window.innerWidth >= 1024 ? { scale: 0.95, opacity: 0, y: 20 } : { y: "100%" }}
                             transition={{ type: "spring", damping: 30, stiffness: 300 }}
-                            className="w-full max-w-lg lg:max-w-2xl bg-[#0a0a0a]/90 backdrop-blur-3xl rounded-t-[2.5rem] lg:rounded-[3rem] border-t lg:border border-white/10 shadow-[0_-20px_50px_rgba(0,0,0,0.8)] lg:shadow-[0_40px_100px_rgba(0,0,0,0.8)] pointer-events-auto relative overflow-hidden flex flex-col max-h-[90vh] lg:max-h-[85vh]"
+                            className="w-full max-w-lg lg:max-w-2xl bg-background/95 backdrop-blur-3xl rounded-t-[2.5rem] lg:rounded-[3rem] border-t lg:border border-border shadow-2xl pointer-events-auto relative overflow-hidden flex flex-col max-h-[90vh] lg:max-h-[85vh]"
                         >
                             {/* Premium Decorative Glows */}
                             <div className="absolute -top-24 -right-24 w-64 h-64 bg-[#7c3aed]/10 rounded-full blur-[100px] -z-10" />
                             <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-[#a6b1ff]/10 rounded-full blur-[100px] -z-10" />
 
                             {/* Sticky Header - Fixed at Top */}
-                            <div className="sticky top-0 z-20 p-8 lg:p-10 pb-6 bg-[#0a0a0a]/60 backdrop-blur-xl border-b border-white/5">
+                            <div className="sticky top-0 z-20 p-8 lg:p-10 pb-6 bg-background/80 backdrop-blur-xl border-b border-border">
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-6">
                                         <div className="w-14 h-14 lg:w-16 lg:h-16 rounded-2xl lg:rounded-3xl bg-gradient-to-tr from-[#6366f1] to-[#8b5cf6] flex items-center justify-center shadow-xl shadow-indigo-500/20 group">
@@ -103,9 +105,9 @@ export default function MoreMenuDrawer({ isOpen, onClose, onLogoutTrigger }) {
                                         <div>
                                             <div className="flex items-center gap-2 mb-1">
                                                 <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
-                                                <p className="text-[10px] font-black text-white/40 uppercase tracking-[0.3em] italic">Current Wallet</p>
+                                                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em] italic">Current Wallet</p>
                                             </div>
-                                            <h3 className="text-3xl lg:text-4xl font-black text-white italic tracking-tighter flex items-baseline gap-2">
+                                            <h3 className="text-3xl lg:text-4xl font-black text-foreground italic tracking-tighter flex items-baseline gap-2">
                                                 {xpBalance?.toLocaleString() || "0"}
                                                 <span className="text-lg lg:text-xl text-[#a6b1ff] not-italic font-black tracking-normal">XP</span>
                                             </h3>
@@ -113,7 +115,7 @@ export default function MoreMenuDrawer({ isOpen, onClose, onLogoutTrigger }) {
                                     </div>
                                     <button
                                         onClick={onClose}
-                                        className="p-4 rounded-2xl bg-white/5 text-white/40 hover:text-white hover:bg-white/10 transition-all group"
+                                        className="p-4 rounded-2xl bg-accent hover:bg-accent/80 text-muted-foreground hover:text-foreground transition-all group"
                                     >
                                         <X size={24} className="group-hover:rotate-90 transition-transform duration-300" />
                                     </button>
@@ -133,15 +135,15 @@ export default function MoreMenuDrawer({ isOpen, onClose, onLogoutTrigger }) {
                                                 navigate(item.path);
                                                 onClose();
                                             }}
-                                            className="w-full flex items-center justify-between p-5 lg:p-6 rounded-[1.5rem] lg:rounded-[2rem] bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/10 group transition-all duration-300 relative overflow-hidden"
+                                            className="w-full flex items-center justify-between p-5 lg:p-6 rounded-[1.5rem] lg:rounded-[2rem] bg-accent/50 hover:bg-accent border border-border hover:border-[#a6b1ff]/30 group transition-all duration-300 relative overflow-hidden"
                                         >
                                             <div className="flex items-center gap-5">
-                                                <div className="p-3 lg:p-3.5 rounded-xl lg:rounded-2xl bg-white/5 group-hover:bg-[#a6b1ff]/20 text-white group-hover:text-[#a6b1ff] transition-all duration-300">
+                                                <div className="p-3 lg:p-3.5 rounded-xl lg:rounded-2xl bg-accent group-hover:bg-[#a6b1ff]/20 text-foreground group-hover:text-[#a6b1ff] transition-all duration-300">
                                                     <item.icon size={22} />
                                                 </div>
-                                                <span className="font-bold text-lg text-white/80 group-hover:text-white transition-colors">{item.label}</span>
+                                                <span className="font-bold text-lg text-foreground/80 group-hover:text-foreground transition-colors">{item.label}</span>
                                             </div>
-                                            <ChevronRight size={20} className="text-white/10 group-hover:text-white group-hover:translate-x-1 transition-all" />
+                                            <ChevronRight size={20} className="text-muted-foreground group-hover:text-foreground group-hover:translate-x-1 transition-all" />
 
                                             {/* Subtle hover line */}
                                             <div className="absolute bottom-0 left-6 right-6 h-[2px] bg-gradient-to-r from-transparent via-[#8b5cf6]/40 to-transparent translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
@@ -180,10 +182,16 @@ export default function MoreMenuDrawer({ isOpen, onClose, onLogoutTrigger }) {
                                     background: transparent;
                                 }
                                 .custom-scrollbar::-webkit-scrollbar-thumb {
-                                    background: rgba(255, 255, 255, 0.05);
+                                    background: rgba(0, 0, 0, 0.1);
                                     border-radius: 20px;
                                 }
+                                .dark .custom-scrollbar::-webkit-scrollbar-thumb {
+                                    background: rgba(255, 255, 255, 0.05);
+                                }
                                 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+                                    background: rgba(0, 0, 0, 0.2);
+                                }
+                                .dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
                                     background: rgba(255, 255, 255, 0.1);
                                 }
                             `}} />

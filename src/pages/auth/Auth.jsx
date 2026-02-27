@@ -12,14 +12,12 @@ import { Label } from "@/components/ui/label";
 import { toast } from "@/components/ui/use-toast";
 import { cn } from "@/lib/utils";
 import GoogleIcon from "@/components/icons/GoogleIcon";
-import ThreeErrorBoundary from "@/components/3d/ErrorBoundary";
 import { useDispatch } from "react-redux";
 import { setCredentials } from "@/redux/slices/authSlice";
 import { useLoginMutation } from "@/redux/api/authApi";
 // import { publicRequest, setToken } from "@/api/integration";
 
-const Scene = React.lazy(() => import("@/components/3d/Scene"));
-const HeroExamples = React.lazy(() => import("@/components/3d/HeroExamples"));
+import VisualBackground from "@/components/collectors/VisualBackground";
 
 const GOOGLE_CLIENT_ID = "965781692825-d9242mpmjtqqk5svl8hvsnu000hh1f2m.apps.googleusercontent.com"; // From v1 constants
 
@@ -46,7 +44,6 @@ function AuthContent() {
     });
 
     const handleGoogleSuccess = async (tokenResponse) => {
-        console.log("Google Success:", tokenResponse);
         setIsLoading(true);
         try {
             // Get Google User Info
@@ -188,19 +185,13 @@ function AuthContent() {
     };
 
     return (
-        <div className="relative min-h-screen w-full overflow-y-auto font-sans text-white">
+        <div className="relative min-h-screen w-full overflow-y-auto font-sans text-foreground">
             {/* 3D Background - Fixed position */}
             <div className="fixed inset-0 z-0">
-                <div className="absolute inset-0 bg-gradient-to-br from-[#0a0a0a] via-[#1a1520] to-[#0a0a0a]" />
-                <React.Suspense fallback={<div className="w-full h-full bg-[#0a0a0a]" />}>
-                    <ThreeErrorBoundary>
-                        <Scene>
-                            <HeroExamples />
-                        </Scene>
-                    </ThreeErrorBoundary>
-                </React.Suspense>
+                <div className="absolute inset-0 bg-gradient-to-br from-background via-muted to-background" />
+                <VisualBackground />
                 {/* Gradient overlay for readability */}
-                <div className="absolute inset-0 bg-black/60 pointer-events-none" />
+                <div className="absolute inset-0 bg-background/60 pointer-events-none" />
             </div>
 
             {/* Auth Content */}
@@ -212,16 +203,16 @@ function AuthContent() {
                         <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-tr from-[#a6b1ff]/20 to-[#c7aff8]/20 backdrop-blur-xl border border-[#a6b1ff]/20 shadow-[0_0_50px_-12px_rgba(166,177,255,0.5)]">
                             <Sparkles className="h-8 w-8 text-[#a6b1ff]" />
                         </div>
-                        <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
+                        <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
                             Welcome Back
                         </h2>
-                        <p className="mt-2 text-sm text-gray-400">
+                        <p className="mt-2 text-sm text-muted-foreground">
                             Enter your credentials to access your collection
                         </p>
                     </div>
 
                     {/* Form Card */}
-                    <div className="group relative overflow-hidden rounded-3xl bg-white/5 p-8 backdrop-blur-2xl border border-white/10 shadow-2xl transition-all duration-300 hover:bg-white/10 animate-in fade-in zoom-in-95 duration-500 delay-150">
+                    <div className="group relative overflow-hidden rounded-3xl bg-card/80 p-8 backdrop-blur-2xl border border-border shadow-2xl transition-all duration-300 hover:bg-card/90 animate-in fade-in zoom-in-95 duration-500 delay-150">
                         {/* Glow effect */}
                         <div className="absolute -inset-1 bg-gradient-to-r from-[#a6b1ff]/20 via-[#c7aff8]/20 to-[#ffb585]/20 blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
 
@@ -273,17 +264,17 @@ function AuthContent() {
                             </Button>
 
                             <div className="relative flex items-center py-2">
-                                <div className="flex-grow border-t border-white/10"></div>
-                                <span className="flex-shrink-0 mx-4 text-gray-500 text-xs uppercase tracking-wider">Or continue with email</span>
-                                <div className="flex-grow border-t border-white/10"></div>
+                                <div className="flex-grow border-t border-border"></div>
+                                <span className="flex-shrink-0 mx-4 text-muted-foreground text-xs uppercase tracking-wider">Or continue with email</span>
+                                <div className="flex-grow border-t border-border"></div>
                             </div>
 
                             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
 
                                 <div className="space-y-2">
-                                    <Label htmlFor="email" className="text-gray-300 ml-1">Email</Label>
+                                    <Label htmlFor="email" className="text-foreground ml-1">Email</Label>
                                     <div className="relative group/input">
-                                        <div className="absolute left-3 top-3 text-gray-400 group-focus-within/input:text-[#a6b1ff] transition-colors">
+                                        <div className="absolute left-3 top-3 text-muted-foreground group-focus-within/input:text-[#a6b1ff] transition-colors">
                                             <Mail className="h-5 w-5" />
                                         </div>
                                         <Input
@@ -291,7 +282,7 @@ function AuthContent() {
                                             id="email"
                                             type="email"
                                             placeholder="name@example.com"
-                                            className="pl-10 h-12 bg-black/20 border-white/10 text-white placeholder:text-gray-500 focus:border-[#a6b1ff] focus:ring-[#a6b1ff]/20 rounded-xl transition-all"
+                                            className="pl-10 h-12 bg-input border-border text-foreground placeholder:text-muted-foreground focus:border-[#a6b1ff] focus:ring-[#a6b1ff]/20 rounded-xl transition-all"
                                             disabled={isLoading || isLoginLoading}
                                         />
                                     </div>
@@ -302,13 +293,13 @@ function AuthContent() {
 
                                 <div className="space-y-2">
                                     <div className="flex items-center justify-between">
-                                        <Label htmlFor="password" className="text-gray-300 ml-1">Password</Label>
+                                        <Label htmlFor="password" className="text-foreground ml-1">Password</Label>
                                         <Link to="/auth/forgot-password" className="text-xs text-[#a6b1ff] hover:text-[#c7aff8] transition-colors">
                                             Forgot password?
                                         </Link>
                                     </div>
                                     <div className="relative group/input">
-                                        <div className="absolute left-3 top-3 text-gray-400 group-focus-within/input:text-[#a6b1ff] transition-colors">
+                                        <div className="absolute left-3 top-3 text-muted-foreground group-focus-within/input:text-[#a6b1ff] transition-colors">
                                             <Lock className="h-5 w-5" />
                                         </div>
                                         <Input
@@ -316,7 +307,7 @@ function AuthContent() {
                                             id="password"
                                             type="password"
                                             placeholder="••••••••"
-                                            className="pl-10 h-12 bg-black/20 border-white/10 text-white placeholder:text-gray-500 focus:border-[#a6b1ff] focus:ring-[#a6b1ff]/20 rounded-xl transition-all"
+                                            className="pl-10 h-12 bg-input border-border text-foreground placeholder:text-muted-foreground focus:border-[#a6b1ff] focus:ring-[#a6b1ff]/20 rounded-xl transition-all"
                                             disabled={isLoading || isLoginLoading}
                                         />
                                     </div>
@@ -343,7 +334,7 @@ function AuthContent() {
                             </form>
                         </div>
 
-                        <div className="mt-6 text-center text-sm text-gray-400">
+                        <div className="mt-6 text-center text-sm text-muted-foreground">
                             <span className="opacity-70">Don't have an account?</span>{" "}
                             <Link to="/auth/signup" className="font-medium text-[#c7aff8] hover:text-[#ffb585] transition-colors">
                                 Join now
