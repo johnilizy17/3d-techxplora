@@ -25,10 +25,9 @@ export default function Home() {
       {/* Hero Section */}
       <HeroSection />
 
-    <HowItWorks />
+      <HowItWorks />
 
       <FAQ />
-
 
       <ContactSection />
 

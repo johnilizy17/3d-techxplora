@@ -37,14 +37,14 @@ export default function HeroSection() {
   const [isSponsorOpen, setIsSponsorOpen] = useState(false);
 
   return (
-    <div className="relative min-h-screen flex items-center justify-center overflow-hidden">
+    <div className="relative h-[700px] md:h-[750px] lg:h-[700px] flex items-center justify-center overflow-hidden py-16 md:py-20">
       {/* Background with 3D elements */}
       <div className="fixed inset-0 z-0 opacity-40 pointer-events-none">
         <VisualBackground />
       </div>
 
       {/* Hero Content */}
-      <div className="relative z-10 max-w-6xl mx-auto px-6 py-32 text-center">
+      <div className="relative z-10 max-w-6xl mx-auto px-6 py-16 md:py-20 text-center">
         <div className="animate-in fade-in slide-in-from-bottom duration-700">
           {/* Badge */}
           <div className="mb-8 inline-flex items-center gap-2 glass-morphism px-5 py-2 rounded-full">

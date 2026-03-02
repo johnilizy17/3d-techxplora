@@ -65,10 +65,10 @@ export default function Leaderboard() {
                                     </div>
                                     <span className="text-[10px] font-bold text-[#a6b1ff] uppercase tracking-widest">Global Rankings</span>
                                 </div>
-                                <h1 className="text-4xl sm:text-5xl font-black text-white tracking-tight uppercase italic leading-none">
-                                    The <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#a6b1ff] to-white">Top 20</span>
+                                <h1 className="text-4xl sm:text-5xl font-black text-foreground dark:text-white tracking-tight uppercase italic leading-none">
+                                    The <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#a6b1ff] to-foreground dark:to-white">Top 20</span>
                                 </h1>
-                                <p className="text-sm font-medium text-white/40 max-w-md">
+                                <p className="text-sm font-medium text-muted-foreground dark:text-white/40 max-w-md">
                                     Track the world's most active Xploras and their journey through the Quiz.
                                 </p>
                             </div>
@@ -83,7 +83,7 @@ export default function Leaderboard() {
                                         placeholder="Find an Xplora..."
                                         value={searchQuery}
                                         onChange={(e) => setSearchQuery(e.target.value)}
-                                        className="w-full h-11 pl-11 pr-4 bg-white/5 border border-white/10 rounded-2xl text-white placeholder:text-white/20 focus:outline-none focus:border-[#a6b1ff]/30 focus:bg-white/10 transition-all text-sm font-medium"
+                                        className="w-full h-11 pl-11 pr-4 bg-white/5 dark:bg-white/5 border border-gray-300 dark:border-white/10 rounded-2xl text-foreground dark:text-white placeholder:text-muted-foreground dark:placeholder:text-white/20 focus:outline-none focus:border-[#a6b1ff]/30 focus:bg-white/10 transition-all text-sm font-medium"
                                     />
                                 </div>
                             </div>
@@ -117,8 +117,8 @@ export default function Leaderboard() {
                                                 <div className="absolute inset-0 flex flex-col items-center justify-center -skew-x-[-10deg]">
                                                     <span className="text-4xl sm:text-5xl lg:text-6xl font-black text-[#e2e8f0]/30 italic leading-none">2</span>
                                                     <div className="mt-2 text-center">
-                                                        <p className="text-[10px] sm:text-xs font-black text-white/90 uppercase tracking-tighter truncate w-20 sm:w-28">{topThree[1].name}</p>
-                                                        <p className="text-[8px] sm:text-[10px] font-bold text-[#e2e8f0] uppercase italic">{topThree[1].xp} XP</p>
+                                                        <p className="text-[10px] sm:text-xs font-black text-foreground dark:text-white/90 uppercase tracking-tighter truncate w-20 sm:w-28">{topThree[1].name}</p>
+                                                        <p className="text-[8px] sm:text-[10px] font-bold text-[#718096] dark:text-[#e2e8f0] uppercase italic">{topThree[1].xp} XP</p>
                                                     </div>
                                                 </div>
                                             </div>
@@ -147,8 +147,8 @@ export default function Leaderboard() {
                                                 <div className="absolute inset-0 flex flex-col items-center justify-center">
                                                     <span className="text-6xl sm:text-7xl lg:text-8xl font-black text-[#fbbf24]/30 italic leading-none">1</span>
                                                     <div className="mt-2 text-center">
-                                                        <p className="text-xs sm:text-sm font-black text-white uppercase tracking-tighter italic truncate w-24 sm:w-32">{topThree[0].name}</p>
-                                                        <p className="text-xs font-black text-[#fbbf24] uppercase italic drop-shadow-md">{topThree[0].xp} XP</p>
+                                                        <p className="text-xs sm:text-sm font-black text-foreground dark:text-white uppercase tracking-tighter italic truncate w-24 sm:w-32">{topThree[0].name}</p>
+                                                        <p className="text-xs font-black text-[#d97706] dark:text-[#fbbf24] uppercase italic drop-shadow-md">{topThree[0].xp} XP</p>
                                                     </div>
                                                 </div>
                                             </div>
@@ -169,8 +169,8 @@ export default function Leaderboard() {
                                                 <div className="absolute inset-0 flex flex-col items-center justify-center -skew-x-[10deg]">
                                                     <span className="text-4xl sm:text-5xl lg:text-6xl font-black text-[#b45309]/30 italic leading-none">3</span>
                                                     <div className="mt-2 text-center">
-                                                        <p className="text-[10px] sm:text-xs font-black text-white/90 uppercase tracking-tighter truncate w-20 sm:w-28">{topThree[2].name}</p>
-                                                        <p className="text-[8px] sm:text-[10px] font-bold text-[#b45309] uppercase italic">{topThree[2].xp} XP</p>
+                                                        <p className="text-[10px] sm:text-xs font-black text-foreground dark:text-white/90 uppercase tracking-tighter truncate w-20 sm:w-28">{topThree[2].name}</p>
+                                                        <p className="text-[8px] sm:text-[10px] font-bold text-[#92400e] dark:text-[#b45309] uppercase italic">{topThree[2].xp} XP</p>
                                                     </div>
                                                 </div>
                                             </div>
@@ -186,7 +186,7 @@ export default function Leaderboard() {
                                 <div className="flex items-center justify-between mb-8 px-2">
                                     <div className="flex items-center gap-4">
                                         <div className="w-8 h-px bg-gradient-to-r from-[#a6b1ff] to-transparent" />
-                                        <h3 className="text-xs font-black text-white/60 uppercase tracking-[0.3em] italic">Full Standings</h3>
+                                        <h3 className="text-xs font-black text-muted-foreground dark:text-white/60 uppercase tracking-[0.3em] italic">Full Standings</h3>
                                     </div>
                                     {searchQuery && (
                                         <p className="text-[10px] font-bold text-[#a6b1ff] uppercase tracking-widest italic">
@@ -195,7 +195,7 @@ export default function Leaderboard() {
                                     )}
                                 </div>
 
-                                <div className="flex items-center px-8 py-2 text-[10px] font-black text-white/30 uppercase tracking-[0.2em] italic">
+                                <div className="flex items-center px-8 py-2 text-[10px] font-black text-muted-foreground dark:text-white/30 uppercase tracking-[0.2em] italic">
                                     <span className="w-12 text-center">Rank</span>
                                     <span className="flex-1 ml-4 text-left">Xplora</span>
                                     <span className="hidden sm:block w-32 text-center">Level</span>
@@ -233,10 +233,10 @@ export default function Leaderboard() {
                                                         {item.avatar && <img src={item.avatar} alt={item.name} className="absolute inset-0 w-full h-full object-cover" />}
                                                     </div>
                                                     <div className="truncate">
-                                                        <h4 className="text-sm font-black text-white uppercase italic tracking-tight group-hover:text-[#a6b1ff] transition-colors truncate">
+                                                        <h4 className="text-sm font-black text-foreground dark:text-white uppercase italic tracking-tight group-hover:text-[#a6b1ff] transition-colors truncate">
                                                             {item.name} {user?.id === item.id && "(YOU)"}
                                                         </h4>
-                                                        <p className="text-[10px] font-bold text-white/30 uppercase tracking-widest leading-none mt-0.5">
+                                                        <p className="text-[10px] font-bold text-muted-foreground dark:text-white/30 uppercase tracking-widest leading-none mt-0.5">
                                                             {item.role}
                                                         </p>
                                                     </div>
@@ -250,12 +250,12 @@ export default function Leaderboard() {
                                                             style={{ width: `${(item.level % 10) * 10}%` }}
                                                         />
                                                     </div>
-                                                    <span className="text-[10px] font-black text-white/60 uppercase">Lv.{item.level}</span>
+                                                    <span className="text-[10px] font-black text-muted-foreground dark:text-white/60 uppercase">Lv.{item.level}</span>
                                                 </div>
 
                                                 {/* Points */}
                                                 <div className="w-24 text-right flex flex-col items-end">
-                                                    <span className="text-sm sm:text-lg font-black text-white italic tracking-tighter">
+                                                    <span className="text-sm sm:text-lg font-black text-foreground dark:text-white italic tracking-tighter">
                                                         {item.xp.toLocaleString()}
                                                     </span>
                                                     <div className="flex items-center gap-1">
@@ -279,7 +279,7 @@ export default function Leaderboard() {
                             </div>
 
                             {/* Footer / Disclaimer */}
-                            <p className="mt-12 text-center text-white/20 text-[10px] font-bold uppercase tracking-[0.3em] pb-10">
+                            <p className="mt-12 text-center text-muted-foreground dark:text-white/20 text-[10px] font-bold uppercase tracking-[0.3em] pb-10">
                                 Rankings are updated in real-time based on XP earnings
                             </p>
                         </>

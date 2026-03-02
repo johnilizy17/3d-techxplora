@@ -116,7 +116,7 @@ export default function HowItWorks() {
   return (
     <div
       ref={sectionRef}
-      className="relative pt-32 pb-60 px-6 bg-gradient-to-b from-background via-muted to-background transition-colors duration-300"
+      className="relative pt-16 md:pt-20 pb-20 md:pb-32 px-6 bg-gradient-to-b from-background via-muted to-background transition-colors duration-300"
     >
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-16">
