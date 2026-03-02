@@ -221,7 +221,7 @@ export default function Leaderboard() {
 
                                                 {/* Rank */}
                                                 <div className="w-12 flex justify-center">
-                                                    <span className={`text-lg font-black italic tracking-tighter ${item.rank <= 3 ? 'text-[#a6b1ff]' : 'text-white/40 group-hover:text-white/80'}`}>
+                                                    <span className={`text-lg font-black italic tracking-tighter ${item.rank <= 3 ? 'text-[#a6b1ff]' : 'text-white/40 dark:text-white/40 group-hover:text-foreground dark:group-hover:text-white group-hover:font-extrabold'}`}>
                                                         #{item.rank}
                                                     </span>
                                                 </div>

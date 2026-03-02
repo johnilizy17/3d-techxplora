@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Send, Mic, X, Bot, User, Sparkles, MessageCircle, Headphones } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import MessageText from './MessageText';
 import TiltCard from '../ui/TiltCard';
 import { cn } from '@/lib/utils';
@@ -63,7 +63,24 @@ const generateResponse = async (userInput, conversationHistory = []) => {
 
 const ChatBot = () => {
     const navigate = useNavigate();
+    const location = useLocation();
     const { darkMode } = useTheme();
+    
+    // Hide ChatBot on course detail pages (e.g., /courses/18)
+    const isCourseDetailPage = /^\/courses\/\d+/.test(location.pathname);
+    
+    // Check if current page is a dashboard page (has sidebar navigation)
+    const isDashboardPage = location.pathname.startsWith('/dashboard') || 
+                           location.pathname.startsWith('/courses') ||
+                           location.pathname.startsWith('/quizzes') ||
+                           location.pathname.startsWith('/syllabus') ||
+                           location.pathname.startsWith('/groups') ||
+                           location.pathname.startsWith('/profile') ||
+                           location.pathname.startsWith('/settings') ||
+                           location.pathname.startsWith('/support') ||
+                           location.pathname.startsWith('/history') ||
+                           location.pathname.startsWith('/analytics');
+    
     const [showModal, setShowModal] = useState(false);
     const [chatMode, setChatMode] = useState(null); // 'ai' or 'support'
     const [isOpen, setIsOpen] = useState(false);
@@ -183,9 +200,22 @@ const ChatBot = () => {
         }
     };
 
+    // Don't render ChatBot on course detail pages
+    if (isCourseDetailPage) {
+        return null;
+    }
+
     return (
-        <div className="fixed bottom-[104px] md:bottom-6 right-6 z-50 flex flex-col items-end pointer-events-none">
-            <div className="pointer-events-auto flex flex-col items-end">
+        <div className={cn(
+            "fixed z-50 flex flex-col items-end pointer-events-none",
+            isDashboardPage 
+                ? "bottom-[104px] md:bottom-6 right-6" // Floating position for dashboard pages
+                : "bottom-[15px] right-0 left-0 md:left-auto md:right-6 md:bottom-6" // Bottom attached for non-dashboard pages with 15px spacing
+        )}>
+            <div className={cn(
+                "pointer-events-auto flex flex-col items-end",
+                !isDashboardPage && "w-full md:w-auto"
+            )}>
                 {/* Modal for Mode Selection */}
                 <AnimatePresence>
                     {showModal && (
@@ -460,8 +490,11 @@ const ChatBot = () => {
                         whileTap={{ scale: 0.95 }}
                         onClick={handleButtonClick}
                         className={cn(
-                            "group flex items-center gap-2 px-6 py-3 rounded-2xl shadow-2xl transition-all duration-300",
-                            isOpen ? "bg-red-500 shadow-red-500/20" : "bg-blue-600 shadow-blue-600/20"
+                            "group flex items-center gap-2 px-6 py-3 shadow-2xl transition-all duration-300",
+                            isOpen ? "bg-red-500 shadow-red-500/20" : "bg-blue-600 shadow-blue-600/20",
+                            isDashboardPage 
+                                ? "rounded-2xl" // Rounded on all sides for floating button
+                                : "rounded-t-2xl md:rounded-2xl w-full md:w-auto justify-center md:justify-start" // Rounded top only on mobile, full rounded on desktop
                         )}
                     >
                         <div className="relative">

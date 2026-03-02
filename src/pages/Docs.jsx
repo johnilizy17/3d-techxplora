@@ -184,7 +184,7 @@ const Docs = () => {
                                         animate={{ rotate: isActive ? 180 : 0 }}
                                         transition={{ duration: 0.3 }}
                                     >
-                                        <ChevronDown className="w-6 h-6 text-white/40 group-hover:text-white/60" />
+                                        <ChevronDown className="w-6 h-6 text-white/40 dark:text-white/40 group-hover:text-foreground dark:group-hover:text-white/80" />
                                     </motion.div>
                                 </button>
 
@@ -257,15 +257,24 @@ const Docs = () => {
                                                                                 </div>
                                                                                 <div
                                                                                     onClick={() => setSelectedVideo(page)}
-                                                                                    className="aspect-video bg-white/5 rounded-lg flex items-center justify-center border border-white/10 group cursor-pointer hover:border-[#a6b1ff]/50 transition-all overflow-hidden relative"
+                                                                                    className="aspect-video bg-gray-900 dark:bg-gray-900 rounded-lg flex items-center justify-center border border-white/10 group cursor-pointer hover:border-[#a6b1ff]/50 transition-all overflow-hidden relative"
                                                                                 >
-                                                                                    <div className="text-center z-10">
-                                                                                        <PlayCircle className="w-12 h-12 md:w-16 md:h-16 text-[#a6b1ff] mx-auto mb-2 md:mb-3 group-hover:scale-110 transition-transform" />
-                                                                                        <p className="text-white/40 text-sm font-medium">
+                                                                                    {/* Video Banner Image */}
+                                                                                    <img 
+                                                                                        src="/video.png" 
+                                                                                        alt="Video Tutorial" 
+                                                                                        className="absolute inset-0 w-full h-full object-cover z-0 opacity-90"
+                                                                                    />
+                                                                                    
+                                                                                    {/* Overlay - lighter in light mode */}
+                                                                                    <div className="absolute inset-0 bg-black/20 dark:bg-black/30 group-hover:bg-black/40 dark:group-hover:bg-black/50 transition-all duration-300 z-[1]" />
+                                                                                    
+                                                                                    <div className="text-center z-10 relative">
+                                                                                        <PlayCircle className="w-12 h-12 md:w-16 md:h-16 text-white mx-auto mb-2 md:mb-3 group-hover:scale-110 transition-transform drop-shadow-lg" />
+                                                                                        <p className="text-white text-sm font-medium drop-shadow-lg">
                                                                                             Click to play tutorial
                                                                                         </p>
                                                                                     </div>
-                                                                                    <div className="absolute inset-0 bg-[#a6b1ff]/5 opacity-0 group-hover:opacity-100 transition-opacity" />
                                                                                 </div>
                                                                             </div>
                                                                         </div>

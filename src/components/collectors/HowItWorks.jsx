@@ -269,13 +269,16 @@ export default function HowItWorks() {
             </p>
           </div>
 
-          <div className="relative aspect-video rounded-3xl overflow-hidden glass-morphism border border-border shadow-[0_0_80px_rgba(166,177,255,0.1)] group">
-            {/* Cinematic Gradient Background */}
-            <div className="absolute inset-0 bg-gradient-to-tr from-[#a6b1ff]/20 via-transparent to-[#ffb585]/20 mix-blend-overlay z-0" />
-            <div className="absolute inset-0 bg-background/40 z-0" />
+          <div className="relative aspect-video rounded-3xl overflow-hidden glass-morphism border border-border shadow-[0_0_80px_rgba(166,177,255,0.1)] group bg-gray-900 dark:bg-gray-900">
+            {/* Video Banner Image */}
+            <img 
+              src="/video.png" 
+              alt="TechXplora Demo" 
+              className="absolute inset-0 w-full h-full object-cover z-0 opacity-90"
+            />
 
-            {/* Animated Grid Overlay for "Tech" look */}
-            <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay z-0" />
+            {/* Overlay on hover - adapts to theme */}
+            <div className="absolute inset-0 bg-black/20 dark:bg-black/30 group-hover:bg-black/40 dark:group-hover:bg-black/50 transition-all duration-300 z-[1]" />
 
             <div
               className="absolute inset-0 flex items-center justify-center z-10 cursor-pointer group/play"
@@ -286,8 +289,8 @@ export default function HowItWorks() {
                 <div className="absolute inset-0 rounded-full bg-[#a6b1ff]/20 animate-ping duration-[3000ms]" />
                 <div className="absolute inset-0 rounded-full bg-[#a6b1ff]/10 animate-pulse duration-[2000ms]" />
 
-                <div className="relative w-28 h-28 rounded-full bg-card/80 backdrop-blur-xl flex items-center justify-center border border-border group-hover/play:scale-110 group-hover/play:border-[#a6b1ff]/50 transition-all duration-500 shadow-[0_0_50px_rgba(166,177,255,0.3)]">
-                  <div className="w-0 h-0 border-t-[18px] border-t-transparent border-l-[32px] border-l-foreground border-b-[18px] border-b-transparent ml-2 drop-shadow-[0_0_15px_rgba(166,177,255,0.5)]" />
+                <div className="relative w-28 h-28 rounded-full bg-white/90 dark:bg-card/90 backdrop-blur-xl flex items-center justify-center border border-border group-hover/play:scale-110 group-hover/play:border-[#a6b1ff]/50 transition-all duration-500 shadow-[0_0_50px_rgba(166,177,255,0.3)]">
+                  <div className="w-0 h-0 border-t-[18px] border-t-transparent border-l-[32px] border-l-[#a6b1ff] border-b-[18px] border-b-transparent ml-2 drop-shadow-[0_0_15px_rgba(166,177,255,0.5)]" />
                 </div>
               </div>
             </div>

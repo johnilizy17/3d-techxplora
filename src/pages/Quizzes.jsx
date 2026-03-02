@@ -115,7 +115,7 @@ export default function Quizzes() {
                                             onClick={() => setActiveFilter(filter.label)}
                                             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-300 ${isActive
                                                 ? `bg-gradient-to-r ${filter.color} text-white shadow-lg shadow-black/20 scale-105`
-                                                : 'text-white/40 hover:text-white/70 hover:bg-white/5'
+                                                : 'text-white/40 dark:text-white/40 hover:text-foreground dark:hover:text-white hover:bg-white/5 hover:font-extrabold'
                                                 }`}
                                         >
                                             <Icon size={14} className={isActive ? "animate-pulse" : ""} />

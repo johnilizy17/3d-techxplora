@@ -647,14 +647,14 @@ const Support = () => {
                     <motion.div
                         initial={{ scale: 0.9, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
-                        className="bg-[#1a1a1a] border border-white/10 rounded-3xl p-8 max-w-md w-full mx-4"
+                        className="bg-card border border-border rounded-3xl p-8 max-w-md w-full mx-4"
                     >
                         <div className="text-center mb-6">
                             <div className="w-16 h-16 rounded-full bg-gradient-to-br from-green-600 to-teal-600 flex items-center justify-center mx-auto mb-4">
                                 <MessageSquare size={32} className="text-white" />
                             </div>
-                            <h2 className="text-2xl font-bold text-white mb-2">Welcome to Support</h2>
-                            <p className="text-white/60 text-sm">Please enter your email to continue</p>
+                            <h2 className="text-2xl font-bold text-foreground mb-2">Welcome to Support</h2>
+                            <p className="text-muted-foreground text-sm">Please enter your email to continue</p>
                         </div>
 
                         <form onSubmit={handleEmailSubmit} className="space-y-4">
@@ -664,7 +664,7 @@ const Support = () => {
                                 onChange={(e) => setGuestEmail(e.target.value)}
                                 placeholder="your@email.com"
                                 required
-                                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/40 focus:outline-none focus:border-green-500/50 transition-colors"
+                                className="w-full bg-accent border border-border rounded-xl px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-green-500/50 transition-colors"
                             />
                             <button
                                 type="submit"
@@ -677,7 +677,7 @@ const Support = () => {
                 </motion.div>
             )}
 
-        <div className="h-screen bg-[#0a0a0a] flex flex-col overflow-hidden">
+        <div className="h-screen bg-background flex flex-col overflow-hidden">
             {/* WhatsApp-style Header - Fixed */}
             <div className="bg-gradient-to-r from-green-600 to-teal-600 px-4 py-3 flex items-center gap-4 shadow-lg flex-shrink-0">
                 <button
@@ -728,7 +728,7 @@ const Support = () => {
                             animate={{ x: 0 }}
                             exit={{ x: '100%' }}
                             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                            className="fixed top-0 right-0 h-full w-full max-w-md bg-[#1a1a1a] shadow-2xl z-50 flex flex-col"
+                            className="fixed top-0 right-0 h-full w-full max-w-md bg-card shadow-2xl z-50 flex flex-col border-l border-border"
                         >
                             {/* Drawer Header */}
                             <div className="bg-gradient-to-r from-green-600 to-teal-600 px-4 py-4 flex items-center justify-between">
@@ -761,8 +761,8 @@ const Support = () => {
                                         animate={{ opacity: 1, x: 0 }}
                                         transition={{ delay: idx * 0.05 }}
                                         className={cn(
-                                            "border-b border-white/10 hover:bg-white/5 transition-colors cursor-pointer",
-                                            chatId === chat.id && "bg-white/10"
+                                            "border-b border-border hover:bg-accent transition-colors cursor-pointer",
+                                            chatId === chat.id && "bg-accent"
                                         )}
                                         onClick={() => handleChatSelect(chat.id)}
                                     >
@@ -773,16 +773,16 @@ const Support = () => {
                                                         <Bot size={20} className="text-white" />
                                                     </div>
                                                     <div className="flex-1 min-w-0">
-                                                        <h3 className="text-white font-semibold text-sm truncate">
+                                                        <h3 className="text-foreground font-semibold text-sm truncate">
                                                             Support Chat - {chat.mode === 'live' ? 'Live Agent' : 'Bot'}
                                                         </h3>
-                                                        <p className="text-white/60 text-xs truncate mt-0.5">
+                                                        <p className="text-muted-foreground text-xs truncate mt-0.5">
                                                             {chat.lastMessage || 'No messages yet'}
                                                         </p>
                                                     </div>
                                                 </div>
                                                 <div className="flex flex-col items-end gap-1 ml-2">
-                                                    <span className="text-white/40 text-xs whitespace-nowrap">
+                                                    <span className="text-muted-foreground text-xs whitespace-nowrap">
                                                         {formatTimestamp(chat.timestamp)}
                                                     </span>
                                                     {chat.unread > 0 && (
@@ -804,11 +804,11 @@ const Support = () => {
 
                                 {chatHistory.length === 0 && (
                                     <div className="flex flex-col items-center justify-center h-full text-center p-8">
-                                        <div className="w-20 h-20 rounded-full bg-white/5 flex items-center justify-center mb-4">
-                                            <MessageSquare size={32} className="text-white/40" />
+                                        <div className="w-20 h-20 rounded-full bg-accent flex items-center justify-center mb-4">
+                                            <MessageSquare size={32} className="text-muted-foreground" />
                                         </div>
-                                        <h3 className="text-white font-semibold mb-2">No Chat History</h3>
-                                        <p className="text-white/60 text-sm">
+                                        <h3 className="text-foreground font-semibold mb-2">No Chat History</h3>
+                                        <p className="text-muted-foreground text-sm">
                                             Your previous conversations will appear here
                                         </p>
                                     </div>
@@ -816,7 +816,7 @@ const Support = () => {
                             </div>
 
                             {/* Drawer Footer */}
-                            <div className="p-4 border-t border-white/10">
+                            <div className="p-4 border-t border-border">
                                 <button
                                     onClick={handleStartNewConversation}
                                     className="w-full py-3 bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-500 hover:to-teal-500 rounded-xl text-white font-semibold transition-all shadow-lg shadow-green-600/20"
@@ -830,8 +830,8 @@ const Support = () => {
             </AnimatePresence>
 
             {/* WhatsApp-style Background Pattern - Scrollable Messages */}
-            <div className="flex-1 overflow-y-auto bg-[#0a0a0a] relative" style={{
-                backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.02'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
+            <div className="flex-1 overflow-y-auto bg-background relative" style={{
+                backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23000000' fill-opacity='0.02' class='dark-pattern'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
             }}>
                 <div className="max-w-4xl mx-auto p-4 space-y-3">
                     {/* Messages */}
@@ -849,7 +849,7 @@ const Support = () => {
                                 "max-w-[75%] rounded-lg px-4 py-2 shadow-lg relative",
                                 msg.sender === 'user'
                                     ? "bg-gradient-to-br from-green-600 to-teal-600 text-white rounded-br-none"
-                                    : "bg-[#1a1a1a] text-white border border-white/10 rounded-bl-none"
+                                    : "bg-card text-foreground border border-border rounded-bl-none"
                             )}>
                                 {msg.sender === 'support' && (
                                     <div className="flex items-center gap-2 mb-1">
@@ -879,7 +879,7 @@ const Support = () => {
                             animate={{ opacity: 1, y: 0 }}
                             className="flex justify-start"
                         >
-                            <div className="bg-[#1a1a1a] border border-white/10 rounded-lg rounded-bl-none px-4 py-3 shadow-lg">
+                            <div className="bg-card border border-border rounded-lg rounded-bl-none px-4 py-3 shadow-lg">
                                 <div className="flex gap-1">
                                     {[0, 1, 2].map((i) => (
                                         <motion.div
@@ -910,7 +910,7 @@ const Support = () => {
                                         animate={{ opacity: 1, x: 0 }}
                                         transition={{ delay: idx * 0.05 }}
                                         onClick={() => handleOptionClick(option)}
-                                        className="bg-[#1a1a1a] hover:bg-[#252525] border border-white/10 hover:border-green-500/50 text-white px-4 py-2.5 rounded-lg text-sm transition-all shadow-lg max-w-[75%] text-left"
+                                        className="bg-card hover:bg-accent border border-border hover:border-green-500/50 text-foreground px-4 py-2.5 rounded-lg text-sm transition-all shadow-lg max-w-[75%] text-left"
                                     >
                                         {option.label}
                                     </motion.button>
@@ -924,7 +924,7 @@ const Support = () => {
             </div>
 
             {/* WhatsApp-style Input - Fixed */}
-            <div className="bg-[#1a1a1a] border-t border-white/10 px-4 py-3 flex-shrink-0">
+            <div className="bg-card border-t border-border px-4 py-3 flex-shrink-0">
                 <form onSubmit={handleSendMessage} className="flex items-center gap-3 max-w-4xl mx-auto relative">
                     {/* Emoji Picker */}
                     <AnimatePresence>
@@ -934,14 +934,14 @@ const Support = () => {
                                 initial={{ opacity: 0, y: 10, scale: 0.95 }}
                                 animate={{ opacity: 1, y: 0, scale: 1 }}
                                 exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                                className="absolute bottom-full left-0 mb-2 bg-[#2a2a2a] border border-white/10 rounded-2xl p-4 shadow-2xl w-80 max-h-64 overflow-y-auto"
+                                className="absolute bottom-full left-0 mb-2 bg-card border border-border rounded-2xl p-4 shadow-2xl w-80 max-h-64 overflow-y-auto"
                             >
                                 <div className="flex items-center justify-between mb-3">
-                                    <h3 className="text-white font-semibold text-sm">Emojis</h3>
+                                    <h3 className="text-foreground font-semibold text-sm">Emojis</h3>
                                     <button
                                         type="button"
                                         onClick={() => setShowEmojiPicker(false)}
-                                        className="text-white/60 hover:text-white transition-colors"
+                                        className="text-muted-foreground hover:text-foreground transition-colors"
                                     >
                                         <X size={18} />
                                     </button>
@@ -952,7 +952,7 @@ const Support = () => {
                                             key={idx}
                                             type="button"
                                             onClick={() => handleEmojiClick(emoji)}
-                                            className="text-2xl hover:bg-white/10 rounded-lg p-2 transition-colors"
+                                            className="text-2xl hover:bg-accent rounded-lg p-2 transition-colors"
                                         >
                                             {emoji}
                                         </button>
@@ -966,7 +966,7 @@ const Support = () => {
                         type="button"
                         onClick={() => setShowEmojiPicker(!showEmojiPicker)}
                         className={cn(
-                            "text-white/60 hover:text-white transition-colors p-2",
+                            "text-muted-foreground hover:text-foreground transition-colors p-2",
                             showEmojiPicker && "text-green-400"
                         )}
                     >
@@ -975,7 +975,7 @@ const Support = () => {
                     
                     <button
                         type="button"
-                        className="text-white/60 hover:text-white transition-colors p-2"
+                        className="text-muted-foreground hover:text-foreground transition-colors p-2"
                     >
                         <Paperclip size={24} />
                     </button>
@@ -986,7 +986,7 @@ const Support = () => {
                             value={message}
                             onChange={(e) => setMessage(e.target.value)}
                             placeholder={conversationMode === 'live' ? "Type a message..." : "Use options above to chat with bot..."}
-                            className="w-full bg-[#2a2a2a] border border-white/10 rounded-full px-5 py-3 text-sm text-white placeholder:text-white/40 focus:outline-none focus:border-green-500/50 transition-colors"
+                            className="w-full bg-accent border border-border rounded-full px-5 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-green-500/50 transition-colors"
                         />
                     </div>
 
@@ -1001,7 +1001,7 @@ const Support = () => {
                     ) : (
                         <button
                             type="button"
-                            className="text-white/60 hover:text-white transition-colors p-2"
+                            className="text-muted-foreground hover:text-foreground transition-colors p-2"
                         >
                             <ImageIcon size={24} />
                         </button>

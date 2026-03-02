@@ -14,7 +14,7 @@ import { cn } from "@/lib/utils";
 import GoogleIcon from "@/components/icons/GoogleIcon";
 import { useDispatch } from "react-redux";
 import { setCredentials } from "@/redux/slices/authSlice";
-import { useLoginMutation } from "@/redux/api/authApi";
+import { useLoginMutation, useGoogleLoginMutation } from "@/redux/api/authApi";
 // import { publicRequest, setToken } from "@/api/integration";
 
 import VisualBackground from "@/components/collectors/VisualBackground";
@@ -31,6 +31,7 @@ function AuthContent() {
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const [login, { isLoading: isLoginLoading }] = useLoginMutation();
+    const [googleLogin, { isLoading: isGoogleLoginLoading }] = useGoogleLoginMutation();
 
     const [isLoading, setIsLoading] = useState(false);
     const [authFeedback, setAuthFeedback] = useState(null);
@@ -52,12 +53,16 @@ function AuthContent() {
             });
             const googleUser = await userInfoResponse.json();
 
-            // Login with backend (mimicking logic from old/pages/auth/login.tsx:47)
-            const loginData = {
+            // Prepare data for Google login endpoint
+            const googleLoginData = {
+                google_id: googleUser.sub,
                 email: googleUser.email.trim().toLowerCase(),
-                password: googleUser.sub + googleUser.given_name, // v1 Logic
+                first_name: googleUser.given_name || '',
+                last_name: googleUser.family_name || '',
             };
-            const response = await login(loginData).unwrap();
+
+            // Login with backend using dedicated Google endpoint
+            const response = await googleLogin(googleLoginData).unwrap();
 
             // Save credentials to Redux
             dispatch(setCredentials({
@@ -98,9 +103,18 @@ function AuthContent() {
 
         } catch (error) {
             console.error("Google verify error:", error);
+            
+            // Extract error message
+            const errorMessage = error?.data?.message || error?.message || "Could not verify with Google.";
+            
+            setAuthFeedback({
+                type: "error",
+                message: errorMessage,
+            });
+            
             toast({
                 title: "Google Login failed",
-                description: error.response?.data?.message || "Could not verify with Google.",
+                description: errorMessage,
                 variant: "destructive",
             });
         } finally {
@@ -257,7 +271,7 @@ function AuthContent() {
                                 type="button"
                                 onClick={() => loginWithGoogle()}
                                 className="w-full h-12 bg-white text-black hover:bg-gray-100 font-medium rounded-xl flex items-center justify-center gap-3 transition-transform hover:scale-[1.02]"
-                                disabled={isLoading || isLoginLoading}
+                                disabled={isLoading || isLoginLoading || isGoogleLoginLoading}
                             >
                                 <GoogleIcon />
                                 Continue with Google

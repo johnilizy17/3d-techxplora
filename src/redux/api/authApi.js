@@ -12,6 +12,16 @@ export const authApi = baseApi.injectEndpoints({
             invalidatesTags: ['Auth'],
         }),
 
+        // Google Login
+        googleLogin: builder.mutation({
+            query: (googleData) => ({
+                url: '/login/google',
+                method: 'POST',
+                body: googleData,
+            }),
+            invalidatesTags: ['Auth'],
+        }),
+
         // Register Student
         registerStudent: builder.mutation({
             query: (userData) => ({
@@ -206,6 +216,7 @@ export const authApi = baseApi.injectEndpoints({
 
 export const {
     useLoginMutation,
+    useGoogleLoginMutation,
     useRegisterStudentMutation,
     useRegisterTeacherMutation,
     useGetProfileQuery,

@@ -105,14 +105,14 @@ export const studentApi = baseApi.injectEndpoints({
 
         // Get course progress
         getCourseProgress: builder.query({
-            query: (courseId) => `/students/courses/${courseId}/progress`,
+            query: (courseId) => `/students/courses/${courseId}/case-study-scores`,
             providesTags: (result, error, courseId) => [{ type: 'Course', id: courseId }],
         }),
 
         // Update course progress
         updateCourseProgress: builder.mutation({
             query: ({ courseId, progressData }) => ({
-                url: `/students/courses/${courseId}/progress`,
+                url: `/students/courses/${courseId}/case-study-scores`,
                 method: 'PUT',
                 body: progressData,
             }),
@@ -170,6 +170,19 @@ export const studentApi = baseApi.injectEndpoints({
             }),
             invalidatesTags: ['Group', 'Student'],
         }),
+
+        // Submit case study answers
+        submitCaseStudyAnswers: builder.mutation({
+            query: ({ courseId, caseStudyData }) => ({
+                url: `/students/courses/${courseId}/case-study`,
+                method: 'POST',
+                body: caseStudyData,
+            }),
+            invalidatesTags: (result, error, { courseId }) => [
+                { type: 'Course', id: courseId },
+                'Student',
+            ],
+        }),
     }),
 });
 
@@ -191,4 +204,5 @@ export const {
     useVerifyGroupCodeQuery,
     useLazyVerifyGroupCodeQuery,
     useJoinGroupMutation,
+    useSubmitCaseStudyAnswersMutation,
 } = studentApi;

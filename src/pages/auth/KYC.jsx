@@ -1,4 +1,4 @@
-import React from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -11,7 +11,7 @@ import {
     Mail as MailIcon,
     ArrowRight,
     Loader2,
-    CheckCircle2
+    ChevronDown
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,6 +22,7 @@ import { useUpdateTeacherMutation, useUpdateStudentMutation } from "@/redux/api/
 import { updateUser } from "@/redux/slices/authSlice";
 import AuthLayout from "./AuthLayout";
 import { cn } from "@/lib/utils";
+import { nigeriaStates } from "@/data/nigeriaStates";
 
 const kycSchema = z.object({
     date_of_birth: z.string().min(1, "Date of birth is required"),
@@ -41,7 +42,12 @@ export default function KYC() {
 
     const isLoading = isTeacherLoading || isStudentLoading;
 
-    const { register, handleSubmit, formState: { errors } } = useForm({
+    // State management for cascading dropdowns
+    const [selectedState, setSelectedState] = useState(user?.state || "");
+    const [selectedLGA, setSelectedLGA] = useState(user?.lga || "");
+    const [availableLGAs, setAvailableLGAs] = useState([]);
+
+    const { register, handleSubmit, formState: { errors }, setValue, watch } = useForm({
         resolver: zodResolver(kycSchema),
         defaultValues: {
             date_of_birth: user?.date_of_birth || "",
@@ -53,6 +59,38 @@ export default function KYC() {
         }
     });
 
+    // Update available LGAs when state changes
+    useEffect(() => {
+        if (selectedState) {
+            const stateData = nigeriaStates.find(s => s.state === selectedState);
+            if (stateData) {
+                setAvailableLGAs(stateData.lgas);
+            } else {
+                setAvailableLGAs([]);
+            }
+        } else {
+            setAvailableLGAs([]);
+            setSelectedLGA("");
+            setValue("lga", "");
+        }
+    }, [selectedState, setValue]);
+
+    // Handle state selection
+    const handleStateChange = (e) => {
+        const newState = e.target.value;
+        setSelectedState(newState);
+        setValue("state", newState);
+        setSelectedLGA("");
+        setValue("lga", "");
+    };
+
+    // Handle LGA selection
+    const handleLGAChange = (e) => {
+        const newLGA = e.target.value;
+        setSelectedLGA(newLGA);
+        setValue("lga", newLGA);
+    };
+
     const onSubmit = async (data) => {
         try {
             const isTeacher = user?.accountable_type === "App\\Models\\Teacher";
@@ -62,11 +100,11 @@ export default function KYC() {
                 is_verified: 0 // Mark as pending verification
             };
 
-            let response;
+            let result;
             if (isTeacher) {
-                response = await updateTeacher(updatePayload).unwrap();
+                result = await updateTeacher(updatePayload).unwrap();
             } else {
-                response = await updateStudent(updatePayload).unwrap();
+                result = await updateStudent(updatePayload).unwrap();
             }
 
             // Update Redux state with new user data
@@ -153,29 +191,71 @@ export default function KYC() {
                             )}
                         </div>
 
-                        {/* LGA and City - Grid */}
+                        {/* State and LGA - Grid */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                            {/* State */}
+                            <div className="space-y-3">
+                                <Label className="text-sm font-bold text-gray-400 ml-1 tracking-wider uppercase">State</Label>
+                                <div className="relative group/input">
+                                    <Map className="absolute left-4 top-4 h-5 w-5 text-gray-400 group-focus-within/input:text-[#A78BFA] transition-colors z-10 pointer-events-none" />
+                                    <ChevronDown className="absolute right-4 top-4 h-5 w-5 text-gray-400 z-10 pointer-events-none" />
+                                    <select
+                                        {...register("state")}
+                                        value={selectedState}
+                                        onChange={handleStateChange}
+                                        disabled={isLoading}
+                                        className={cn(
+                                            "w-full pl-12 pr-12 h-14 bg-black/40 border-white/10 text-white dark:text-white placeholder:text-gray-600 text-base font-medium focus:border-[#A78BFA] focus:ring-4 focus:ring-[#A78BFA]/10 rounded-xl transition-all shadow-inner appearance-none cursor-pointer [&>option]:text-gray-900 [&>option]:bg-white dark:[&>option]:text-white dark:[&>option]:bg-gray-900",
+                                            errors.state && "border-red-500/50 focus:border-red-500 focus:ring-red-500/10"
+                                        )}
+                                    >
+                                        <option value="">Select your state</option>
+                                        {nigeriaStates.map((stateData) => (
+                                            <option key={stateData.state} value={stateData.state}>
+                                                {stateData.state}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                                {errors.state && (
+                                    <p className="text-sm text-red-400 font-medium ml-1 animate-in slide-in-from-top-1">{errors.state.message}</p>
+                                )}
+                            </div>
+
                             {/* LGA */}
                             <div className="space-y-3">
                                 <Label className="text-sm font-bold text-gray-400 ml-1 tracking-wider uppercase">LGA</Label>
                                 <div className="relative group/input">
-                                    <Building2 className="absolute left-4 top-4 h-5 w-5 text-gray-400 group-focus-within/input:text-[#A78BFA] transition-colors" />
-                                    <Input
+                                    <Building2 className="absolute left-4 top-4 h-5 w-5 text-gray-400 group-focus-within/input:text-[#A78BFA] transition-colors z-10 pointer-events-none" />
+                                    <ChevronDown className="absolute right-4 top-4 h-5 w-5 text-gray-400 z-10 pointer-events-none" />
+                                    <select
                                         {...register("lga")}
-                                        type="text"
-                                        placeholder="Local Govt Area"
+                                        value={selectedLGA}
+                                        onChange={handleLGAChange}
+                                        disabled={!selectedState || isLoading}
                                         className={cn(
-                                            "pl-12 h-14 bg-black/40 border-white/10 text-white placeholder:text-gray-600 text-base font-medium focus:border-[#A78BFA] focus:ring-4 focus:ring-[#A78BFA]/10 rounded-xl transition-all shadow-inner",
+                                            "w-full pl-12 pr-12 h-14 bg-black/40 border-white/10 text-white dark:text-white placeholder:text-gray-600 text-base font-medium focus:border-[#A78BFA] focus:ring-4 focus:ring-[#A78BFA]/10 rounded-xl transition-all shadow-inner appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed [&>option]:text-gray-900 [&>option]:bg-white dark:[&>option]:text-white dark:[&>option]:bg-gray-900",
                                             errors.lga && "border-red-500/50 focus:border-red-500 focus:ring-red-500/10"
                                         )}
-                                        disabled={isLoading}
-                                    />
+                                    >
+                                        <option value="">
+                                            {selectedState ? "Select LGA" : "Select state first"}
+                                        </option>
+                                        {availableLGAs.map((lga) => (
+                                            <option key={lga} value={lga}>
+                                                {lga}
+                                            </option>
+                                        ))}
+                                    </select>
                                 </div>
                                 {errors.lga && (
                                     <p className="text-sm text-red-400 font-medium ml-1 animate-in slide-in-from-top-1">{errors.lga.message}</p>
                                 )}
                             </div>
+                        </div>
 
+                        {/* City and Postal Code - Grid */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                             {/* City */}
                             <div className="space-y-3">
                                 <Label className="text-sm font-bold text-gray-400 ml-1 tracking-wider uppercase">City</Label>
@@ -194,30 +274,6 @@ export default function KYC() {
                                 </div>
                                 {errors.city && (
                                     <p className="text-sm text-red-400 font-medium ml-1 animate-in slide-in-from-top-1">{errors.city.message}</p>
-                                )}
-                            </div>
-                        </div>
-
-                        {/* State and Postal Code - Grid */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-                            {/* State */}
-                            <div className="space-y-3">
-                                <Label className="text-sm font-bold text-gray-400 ml-1 tracking-wider uppercase">State</Label>
-                                <div className="relative group/input">
-                                    <Map className="absolute left-4 top-4 h-5 w-5 text-gray-400 group-focus-within/input:text-[#A78BFA] transition-colors" />
-                                    <Input
-                                        {...register("state")}
-                                        type="text"
-                                        placeholder="Your state"
-                                        className={cn(
-                                            "pl-12 h-14 bg-black/40 border-white/10 text-white placeholder:text-gray-600 text-base font-medium focus:border-[#A78BFA] focus:ring-4 focus:ring-[#A78BFA]/10 rounded-xl transition-all shadow-inner",
-                                            errors.state && "border-red-500/50 focus:border-red-500 focus:ring-red-500/10"
-                                        )}
-                                        disabled={isLoading}
-                                    />
-                                </div>
-                                {errors.state && (
-                                    <p className="text-sm text-red-400 font-medium ml-1 animate-in slide-in-from-top-1">{errors.state.message}</p>
                                 )}
                             </div>
 

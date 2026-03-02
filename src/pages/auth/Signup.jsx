@@ -27,7 +27,7 @@ import { cn } from "@/lib/utils";
 import AuthLayout from "./AuthLayout";
 import GoogleIcon from "@/components/icons/GoogleIcon";
 import { useDispatch } from "react-redux";
-import { useLoginMutation, useRegisterStudentMutation, useRegisterTeacherMutation } from "@/redux/api/authApi";
+import { useLoginMutation, useGoogleLoginMutation, useRegisterStudentMutation, useRegisterTeacherMutation } from "@/redux/api/authApi";
 import { setCredentials } from "@/redux/slices/authSlice";
 
 const GOOGLE_CLIENT_ID = "965781692825-d9242mpmjtqqk5svl8hvsnu000hh1f2m.apps.googleusercontent.com";
@@ -58,6 +58,7 @@ function SignupContent() {
     const pageParam = searchParams.get("page");
     const codeParam = searchParams.get("code");
     const [login, { isLoading: isLoginLoading }] = useLoginMutation();
+    const [googleLogin, { isLoading: isGoogleLoginLoading }] = useGoogleLoginMutation();
 
     const [registerStudent, { isLoading: isStudentLoading }] = useRegisterStudentMutation();
     const [registerTeacher, { isLoading: isTeacherLoading }] = useRegisterTeacherMutation();
@@ -130,9 +131,15 @@ function SignupContent() {
                 message: `Registration successful! Welcome as a ${role}.`,
             });
 
+            // Use Google login endpoint instead of regular login
+            const googleLoginData = {
+                google_id: googleUser.sub,
+                email: googleUser.email.trim().toLowerCase(),
+                first_name: googleUser.given_name || '',
+                last_name: googleUser.family_name || '',
+            };
 
-
-            const logged = await login(registrationData).unwrap();
+            const logged = await googleLogin(googleLoginData).unwrap();
 
             // Save credentials to Redux
             dispatch(setCredentials({

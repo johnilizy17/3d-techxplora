@@ -16,8 +16,9 @@ export default function Wallet() {
     const user = useSelector(selectCurrentUser);
     const history = useSelector(selectHistory);
     const isTeacher = user?.accountable_type?.includes('Teacher') || user?.role === 'admin';
-    // Access the data array, handling if history is the array itself or an object containing data
-    const historyList = history?.data || (Array.isArray(history) ? history : []);
+    
+    // Access the data array - API returns { data: { data: [...] } }
+    const historyList = history?.data?.data || history?.data || (Array.isArray(history) ? history : []);
 
     console.log("Wallet Page - Redux History:", history);
     console.log("Wallet Page - Processed List:", historyList);

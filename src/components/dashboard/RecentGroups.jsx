@@ -46,22 +46,22 @@ export default function RecentGroups() {
         <div className="py-8 space-y-6">
             <div className="px-6 lg:px-0 flex justify-between items-end">
                 <div>
-                    <h2 className="text-2xl font-black text-white tracking-tight leading-none mb-2 uppercase">Recent Groups</h2>
+                    <h2 className="text-2xl font-black text-foreground tracking-tight leading-none mb-2 uppercase">Recent Groups</h2>
                     <div className="h-1 w-12 bg-gradient-to-r from-[#a6b1ff] to-transparent rounded-full" />
                 </div>
                 <button
                     onClick={() => navigate('/dashboard/groups')}
-                    className="group text-sm font-black text-[#a6b1ff] hover:text-white flex items-center gap-2 transition-all duration-300 uppercase tracking-widest"
+                    className="group text-sm font-black text-[#a6b1ff] hover:text-[#8b95ff] flex items-center gap-2 transition-all duration-300 uppercase tracking-widest"
                 >
                     Expand All
-                    <div className="p-1 rounded-full bg-white/5 group-hover:bg-[#a6b1ff]/20 transition-colors">
+                    <div className="p-1 rounded-full bg-accent group-hover:bg-[#a6b1ff]/20 transition-colors">
                         <ChevronRight size={16} />
                     </div>
                 </button>
             </div>
 
             {groups.length === 0 ? (
-                <div className="bg-white/5 border border-white/10 rounded-[2rem] p-12">
+                <div className="bg-card border border-border rounded-[2rem] p-12">
                     <EmptyState title="No Groups Found" description="You haven't joined or created any groups yet." />
                 </div>
             ) : (
@@ -84,10 +84,10 @@ const GroupCard = ({ group, index, onClick }) => {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.1 * index, duration: 0.4 }}
             onClick={onClick}
-            className="rounded-[2.5rem] bg-[#1a1a1a]/40 backdrop-blur-xl border border-white/5 hover:border-[#a6b1ff]/30 transition-all duration-500 cursor-pointer p-6 relative group overflow-hidden shadow-2xl flex flex-col min-h-[220px]"
+            className="rounded-[2.5rem] bg-card backdrop-blur-xl border border-border hover:border-[#a6b1ff]/30 transition-all duration-500 cursor-pointer p-6 relative group overflow-hidden shadow-lg hover:shadow-xl flex flex-col min-h-[220px]"
         >
             {/* Glossy Overlay */}
-            <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/[0.01] to-white/[0.04] pointer-events-none" />
+            <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-purple-500/[0.01] to-purple-500/[0.04] pointer-events-none" />
 
             {/* Background Decorative Glow */}
             <div className="absolute -top-12 -right-12 w-32 h-32 bg-purple-500/10 rounded-full blur-[60px] group-hover:bg-purple-500/20 transition-all duration-700" />
@@ -100,7 +100,7 @@ const GroupCard = ({ group, index, onClick }) => {
                             {group.title?.charAt(0) || <Users size={24} />}
                         </AvatarFallback>
                     </Avatar>
-                    <div className="absolute -bottom-2 -right-2 p-1.5 rounded-lg bg-[#0a0a0a] border border-white/10 shadow-lg">
+                    <div className="absolute -bottom-2 -right-2 p-1.5 rounded-lg bg-background border border-border shadow-lg">
                         <Users size={12} className="text-[#a6b1ff]" />
                     </div>
                 </div>
@@ -111,31 +111,31 @@ const GroupCard = ({ group, index, onClick }) => {
                             {isActive ? <ShieldCheck size={10} /> : <ShieldAlert size={10} />}
                             {isActive ? 'Active' : 'Disabled'}
                         </div>
-                        <span className="text-[9px] font-bold text-white/30 uppercase tracking-widest">{timeAgo(group.created_at)}</span>
+                        <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">{timeAgo(group.created_at)}</span>
                     </div>
-                    <h3 className="text-xl font-black text-white italic line-clamp-1 uppercase tracking-tighter group-hover:text-[#a6b1ff] transition-colors leading-tight">{group.title}</h3>
-                    <p className="text-xs text-white/40 line-clamp-1 font-medium italic mt-1">{group.description || "No group description available"}</p>
+                    <h3 className="text-xl font-black text-foreground italic line-clamp-1 uppercase tracking-tighter group-hover:text-[#a6b1ff] transition-colors leading-tight">{group.title}</h3>
+                    <p className="text-xs text-muted-foreground line-clamp-1 font-medium italic mt-1">{group.description || "No group description available"}</p>
                 </div>
             </div>
 
-            <div className="mt-auto flex items-center justify-between relative z-10 pt-6 border-t border-white/5">
+            <div className="mt-auto flex items-center justify-between relative z-10 pt-6 border-t border-border">
                 <div className="flex -space-x-2">
                     {[1, 2].map((i) => (
-                        <div key={i} className="w-8 h-8 rounded-xl bg-white/5 border border-[#0a0a0a] flex items-center justify-center backdrop-blur-md">
-                            <span className="text-[10px] text-white/40 font-black italic">?</span>
+                        <div key={i} className="w-8 h-8 rounded-xl bg-accent border border-background flex items-center justify-center backdrop-blur-md">
+                            <span className="text-[10px] text-muted-foreground font-black italic">?</span>
                         </div>
                     ))}
-                    <div className="w-8 h-8 rounded-xl bg-[#a6b1ff]/10 border border-[#0a0a0a] flex items-center justify-center backdrop-blur-md">
+                    <div className="w-8 h-8 rounded-xl bg-[#a6b1ff]/10 border border-background flex items-center justify-center backdrop-blur-md">
                         <span className="text-[9px] text-[#a6b1ff] font-black italic">10+</span>
                     </div>
                 </div>
 
                 <div className="flex items-center gap-3">
                     <div className="flex flex-col items-end mr-2">
-                        <span className="text-[8px] font-black text-white/20 uppercase tracking-[0.2em] leading-none mb-1">Group Code</span>
+                        <span className="text-[8px] font-black text-muted-foreground uppercase tracking-[0.2em] leading-none mb-1">Group Code</span>
                         <span className="text-sm font-black text-[#a6b1ff] uppercase tracking-wider leading-none italic">{group.group_code}</span>
                     </div>
-                    <div className="p-3 rounded-2xl bg-white/5 border border-white/10 hover:bg-[#a6b1ff] hover:text-[#0a0a0a] transition-all duration-300 group/link">
+                    <div className="p-3 rounded-2xl bg-accent border border-border hover:bg-[#a6b1ff] hover:text-[#0a0a0a] transition-all duration-300 group/link">
                         <ArrowUpRight size={18} className="group-hover/link:scale-110 transition-transform" />
                     </div>
                 </div>

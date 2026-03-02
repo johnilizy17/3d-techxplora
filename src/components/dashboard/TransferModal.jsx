@@ -151,7 +151,7 @@ export default function TransferModal({ trigger }) {
                                     <p className="font-bold text-white text-lg leading-none">{recipient?.fullname || recipient?.name}</p>
                                     <p className="text-xs text-white/40">{email}</p>
                                 </div>
-                                <button onClick={() => setStep(1)} className="p-2 hover:bg-white/5 rounded-lg text-white/20 hover:text-white/60 transition-colors">
+                                <button onClick={() => setStep(1)} className="p-2 hover:bg-white/5 rounded-lg text-white/20 dark:text-white/20 hover:text-foreground dark:hover:text-white/80 transition-all hover:font-bold">
                                     <X size={16} />
                                 </button>
                             </div>

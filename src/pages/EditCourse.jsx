@@ -231,7 +231,7 @@ export default function EditCourse() {
                 <div className="max-w-6xl mx-auto px-6 lg:px-10 mt-6 space-y-8">
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-[#0a0a0a]/40 backdrop-blur-xl border border-white/10 rounded-[2.5rem] p-8 lg:px-12">
                         <div className="flex items-center gap-4">
-                            <button onClick={() => navigate(-1)} className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-white/40 hover:text-white transition-all">
+                            <button onClick={() => navigate(-1)} className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-white/40 dark:text-white/40 hover:text-foreground dark:hover:text-white transition-all hover:font-bold">
                                 <ArrowLeft size={20} />
                             </button>
                             <div>
@@ -563,7 +563,7 @@ const FileUploadField = ({ label, field, url, isUploading, onUpload, isVideo = f
                         <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-[10px] font-black text-white uppercase underline"><span className="cursor-pointer">Change</span></div>
                     </div>
                 ) : (
-                    <div className="w-full h-full flex flex-col items-center justify-center gap-2 text-white/20 hover:text-white/40 transition-all">
+                    <div className="w-full h-full flex flex-col items-center justify-center gap-2 text-white/20 dark:text-white/20 hover:text-foreground dark:hover:text-white/60 transition-all hover:font-bold">
                         {isUploading ? <Loader2 size={24} className="animate-spin text-[#a6b1ff]" /> : <UploadCloud size={24} />}
                         <span className="text-[10px] font-black uppercase tracking-widest">{isUploading ? 'Uploading...' : (isDragging ? 'Drop File Here' : `Upload ${field}`)}</span>
                     </div>

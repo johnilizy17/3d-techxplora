@@ -1,11 +1,11 @@
 @import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
 
+/* Import comprehensive theme overrides */
+@import './theme-overrides.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-/* Import comprehensive theme overrides */
-@import './theme-overrides.css';
 
 @layer base {
   :root {

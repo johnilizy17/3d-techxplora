@@ -1,11 +1,9 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Product } from "@/api/entities";
-import HeroSection from "../components/collectors/HeroSection";
 import FeaturedGallery from "../components/collectors/FeaturedGallery";
-import BrandStory from "../components/collectors/BrandStory";
 import HowItWorks from "../components/collectors/HowItWorks";
 import FAQ from "../components/collectors/FAQ";
-import ShopCarousel from "../components/collectors/ShopCarousel";
+import HeroSection from "../components/collectors/HeroSection";
 import ContactSection from "../components/collectors/ContactSection";
 import DeveloperFooter from "../components/collectors/DeveloperFooter";
 
@@ -24,13 +22,10 @@ export default function Home() {
 
   return (
     <div className="relative bg-background overflow-hidden transition-colors duration-300">
-      {/* HERO 3D RENDER PLACEHOLDER - Replace with actual 3D scene or hero image */}
+      {/* Hero Section */}
       <HeroSection />
 
-      {/* PRODUCT IMAGE PLACEHOLDERS - Replace with actual product photography */}
-      {/* <FeaturedGallery products={products} /> */}
-
-      <HowItWorks />
+    <HowItWorks />
 
       <FAQ />
 

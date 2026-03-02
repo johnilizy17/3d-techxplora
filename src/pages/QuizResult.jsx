@@ -51,7 +51,7 @@ export default function QuizResult() {
     const result = location.state?.result || { score: 0, answers: [] };
     const score = result.score || 0;
     const percentage = Math.round((score / (questions.length || 1)) * 100);
-    const xpEarned = Math.round((score / (questions.length || 1)) * (quiz.xp || 0));
+    const xpEarned = score * (quiz.p_xp || 0); // Correct answers * XP per question
 
     const handleShare = () => {
         if (navigator.share) {

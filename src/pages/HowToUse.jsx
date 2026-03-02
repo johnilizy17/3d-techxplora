@@ -62,32 +62,32 @@ export default function HowToUse() {
             <div className="relative z-10 max-w-7xl mx-auto px-6 py-20">
 
                 {/* Video Section */}
-                <div className="mb-24 relative rounded-[2rem] overflow-hidden aspect-video shadow-[0_0_100px_rgba(166,177,255,0.15)] group animate-in fade-in slide-in-from-top duration-1000">
-                    <div className="absolute inset-0 bg-gradient-to-br from-[#1a1520] to-[#0a0a0a] z-0" />
-
-                    {/* Placeholder Grid Animation */}
-                    <div className="absolute inset-0 z-0 opacity-20"
-                        style={{
-                            backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(255,255,255,0.15) 1px, transparent 0)',
-                            backgroundSize: '40px 40px'
-                        }}
+                <div className="mb-24 relative rounded-[2rem] overflow-hidden aspect-video shadow-[0_0_100px_rgba(166,177,255,0.15)] group animate-in fade-in slide-in-from-top duration-1000 bg-gray-900 dark:bg-gray-900">
+                    {/* Video Banner Image */}
+                    <img 
+                        src="/video.png" 
+                        alt="TechXplora Demo" 
+                        className="absolute inset-0 w-full h-full object-cover z-0 opacity-90"
                     />
+
+                    {/* Overlay on hover - lighter in light mode */}
+                    <div className="absolute inset-0 bg-black/20 dark:bg-black/30 group-hover:bg-black/40 dark:group-hover:bg-black/50 transition-all duration-300 z-[1]" />
 
                     {/* Play Button */}
                     <div
                         onClick={() => setShowVideo(true)}
                         className="absolute inset-0 flex items-center justify-center z-10"
                     >
-                        <div className="w-24 h-24 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center cursor-pointer group-hover:scale-110 transition-all duration-500 hover:bg-[#a6b1ff] hover:border-[#a6b1ff]">
-                            <div className="w-0 h-0 border-t-[12px] border-t-transparent border-l-[20px] border-l-white border-b-[12px] border-b-transparent ml-2 group-hover:border-l-black transition-colors" />
+                        <div className="w-24 h-24 rounded-full bg-white/90 dark:bg-white/90 backdrop-blur-md border border-white/20 flex items-center justify-center cursor-pointer group-hover:scale-110 transition-all duration-500 hover:bg-[#a6b1ff] hover:border-[#a6b1ff]">
+                            <div className="w-0 h-0 border-t-[12px] border-t-transparent border-l-[20px] border-l-[#a6b1ff] border-b-[12px] border-b-transparent ml-2 group-hover:border-l-white transition-colors" />
                         </div>
-                        <p className="absolute mt-32 text-gray-400 font-medium tracking-widest text-sm uppercase opacity-0 group-hover:opacity-100 transition-opacity transform translate-y-4 group-hover:translate-y-0 duration-300">
+                        <p className="absolute mt-32 text-white dark:text-white font-medium tracking-widest text-sm uppercase opacity-0 group-hover:opacity-100 transition-opacity transform translate-y-4 group-hover:translate-y-0 duration-300 drop-shadow-lg">
                             Watch Tutorial
                         </p>
                     </div>
 
-                    {/* Gradient Overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent pointer-events-none" />
+                    {/* Gradient Overlay - lighter in light mode */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent dark:from-black/80 pointer-events-none z-[2]" />
 
                     <div className="absolute bottom-8 left-8 right-8 z-20">
                         <h3 className="text-2xl font-bold text-white mb-2">Welcome to Techxplora</h3>
@@ -209,7 +209,7 @@ export default function HowToUse() {
                     <div className="mt-8 flex justify-center">
                         <button
                             onClick={() => setIsStudentTeacherOpen(false)}
-                            className="text-white hover:text-white/80 transition-colors text-sm font-semibold tracking-wide uppercase"
+                            className="text-white dark:text-white hover:text-foreground dark:hover:text-white/90 hover:font-bold transition-all text-sm font-semibold tracking-wide uppercase"
                         >
                             Cancel
                         </button>
@@ -242,7 +242,7 @@ export default function HowToUse() {
                     <div className="mt-8 flex justify-center">
                         <button
                             onClick={() => setIsPartnerOpen(false)}
-                            className="text-white hover:text-white/80 transition-colors text-sm font-semibold tracking-wide uppercase"
+                            className="text-white dark:text-white hover:text-foreground dark:hover:text-white/90 hover:font-bold transition-all text-sm font-semibold tracking-wide uppercase"
                         >
                             Cancel
                         </button>
