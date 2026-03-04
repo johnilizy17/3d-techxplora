@@ -82,22 +82,30 @@ export default function ViewManagedCourse() {
                             <span className="font-black text-sm uppercase tracking-wider">Back to Academy</span>
                         </button>
 
-                        <div className="flex items-center gap-3">
+                        <div className="flex flex-wrap items-center gap-3">
                             <Button
                                 variant="outline"
-                                className="bg-white/5 border-white/10 text-white hover:bg-white/10"
-                                onClick={() => navigate(`/courses/${courseId}`)}
+                                className="bg-white/5 border-white/10 text-white hover:bg-white/10 text-xs sm:text-sm"
+                                onClick={() => navigate(`/dashboard/courses/${courseId}/case-study-results`)}
                             >
-                                <Eye size={18} className="mr-2" />
-                                Preview as Student
+                                <BarChart2 size={16} className="sm:mr-2" />
+                                <span className="hidden sm:inline">View Results</span>
                             </Button>
                             <Button
                                 variant="outline"
-                                className="bg-white/5 border-white/10 text-white hover:bg-white/10"
+                                className="bg-white/5 border-white/10 text-white hover:bg-white/10 text-xs sm:text-sm"
+                                onClick={() => navigate(`/courses/${courseId}`)}
+                            >
+                                <Eye size={16} className="sm:mr-2" />
+                                <span className="hidden sm:inline">Preview</span>
+                            </Button>
+                            <Button
+                                variant="outline"
+                                className="bg-white/5 border-white/10 text-white hover:bg-white/10 text-xs sm:text-sm"
                                 onClick={() => navigate(`/dashboard/courses/edit/${courseId}`)}
                             >
-                                <Edit size={18} className="mr-2" />
-                                Edit Course
+                                <Edit size={16} className="sm:mr-2" />
+                                <span className="hidden sm:inline">Edit</span>
                             </Button>
                             <Button
                                 variant="destructive"
@@ -105,7 +113,7 @@ export default function ViewManagedCourse() {
                                 onClick={handleDelete}
                                 disabled={isDeleting}
                             >
-                                {isDeleting ? <Loader2 size={18} className="animate-spin" /> : <Trash2 size={18} />}
+                                {isDeleting ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
                             </Button>
                         </div>
                     </div>

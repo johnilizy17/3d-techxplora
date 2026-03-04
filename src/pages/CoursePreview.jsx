@@ -281,26 +281,61 @@ const { user } = useSelector((a => a.auth));
                     [currentSegment.id]: [...currentAnswers, answer]
                 }));
             }
-        } else {
+            // Don't show feedback immediately for multiple choice - wait for submission
+        } else if (currentSegment.questionType === QUESTION_TYPES.SINGLE_CHOICE) {
             setUserAnswers(prev => ({
                 ...prev,
                 [currentSegment.id]: answer
             }));
             
             // Show feedback for single choice immediately
-            if (currentSegment.questionType === QUESTION_TYPES.SINGLE_CHOICE) {
-                const selectedOption = currentSegment.options.find(o => o.text === answer);
-                if (selectedOption) {
-                    setIsAnswerCorrect(selectedOption.isCorrect);
-                    setCurrentFeedback(selectedOption.feedback || (selectedOption.isCorrect ? currentSegment.correctFeedback : currentSegment.incorrectFeedback) || '');
-                    setShowFeedback(true);
-                }
+            const selectedOption = currentSegment.options.find(o => o.text === answer);
+            if (selectedOption) {
+                setIsAnswerCorrect(selectedOption.isCorrect);
+                setCurrentFeedback(selectedOption.feedback || (selectedOption.isCorrect ? currentSegment.correctFeedback : currentSegment.incorrectFeedback) || '');
+                setShowFeedback(true);
             }
+        } else {
+            // SHORT_ANSWER type
+            setUserAnswers(prev => ({
+                ...prev,
+                [currentSegment.id]: answer
+            }));
+        }
+    };
+
+    const handleCheckAnswer = () => {
+        const currentCaseStudy = caseStudies[currentCaseStudyIndex];
+        const currentSegment = currentCaseStudy.segments[currentSegmentIndex];
+        
+        if (currentSegment.questionType === QUESTION_TYPES.MULTIPLE_CHOICE) {
+            const correctOptions = currentSegment.options.filter(o => o.isCorrect).map(o => o.text);
+            const userSelectedOptions = userAnswers[currentSegment.id] || [];
+            const isCorrect = correctOptions.length === userSelectedOptions.length &&
+                correctOptions.every(o => userSelectedOptions.includes(o));
+            
+            setIsAnswerCorrect(isCorrect);
+            setCurrentFeedback(isCorrect ? currentSegment.correctFeedback : currentSegment.incorrectFeedback || '');
+            setShowFeedback(true);
+        } else if (currentSegment.questionType === QUESTION_TYPES.SHORT_ANSWER) {
+            const answer = userAnswers[currentSegment.id];
+            const isCorrect = answer?.toLowerCase().trim() === currentSegment.correctAnswer?.toLowerCase().trim();
+            
+            setIsAnswerCorrect(isCorrect);
+            setCurrentFeedback(isCorrect ? currentSegment.correctFeedback : currentSegment.incorrectFeedback || '');
+            setShowFeedback(true);
         }
     };
 
     const handleNextSegment = async () => {
         const currentCaseStudy = caseStudies[currentCaseStudyIndex];
+        const currentSegment = currentCaseStudy.segments[currentSegmentIndex];
+        
+        // If feedback hasn't been shown yet, show it first
+        if (!showFeedback && (currentSegment.questionType === QUESTION_TYPES.MULTIPLE_CHOICE || currentSegment.questionType === QUESTION_TYPES.SHORT_ANSWER)) {
+            handleCheckAnswer();
+            return;
+        }
         
         // Reset feedback when moving to next segment
         setShowFeedback(false);
@@ -422,8 +457,8 @@ const { user } = useSelector((a => a.auth));
     if (courseError || !course) {
         return (
             <div className="min-h-screen pt-24 pb-32 px-6 max-w-7xl mx-auto text-center">
-                <h2 className="text-2xl font-bold text-white mb-2">Course not found</h2>
-                <p className="text-gray-400">The course you are looking for does not exist or has been removed.</p>
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Course not found</h2>
+                <p className="text-gray-900 dark:text-gray-400 font-bold">The course you are looking for does not exist or has been removed.</p>
             </div>
         );
     }
@@ -865,8 +900,12 @@ const { user } = useSelector((a => a.auth));
                                                                 <Loader2 className="w-5 h-5 mr-2 animate-spin" />
                                                                 Submitting...
                                                             </>
-                                                        ) : (
+                                                        ) : showFeedback ? (
                                                             currentSegmentIndex < (caseStudies[currentCaseStudyIndex]?.segments?.length || 0) - 1 ? 'Next Segment' : 'Finish Case Study'
+                                                        ) : (
+                                                            caseStudies[currentCaseStudyIndex]?.segments[currentSegmentIndex]?.questionType === QUESTION_TYPES.SINGLE_CHOICE 
+                                                                ? (currentSegmentIndex < (caseStudies[currentCaseStudyIndex]?.segments?.length || 0) - 1 ? 'Next Segment' : 'Finish Case Study')
+                                                                : 'Check Answer'
                                                         )}
                                                     </Button>
                                                 </motion.div>

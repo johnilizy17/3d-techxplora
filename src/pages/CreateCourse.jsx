@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -23,7 +23,8 @@ import {
     FileText,
     Check,
     Search,
-    AlertCircle
+    AlertCircle,
+    Save
 } from 'lucide-react';
 import { selectCurrentUser } from '@/redux/slices/authSlice';
 import { useCreateCourseMutation, useGetQuizzesQuery } from '@/redux/api/teacherApi';
@@ -32,6 +33,7 @@ import CaseStudyBuilder from '@/components/course/CaseStudyBuilder';
 import { Button } from "@/components/ui/button";
 import { toast } from 'sonner';
 import { uploadToCloudinary } from '@/lib/cloudinary';
+import { saveCourseDraft, loadCourseDraft, clearCourseDraft, hasCourseDraft } from '@/utils/courseCreationStorage';
 
 const STEPS = [
     { title: 'Basic Info', icon: BookOpen },
@@ -47,6 +49,7 @@ export default function CreateCourse() {
     const [currentStep, setCurrentStep] = useState(1);
     const [isUploading, setIsUploading] = useState({ banner: false, video: false, other: false });
     const [createCourse, { isLoading: isSubmitting }] = useCreateCourseMutation();
+    const [draftRestored, setDraftRestored] = useState(false);
 
     const [formData, setFormData] = useState({
         title: '',
@@ -74,6 +77,32 @@ export default function CreateCourse() {
 
     const quizzes = quizzesData?.data || quizzesData || [];
 
+    // Load saved draft on mount
+    useEffect(() => {
+        if (!draftRestored) {
+            const savedDraft = loadCourseDraft();
+            
+            if (savedDraft) {
+                setFormData(savedDraft.formData);
+                setCurrentStep(savedDraft.currentStep || 1);
+                
+                toast.success('Draft Restored!', {
+                    description: 'Your course creation progress has been restored',
+                    duration: 4000
+                });
+            }
+            
+            setDraftRestored(true);
+        }
+    }, [draftRestored]);
+
+    // Save draft whenever form data or step changes
+    useEffect(() => {
+        if (draftRestored && currentStep < 5) {
+            saveCourseDraft(formData, currentStep);
+        }
+    }, [formData, currentStep, draftRestored]);
+
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
@@ -81,6 +110,25 @@ export default function CreateCourse() {
     };
 
     const handleFileUpload = async (e, field) => {
+        // Check if this is a URL input (no files but has url property)
+        if (e.target.url) {
+            const videoUrl = e.target.url.trim();
+            
+            // Validate URL format
+            const isValidUrl = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be|drive\.google\.com|.*\.(mp4|webm|ogg)).*$/i.test(videoUrl);
+            
+            if (!isValidUrl) {
+                toast.error("Please enter a valid YouTube, Google Drive, or direct video link");
+                return;
+            }
+
+            // Set the video URL directly without uploading
+            setFormData(prev => ({ ...prev, [`${field}_url`]: videoUrl }));
+            toast.success("Video link added successfully");
+            return;
+        }
+
+        // Handle file upload
         const file = e.target.files[0];
         if (!file) return;
 
@@ -194,7 +242,6 @@ export default function CreateCourse() {
                 description: formData.description, // Matches 'syllabusInstructions' in Admin logic
                 instruction: formData.instruction,
                 category: formData.category,
-                ...formData,
                 case_study: JSON.stringify(formData.case_studies),
                 teacher_id: user.id,
                 admin_code: user.admin_code,
@@ -202,8 +249,11 @@ export default function CreateCourse() {
                 amount: Number(formData.amount),
                 banner: formData.banner_url,
                 video: formData.video_url,
+                other: formData.other, // Additional video resources
                 attachment: formData.attachments.length > 0 ? formData.attachments[0].url : null,
                 attachments: formData.attachments.map(a => a.url),
+                learn: formData.learn,
+                difficulty_level: formData.difficulty_level,
                 // Handle new logic: if quiz_code exists, send it in question array as per admin
                 question: formData.quiz_code ? [`quiz: ${formData.quiz_code} `] : formData.questions,
                 quiz_id: formData.quiz_id
@@ -211,6 +261,10 @@ export default function CreateCourse() {
 
             await createCourse(payload).unwrap();
             toast.success("Course launched successfully!");
+            
+            // Clear draft after successful creation
+            clearCourseDraft();
+            
             setCurrentStep(5);
         } catch (error) {
             toast.error(error?.data?.message || "Failed to launch course");
@@ -233,10 +287,10 @@ export default function CreateCourse() {
             <div className="min-h-screen pb-24 lg:pb-12">
                 <div className="max-w-6xl mx-auto px-6 lg:px-10 mt-6 space-y-8">
                     {/* Stepper Header */}
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-[#0a0a0a]/40 backdrop-blur-xl border border-white/10 rounded-[2.5rem] p-8 lg:px-12">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-gray-50 dark:bg-[#0a0a0a]/40 backdrop-blur-xl border border-gray-200 dark:border-white/10 rounded-[2.5rem] p-8 lg:px-12">
                         <div>
-                            <h2 className="text-sm font-black text-[#a6b1ff] uppercase tracking-[0.3em] mb-1 italic">Academy</h2>
-                            <h1 className="text-2xl lg:text-3xl font-black text-white uppercase italic tracking-tighter">
+                            <h2 className="text-sm font-black text-indigo-600 dark:text-[#a6b1ff] uppercase tracking-[0.3em] mb-1 italic">Academy</h2>
+                            <h1 className="text-2xl lg:text-3xl font-black text-gray-900 dark:text-white uppercase italic tracking-tighter">
                                 {currentStep === 5 ? 'Launch Success' : 'Course Creator'}
                             </h1>
                         </div>
@@ -247,21 +301,63 @@ export default function CreateCourse() {
                                     <div className="flex flex-col items-center gap-2 min-w-[70px] sm:min-w-[80px]">
                                         <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center transition-all duration-500 shrink-0 ${currentStep > idx + 1 ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/20' :
                                             currentStep === idx + 1 ? 'bg-[#a6b1ff] text-[#0a0a0a] scale-110 shadow-lg shadow-indigo-500/20' :
-                                                'bg-white/5 text-white/30 border border-white/10'
+                                                'bg-gray-200 dark:bg-white/5 text-gray-400 dark:text-white/30 border border-gray-300 dark:border-white/10'
                                             } `}>
                                             {currentStep > idx + 1 ? <Check size={18} /> : <step.icon size={18} />}
                                         </div>
-                                        <span className={`text-[8px] sm:text-[9px] font-black uppercase tracking-widest ${currentStep === idx + 1 ? 'text-[#a6b1ff]' : 'text-white/20'}`}>
+                                        <span className={`text-[8px] sm:text-[9px] font-black uppercase tracking-widest ${currentStep === idx + 1 ? 'text-[#a6b1ff]' : 'text-gray-400 dark:text-white/20'}`}>
                                             {step.title}
                                         </span>
                                     </div>
                                     {idx < STEPS.length - 1 && (
-                                        <div className={`w-4 sm:w-8 h-[2px] mb-6 rounded-full shrink-0 ${currentStep > idx + 1 ? 'bg-emerald-500/50' : 'bg-white/10'} `} />
+                                        <div className={`w-4 sm:w-8 h-[2px] mb-6 rounded-full shrink-0 ${currentStep > idx + 1 ? 'bg-emerald-500/50' : 'bg-gray-300 dark:bg-white/10'} `} />
                                     )}
                                 </React.Fragment>
                             ))}
                         </div>
                     </div>
+
+                    {/* Draft Restored Indicator */}
+                    {draftRestored && loadCourseDraft() && currentStep < 5 && (
+                        <motion.div
+                            initial={{ opacity: 0, y: -10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="flex items-center justify-between gap-4 px-4 py-3 bg-gradient-to-r from-emerald-100 to-teal-100 dark:from-emerald-500/10 dark:to-teal-500/10 border-2 border-emerald-300 dark:border-emerald-500/20 rounded-xl shadow-sm"
+                        >
+                            <div className="flex items-center gap-2">
+                                <Save size={16} className="text-emerald-600 dark:text-emerald-400" />
+                                <span className="text-[10px] font-black text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">
+                                    Draft Auto-Saved
+                                </span>
+                            </div>
+                            <button
+                                onClick={() => {
+                                    clearCourseDraft();
+                                    setFormData({
+                                        title: '',
+                                        description: '',
+                                        category: '',
+                                        difficulty_level: 'beginner',
+                                        amount: '',
+                                        banner_url: '',
+                                        video_url: '',
+                                        instruction: '',
+                                        case_studies: [],
+                                        learn: [''],
+                                        other: [],
+                                        attachments: [],
+                                        quiz_id: null,
+                                        questions: []
+                                    });
+                                    setCurrentStep(1);
+                                    toast.info('Draft cleared');
+                                }}
+                                className="text-[9px] font-bold text-emerald-700 dark:text-emerald-400 hover:text-emerald-900 dark:hover:text-emerald-300 uppercase tracking-wider underline"
+                            >
+                                Clear Draft
+                            </button>
+                        </motion.div>
+                    )}
 
                     <AnimatePresence mode="wait">
                         {currentStep === 1 && (
@@ -336,21 +432,21 @@ const Step1 = ({ formData, handleChange, errors, onNext }) => (
                 <h1 className="text-3xl lg:text-4xl font-black text-white uppercase italic mb-2">
                     Basic <span className="text-[#a6b1ff]">Information</span>
                 </h1>
-                <p className="text-white/60 font-medium">Define the core identity of your educational resource</p>
+                <p className="text-gray-700 dark:text-white/60 font-medium">Define the core identity of your educational resource</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="space-y-6">
                     <InputField label="Course Title" name="title" value={formData.title} onChange={handleChange} error={errors.title} placeholder="e.g. Creative Coding Masterclass" icon={BookOpen} />
                     <div className="space-y-2">
-                        <label className="text-xs font-black text-white/40 uppercase tracking-widest pl-1">Description</label>
+                        <label className="text-xs font-black text-gray-600 dark:text-white/40 uppercase tracking-widest pl-1">Description</label>
                         <textarea
                             name="description"
                             value={formData.description}
                             onChange={handleChange}
                             rows={4}
                             placeholder="Detailed overview of the course..."
-                            className={`w-full bg-white/5 border ${errors.description ? 'border-rose-500/50' : 'border-white/10'} rounded-2xl px-5 py-4 text-white placeholder:text-white/20 focus:outline-none focus:border-[#a6b1ff]/50 transition-all resize-none font-medium`}
+                            className={`w-full bg-gray-50 dark:bg-white/5 border ${errors.description ? 'border-rose-500/50' : 'border-gray-300 dark:border-white/10'} rounded-2xl px-5 py-4 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-white/20 focus:outline-none focus:border-[#a6b1ff]/50 transition-all resize-none font-medium`}
                         />
                         {errors.description && <p className="text-rose-400 text-[10px] font-bold mt-1 uppercase tracking-wider">{errors.description}</p>}
                     </div>
@@ -395,7 +491,7 @@ const Step2 = ({ formData, setFormData, handleChange, handleFileUpload, handleLe
                 <h1 className="text-3xl lg:text-4xl font-black text-white uppercase italic mb-2">
                     Visuals & <span className="text-[#a6b1ff]">Content</span>
                 </h1>
-                <p className="text-white/60 font-medium">Bring your course to life with high-quality media</p>
+                <p className="text-gray-700 dark:text-white/60 font-medium">Bring your course to life with high-quality media</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
@@ -405,8 +501,8 @@ const Step2 = ({ formData, setFormData, handleChange, handleFileUpload, handleLe
                             <ImageIcon size={18} className="text-[#a6b1ff]" />
                             Course Assets
                         </h3>
-                        <FileUploadField label="Banner Image (16:9)" field="banner" url={formData.banner_url} isUploading={isUploading.banner} onUpload={handleFileUpload} error={errors.banner} />
-                        <FileUploadField label="Main Video" field="video" url={formData.video_url} isUploading={isUploading.video} onUpload={handleFileUpload} isVideo />
+                        <FileUploadField label="Banner Image (16:9)" field="banner" url={formData.banner_url} isUploading={isUploading.banner} onUpload={handleFileUpload} error={errors.banner} setFormData={setFormData} />
+                        <FileUploadField label="Main Video" field="video" url={formData.video_url} isUploading={isUploading.video} onUpload={handleFileUpload} isVideo setFormData={setFormData} />
                     </div>
 
                     <div className="p-6 rounded-3xl bg-white/5 border border-white/10 space-y-6">
@@ -414,22 +510,21 @@ const Step2 = ({ formData, setFormData, handleChange, handleFileUpload, handleLe
                             <Plus size={18} className="text-emerald-400" />
                             Additional Resources
                         </h3>
-                        <div className="space-y-3">
-                            {formData.other.map((url, i) => (
-                                <div key={i} className="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/5 text-xs text-white/60 group">
-                                    <span className="truncate max-w-[200px]">{url}</span>
-                                    <button onClick={() => removeOtherVideo(i)} className="text-rose-500 hover:text-rose-400 transition-colors">
-                                        <Trash2 size={16} />
-                                    </button>
-                                </div>
-                            ))}
-                            <label className={`w-full h-12 rounded-xl border-2 border-dashed border-white/10 flex items-center justify-center gap-2 cursor-pointer hover:border-[#a6b1ff]/30 hover:bg-white/5 transition-all text-sm font-bold text-white/40 ${isUploading.other ? 'opacity-50 pointer-events-none' : ''}`}>
-                                {isUploading.other ? <Loader2 size={16} className="animate-spin" /> : <UploadCloud size={16} />}
-                                {isUploading.other ? 'Uploading...' : 'Add Video Module'}
-                                <input type="file" className="hidden" accept="video/*" onChange={(e) => handleFileUpload(e, 'other')} />
-                            </label>
-                            <p className="text-[10px] text-white/30 text-center uppercase tracking-widest">Max 5 additional modules</p>
-                        </div>
+                        <AdditionalResourcesUpload 
+                            resources={formData.other}
+                            onAdd={(url) => {
+                                if (formData.other.length >= 5) {
+                                    toast.error("Maximum 5 additional videos allowed");
+                                } else {
+                                    setFormData(prev => ({ ...prev, other: [...prev.other, url] }));
+                                    toast.success("Additional video added");
+                                }
+                            }}
+                            onRemove={removeOtherVideo}
+                            isUploading={isUploading.other}
+                            setIsUploading={(value) => setIsUploading(prev => ({ ...prev, other: value }))}
+                            onFileUpload={handleFileUpload}
+                        />
                     </div>
 
                     <div className="p-6 rounded-3xl bg-white/5 border border-white/10 space-y-6">
@@ -490,14 +585,14 @@ const Step2 = ({ formData, setFormData, handleChange, handleFileUpload, handleLe
                     </div>
 
                     <div className="space-y-2">
-                        <label className="text-xs font-black text-white/40 uppercase tracking-widest pl-1">Final Instruction</label>
+                        <label className="text-xs font-black text-gray-600 dark:text-white/40 uppercase tracking-widest pl-1">Final Instruction</label>
                         <textarea
                             name="instruction"
                             value={formData.instruction}
                             onChange={handleChange}
                             rows={3}
                             placeholder="Final steps for the students..."
-                            className={`w-full bg-white/5 border ${errors.instruction ? 'border-rose-500/50' : 'border-white/10'} rounded-2xl px-5 py-4 text-white focus:border-[#a6b1ff]/50 transition-all resize-none font-medium`}
+                            className={`w-full bg-gray-50 dark:bg-white/5 border ${errors.instruction ? 'border-rose-500/50' : 'border-gray-300 dark:border-white/10'} rounded-2xl px-5 py-4 text-gray-900 dark:text-white focus:border-[#a6b1ff]/50 transition-all resize-none font-medium`}
                         />
                         {errors.instruction && <p className="text-rose-400 text-[10px] font-bold mt-1 uppercase tracking-wider">{errors.instruction}</p>}
                     </div>
@@ -507,9 +602,9 @@ const Step2 = ({ formData, setFormData, handleChange, handleFileUpload, handleLe
                             <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center">
                                 <BookOpen size={20} className="text-purple-400" />
                             </div>
-                            <h4 className="text-sm font-black text-white uppercase tracking-wider">Case Study Assessment</h4>
+                            <h4 className="text-sm font-black text-gray-800 dark:text-white uppercase tracking-wider">Case Study Assessment</h4>
                         </div>
-                        <p className="text-xs text-white/40 leading-relaxed font-medium">
+                        <p className="text-xs text-gray-700 dark:text-white/40 leading-relaxed font-medium">
                             Create interactive scenario-based assessments in Step 4. Students will make decisions and receive immediate feedback based on their choices.
                         </p>
                         <div className="flex items-center gap-2 text-[10px] text-purple-400/60 uppercase tracking-widest font-black">
@@ -521,7 +616,7 @@ const Step2 = ({ formData, setFormData, handleChange, handleFileUpload, handleLe
             </div>
 
             <div className="mt-12 flex justify-between items-center">
-                <button onClick={onPrev} className="text-white/40 hover:text-white font-black uppercase text-xs tracking-widest">Back</button>
+                <button onClick={onPrev} className="text-gray-600 dark:text-white/40 hover:text-gray-900 dark:hover:text-white font-black uppercase text-xs tracking-widest">Back</button>
                 <motion.button
                     whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
                     onClick={onNext}
@@ -575,20 +670,20 @@ const Step3Questions = ({ formData, setFormData, quizzes, onNext, onPrev }) => {
                         <h1 className="text-3xl lg:text-4xl font-black text-white uppercase italic mb-2">
                             Link <span className="text-[#a6b1ff]">Assessment</span>
                         </h1>
-                        <p className="text-white/60 font-medium">Select an existing quiz to attach to this course</p>
+                        <p className="text-gray-700 dark:text-white/60 font-medium">Select an existing quiz to attach to this course</p>
                     </div>
                 </div>
 
                 <div className="space-y-6">
                     <div className="flex flex-col gap-4">
-                        <label className="text-xs font-black text-white/40 uppercase tracking-widest pl-1">Search & Select Quiz</label>
+                        <label className="text-xs font-black text-gray-600 dark:text-white/40 uppercase tracking-widest pl-1">Search & Select Quiz</label>
                         <div className="relative group">
-                            <div className="absolute left-5 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-[#a6b1ff] transition-colors"><Search size={20} /></div>
+                            <div className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 dark:text-white/20 group-focus-within:text-[#a6b1ff] transition-colors"><Search size={20} /></div>
                             <input
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                                 placeholder="Search by quiz name or unique code..."
-                                className="w-full bg-white/5 border border-white/10 rounded-2xl pl-14 pr-6 py-5 text-white placeholder:text-white/20 focus:border-[#a6b1ff]/50 outline-none font-medium transition-all"
+                                className="w-full bg-gray-50 dark:bg-white/5 border border-gray-300 dark:border-white/10 rounded-2xl pl-14 pr-6 py-5 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-white/20 focus:border-[#a6b1ff]/50 outline-none font-medium transition-all"
                             />
                         </div>
                     </div>
@@ -600,7 +695,7 @@ const Step3Questions = ({ formData, setFormData, quizzes, onNext, onPrev }) => {
                                 <p className="text-[10px] font-black text-[#a6b1ff] uppercase tracking-[0.3em]">Currently Selected</p>
                                 <h4 className="text-2xl font-black text-white truncate italic tracking-tight">{selectedQuiz.title}</h4>
                                 <div className="flex items-center gap-2">
-                                    <div className="px-2 py-1 rounded bg-white/10 text-[10px] font-mono text-white/60">{selectedQuiz.quiz_code}</div>
+                                    <div className="px-2 py-1 rounded bg-gray-200 dark:bg-white/10 text-[10px] font-mono text-gray-700 dark:text-white/60">{selectedQuiz.quiz_code}</div>
                                 </div>
                             </div>
                             <Button
@@ -622,7 +717,7 @@ const Step3Questions = ({ formData, setFormData, quizzes, onNext, onPrev }) => {
                                         >
                                             <div className="min-w-0 space-y-1">
                                                 <p className="font-bold text-lg text-white group-hover:text-[#a6b1ff] transition-colors">{quiz.title}</p>
-                                                <p className="text-[10px] text-white/30 uppercase tracking-widest">Code: {quiz.quiz_code}</p>
+                                                <p className="text-[10px] text-gray-500 dark:text-white/30 uppercase tracking-widest">Code: {quiz.quiz_code}</p>
                                             </div>
                                             <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-[#a6b1ff] group-hover:text-black transition-all transform group-hover:scale-110">
                                                 <ArrowRight size={18} />
@@ -633,10 +728,10 @@ const Step3Questions = ({ formData, setFormData, quizzes, onNext, onPrev }) => {
                             ) : (
                                 <div className="py-24 flex flex-col items-center justify-center text-center px-6">
                                     <div className="w-16 h-16 rounded-full bg-dashed border-2 border-white/10 flex items-center justify-center mb-4">
-                                        <Search className="text-white/20" size={24} />
+                                        <Search className="text-gray-400 dark:text-white/20" size={24} />
                                     </div>
-                                    <p className="text-lg font-bold text-white/40">No quizzes match "{searchTerm}"</p>
-                                    <p className="text-xs text-white/20 mt-2 uppercase tracking-widest">Try searching for a different name or code</p>
+                                    <p className="text-lg font-bold text-gray-600 dark:text-white/40">No quizzes match "{searchTerm}"</p>
+                                    <p className="text-xs text-gray-400 dark:text-white/20 mt-2 uppercase tracking-widest">Try searching for a different name or code</p>
                                 </div>
                             )}
                         </div>
@@ -644,7 +739,7 @@ const Step3Questions = ({ formData, setFormData, quizzes, onNext, onPrev }) => {
                 </div>
 
                 <div className="mt-12 flex justify-between items-center">
-                    <button onClick={onPrev} className="text-white/40 hover:text-white font-black uppercase text-xs tracking-widest">Back</button>
+                    <button onClick={onPrev} className="text-gray-600 dark:text-white/40 hover:text-gray-900 dark:hover:text-white font-black uppercase text-xs tracking-widest">Back</button>
                     <motion.button
                         whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
                         onClick={onNext}
@@ -671,7 +766,7 @@ const Step4Assessment = ({ formData, setFormData, quizzes, onLaunch, isSubmittin
                 <h1 className="text-3xl lg:text-4xl font-black text-white uppercase italic mb-2">
                     Final <span className="text-[#a6b1ff]">Assessment</span>
                 </h1>
-                <p className="text-white/60 font-medium">Configure quizzes and interactive case studies</p>
+                <p className="text-gray-700 dark:text-white/60 font-medium">Configure quizzes and interactive case studies</p>
             </div>
 
             <div className="space-y-10">
@@ -698,7 +793,7 @@ const Step4Assessment = ({ formData, setFormData, quizzes, onLaunch, isSubmittin
                             <AlertCircle size={16} className="text-indigo-400" />
                             <h4 className="text-xs font-black text-indigo-400 uppercase tracking-widest">About Certification</h4>
                         </div>
-                        <p className="text-xs text-white/40 leading-relaxed font-medium">
+                        <p className="text-xs text-gray-700 dark:text-white/40 leading-relaxed font-medium">
                             Linking a full quiz allows students to earn a formal certificate upon completion. The in-course questions are used for engagement and quick checks during the lessons.
                         </p>
                     </div>
@@ -727,9 +822,9 @@ const Step4Assessment = ({ formData, setFormData, quizzes, onLaunch, isSubmittin
                 </div>
             </div>
 
-            <div className="mt-12 flex flex-col sm:flex-row items-center justify-between gap-6 pt-10 border-t border-white/5">
+            <div className="mt-12 flex flex-col sm:flex-row items-center justify-between gap-6 pt-10 border-t border-gray-200 dark:border-white/5">
                 <div className="flex items-center gap-8">
-                    <button onClick={onPrev} className="text-white/40 hover:text-white font-black uppercase text-xs tracking-widest transition-colors">Back</button>
+                    <button onClick={onPrev} className="text-gray-600 dark:text-white/40 hover:text-gray-900 dark:hover:text-white font-black uppercase text-xs tracking-widest transition-colors">Back</button>
                     <button onClick={() => navigate('/dashboard/courses')} className="text-rose-400/50 hover:text-rose-400 font-black uppercase text-xs tracking-widest transition-colors">Discard</button>
                 </div>
                 <motion.button
@@ -760,7 +855,10 @@ const SuccessStep = ({ navigate }) => (
             <p className="text-white/60 text-lg font-medium max-w-md mx-auto mb-16 leading-relaxed uppercase tracking-tighter">Your knowledge is now shared. Keep inspiring and empowering your students!</p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
                 <Button onClick={() => navigate('/dashboard/courses')} className="w-full sm:w-auto px-12 py-7 rounded-2xl bg-white text-[#0a0a0a] font-black uppercase tracking-widest hover:bg-white/90 shadow-xl transition-all">My Courses</Button>
-                <Button onClick={() => window.location.reload()} className="w-full sm:w-auto px-12 py-7 rounded-2xl bg-white/5 border border-white/10 text-white font-black uppercase tracking-widest hover:bg-white/10 transition-all">New Course</Button>
+                <Button onClick={() => {
+                    clearCourseDraft();
+                    window.location.reload();
+                }} className="w-full sm:w-auto px-12 py-7 rounded-2xl bg-white/5 border border-white/10 text-white font-black uppercase tracking-widest hover:bg-white/10 transition-all">New Course</Button>
             </div>
         </div>
     </motion.div>
@@ -770,10 +868,10 @@ const SuccessStep = ({ navigate }) => (
 
 const InputField = ({ label, icon: Icon, error, ...props }) => (
     <div className="space-y-2">
-        <label className="text-xs font-black text-white/40 uppercase tracking-widest pl-1 italic">{label}</label>
+        <label className="text-xs font-black text-gray-600 dark:text-white/40 uppercase tracking-widest pl-1 italic">{label}</label>
         <div className="relative">
-            <input {...props} className={`w-full bg-white/5 border ${error ? 'border-rose-500/50' : 'border-white/10'} rounded-2xl px-12 py-5 text-white placeholder:text-white/20 focus:outline-none focus:border-[#a6b1ff]/50 transition-all font-medium`} />
-            {Icon && <Icon size={20} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20" />}
+            <input {...props} className={`w-full bg-gray-50 dark:bg-white/5 border ${error ? 'border-rose-500/50' : 'border-gray-300 dark:border-white/10'} rounded-2xl px-12 py-5 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-white/20 focus:outline-none focus:border-[#a6b1ff]/50 transition-all font-medium`} />
+            {Icon && <Icon size={20} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-white/20" />}
         </div>
         {error && <p className="text-rose-400 text-[10px] font-bold mt-1 uppercase tracking-wider">{error}</p>}
     </div>
@@ -781,22 +879,24 @@ const InputField = ({ label, icon: Icon, error, ...props }) => (
 
 const SelectField = ({ label, options, icon: Icon, error, ...props }) => (
     <div className="space-y-2 text-left">
-        <label className="text-xs font-black text-white/40 uppercase tracking-widest pl-1 italic">{label}</label>
+        <label className="text-xs font-black text-gray-600 dark:text-white/40 uppercase tracking-widest pl-1 italic">{label}</label>
         <div className="relative">
-            <select {...props} className={`w-full bg-white/5 border ${error ? 'border-rose-500/50' : 'border-white/10'} rounded-2xl px-12 py-5 text-white appearance-none focus:outline-none focus:border-[#a6b1ff]/50 transition-all font-medium cursor-pointer`}>
-                <option value="" className="bg-[#0a0a0a]">Select Option</option>
-                {options.map(opt => <option key={opt.value} value={opt.value} className="bg-[#0a0a0a]">{opt.label}</option>)}
+            <select {...props} className={`w-full bg-gray-50 dark:bg-white/5 border ${error ? 'border-rose-500/50' : 'border-gray-300 dark:border-white/10'} rounded-2xl px-12 py-5 text-gray-900 dark:text-white appearance-none focus:outline-none focus:border-[#a6b1ff]/50 transition-all font-medium cursor-pointer`}>
+                <option value="" className="bg-white dark:bg-[#0a0a0a]">Select Option</option>
+                {options.map(opt => <option key={opt.value} value={opt.value} className="bg-white dark:bg-[#0a0a0a]">{opt.label}</option>)}
             </select>
-            {Icon && <Icon size={20} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20" />}
+            {Icon && <Icon size={20} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-white/20" />}
             <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none opacity-20"><ArrowRight size={14} className="rotate-90" /></div>
         </div>
         {error && <p className="text-rose-400 text-[10px] font-bold mt-1 uppercase tracking-wider">{error}</p>}
     </div>
 );
 
-const FileUploadField = ({ label, field, url, isUploading, onUpload, isVideo = false, error }) => {
+const FileUploadField = ({ label, field, url, isUploading, onUpload, isVideo = false, error, setFormData }) => {
     const inputRef = React.useRef(null);
     const [isDragging, setIsDragging] = React.useState(false);
+    const [showUrlInput, setShowUrlInput] = React.useState(false);
+    const [urlInput, setUrlInput] = React.useState('');
 
     const handleDragOver = (e) => {
         e.preventDefault();
@@ -813,57 +913,291 @@ const FileUploadField = ({ label, field, url, isUploading, onUpload, isVideo = f
         setIsDragging(false);
         const file = e.dataTransfer.files[0];
         if (file) {
-            // Create a synthetic event to match the onChange handler expectation
             onUpload({ target: { files: [file] } }, field);
+        }
+    };
+
+    const handleUrlSubmit = () => {
+        if (urlInput.trim()) {
+            // Simulate file upload event with URL
+            onUpload({ target: { files: [], url: urlInput.trim() } }, field);
+            setUrlInput('');
+            setShowUrlInput(false);
+        }
+    };
+
+    const handleRemoveVideo = (e) => {
+        e.stopPropagation();
+        // Clear the video URL directly using setFormData
+        if (setFormData) {
+            setFormData(prev => ({ ...prev, [`${field}_url`]: '' }));
+            setShowUrlInput(false);
+            toast.success("Video removed");
         }
     };
 
     return (
         <div className="space-y-2">
-            <label className="text-xs font-black text-white/40 uppercase tracking-widest pl-1 italic">{label}</label>
-            <div
-                onClick={() => inputRef.current?.click()}
-                onDragOver={handleDragOver}
-                onDragLeave={handleDragLeave}
-                onDrop={handleDrop}
-                className={`relative h-40 rounded-3xl bg-white/5 border-2 border-dashed ${isDragging ? 'border-[#a6b1ff] bg-[#a6b1ff]/10' : 'border-white/10'} hover:border-[#a6b1ff]/30 transition-all overflow-hidden group cursor-pointer`}
-            >
-                {url ? (
-                    <div className="w-full h-full relative">
-                        {isVideo ? (
-                            <div className="w-full h-full flex flex-col items-center justify-center bg-black/40 gap-2">
-                                <Video className="text-emerald-400" size={32} />
-                                <span className="text-[10px] font-black uppercase text-white/60">Module Ready</span>
-                            </div>
-                        ) : (
-                            <img src={url} alt="Preview" className="w-full h-full object-cover" />
-                        )}
-                        <div className="absolute inset-0 bg-[#0a0a0a]/80 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                            <span className="text-white font-black text-xs uppercase underline tracking-widest decoration-indigo-500 underline-offset-4">Change File</span>
+            <label className="text-xs font-black text-gray-600 dark:text-white/40 uppercase tracking-widest pl-1 italic">{label}</label>
+            
+            {isVideo && !url && (
+                <div className="flex gap-2 mb-2">
+                    <button
+                        type="button"
+                        onClick={() => setShowUrlInput(false)}
+                        className={`flex-1 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all ${
+                            !showUrlInput 
+                                ? 'bg-[#a6b1ff] text-black' 
+                                : 'bg-gray-200 dark:bg-white/5 text-gray-600 dark:text-white/40'
+                        }`}
+                    >
+                        Upload File
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => setShowUrlInput(true)}
+                        className={`flex-1 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all ${
+                            showUrlInput 
+                                ? 'bg-[#a6b1ff] text-black' 
+                                : 'bg-gray-200 dark:bg-white/5 text-gray-600 dark:text-white/40'
+                        }`}
+                    >
+                        Use Link
+                    </button>
+                </div>
+            )}
+
+            {isVideo && showUrlInput && !url ? (
+                <div className="space-y-3">
+                    <div className="p-6 rounded-3xl bg-gray-100 dark:bg-white/5 border-2 border-gray-300 dark:border-white/10">
+                        <div className="space-y-3">
+                            <input
+                                type="url"
+                                value={urlInput}
+                                onChange={(e) => setUrlInput(e.target.value)}
+                                placeholder="Paste YouTube or Google Drive link..."
+                                className="w-full px-4 py-3 rounded-xl bg-white dark:bg-black/20 border border-gray-300 dark:border-white/10 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-white/20 focus:outline-none focus:border-[#a6b1ff] transition-all text-sm"
+                            />
+                            <button
+                                type="button"
+                                onClick={handleUrlSubmit}
+                                disabled={!urlInput.trim()}
+                                className="w-full px-4 py-3 bg-[#a6b1ff] text-black rounded-xl font-bold uppercase text-xs tracking-wider hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                            >
+                                Add Video Link
+                            </button>
                         </div>
+                        <p className="text-xs text-gray-500 dark:text-white/30 mt-3 text-center">
+                            Supports YouTube, Google Drive, and direct video links
+                        </p>
                     </div>
-                ) : (
-                    <div className="w-full h-full flex flex-col items-center justify-center gap-3 text-white/20 group-hover:text-white/40 transition-colors">
-                        {isUploading ? <Loader2 size={32} className="animate-spin text-[#a6b1ff]" /> : <UploadCloud size={32} />}
-                        <span className="text-[10px] font-black uppercase tracking-[0.3em]">{isUploading ? 'Syncing...' : (isDragging ? 'Drop File Here' : 'Upload Resource')}</span>
-                    </div>
-                )}
-                <input
-                    ref={inputRef}
-                    type="file"
-                    className="hidden"
-                    accept={isVideo ? "video/*" : "image/*"}
-                    onChange={(e) => onUpload(e, field)}
-                />
-            </div>
+                </div>
+            ) : (
+                <div
+                    onClick={() => inputRef.current?.click()}
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
+                    className={`relative h-40 rounded-3xl bg-gray-100 dark:bg-white/5 border-2 border-dashed ${isDragging ? 'border-[#a6b1ff] bg-[#a6b1ff]/10' : 'border-gray-300 dark:border-white/10'} hover:border-[#a6b1ff]/50 transition-all overflow-hidden group cursor-pointer`}
+                >
+                    {url ? (
+                        <div className="w-full h-full relative">
+                            {isVideo ? (
+                                <div className="w-full h-full flex flex-col items-center justify-center bg-gray-200 dark:bg-black/40 gap-2">
+                                    <Video className="text-emerald-500" size={32} />
+                                    <span className="text-[10px] font-black uppercase text-gray-600 dark:text-white/60">Video Ready</span>
+                                    <button
+                                        type="button"
+                                        onClick={handleRemoveVideo}
+                                        className="mt-2 px-4 py-1 bg-rose-500 text-white rounded-lg text-xs font-bold uppercase hover:bg-rose-600 transition-colors"
+                                    >
+                                        Remove
+                                    </button>
+                                </div>
+                            ) : (
+                                <img src={url} alt="Preview" className="w-full h-full object-cover" />
+                            )}
+                            {!isVideo && (
+                                <div className="absolute inset-0 bg-[#0a0a0a]/80 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                    <span className="text-white font-black text-xs uppercase underline tracking-widest decoration-indigo-500 underline-offset-4">Change File</span>
+                                </div>
+                            )}
+                        </div>
+                    ) : (
+                        <div className="w-full h-full flex flex-col items-center justify-center gap-3 text-gray-400 dark:text-white/20 group-hover:text-gray-600 dark:group-hover:text-white/40 transition-colors">
+                            {isUploading ? <Loader2 size={32} className="animate-spin text-[#a6b1ff]" /> : <UploadCloud size={32} />}
+                            <span className="text-[10px] font-black uppercase tracking-[0.3em]">{isUploading ? 'Syncing...' : (isDragging ? 'Drop File Here' : 'Upload Resource')}</span>
+                        </div>
+                    )}
+                    <input
+                        ref={inputRef}
+                        type="file"
+                        className="hidden"
+                        accept={isVideo ? "video/*" : "image/*"}
+                        onChange={(e) => onUpload(e, field)}
+                    />
+                </div>
+            )}
             {error && <p className="text-rose-400 text-[10px] font-bold uppercase tracking-wider pl-1">{error}</p>}
         </div>
     );
 };
 
 const SummaryItem = ({ label, value }) => (
-    <div className="flex items-center justify-between border-b border-white/5 pb-4">
-        <span className="text-[11px] font-black text-white/30 uppercase tracking-widest">{label}</span>
-        <span className="text-sm font-black text-white uppercase italic tracking-tight">{value}</span>
+    <div className="flex items-center justify-between border-b border-gray-200 dark:border-white/5 pb-4">
+        <span className="text-[11px] font-black text-gray-500 dark:text-white/30 uppercase tracking-widest">{label}</span>
+        <span className="text-sm font-black text-gray-900 dark:text-white uppercase italic tracking-tight">{value}</span>
     </div>
 );
+
+const AdditionalResourcesUpload = ({ resources, onAdd, onRemove, isUploading, setIsUploading, onFileUpload }) => {
+    const fileInputRef = React.useRef(null);
+    const [showUrlInput, setShowUrlInput] = React.useState(false);
+    const [urlInput, setUrlInput] = React.useState('');
+
+    const handleFileUpload = async (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        // Use the parent's handleFileUpload function which uploads to Cloudinary
+        await onFileUpload(e, 'other');
+        
+        // Reset file input to allow uploading the same file again
+        if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+        }
+    };
+
+    const handleUrlSubmit = () => {
+        if (urlInput.trim()) {
+            // Validate URL format
+            const isValidUrl = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be|drive\.google\.com|.*\.(mp4|webm|ogg)).*$/i.test(urlInput.trim());
+            
+            if (!isValidUrl) {
+                toast.error("Please enter a valid YouTube, Google Drive, or direct video link");
+                return;
+            }
+
+            onAdd(urlInput.trim());
+            setUrlInput('');
+            setShowUrlInput(false);
+        }
+    };
+
+    const handleFileButtonClick = () => {
+        if (fileInputRef.current) {
+            fileInputRef.current.click();
+        }
+    };
+
+    const handleSwitchToUpload = () => {
+        setShowUrlInput(false);
+        setUrlInput('');
+        // Trigger file input after state update
+        setTimeout(() => {
+            if (fileInputRef.current) {
+                fileInputRef.current.click();
+            }
+        }, 50);
+    };
+
+    return (
+        <div className="space-y-3">
+            {resources.map((url, i) => (
+                <div key={i} className="flex items-center justify-between p-3 bg-gray-100 dark:bg-white/5 rounded-xl border border-gray-300 dark:border-white/5 text-xs text-gray-700 dark:text-white/60 group">
+                    <div className="flex items-center gap-2 truncate min-w-0">
+                        <Video size={14} className="text-emerald-500 shrink-0" />
+                        <span className="truncate max-w-[200px]">{url}</span>
+                    </div>
+                    <button 
+                        type="button"
+                        onClick={() => onRemove(i)} 
+                        className="text-rose-500 hover:text-rose-400 transition-colors shrink-0"
+                    >
+                        <Trash2 size={16} />
+                    </button>
+                </div>
+            ))}
+
+            {/* Hidden file input - always present */}
+            <input 
+                ref={fileInputRef}
+                type="file" 
+                className="hidden" 
+                accept="video/*" 
+                onChange={handleFileUpload}
+                disabled={isUploading}
+            />
+
+            {!showUrlInput ? (
+                <div className="space-y-2">
+                    <button
+                        type="button"
+                        onClick={handleFileButtonClick}
+                        disabled={isUploading}
+                        className={`w-full h-12 rounded-xl border-2 border-dashed border-gray-300 dark:border-white/10 flex items-center justify-center gap-2 hover:border-[#a6b1ff]/30 hover:bg-gray-100 dark:hover:bg-white/5 transition-all text-sm font-bold text-gray-600 dark:text-white/40 ${isUploading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                    >
+                        {isUploading ? <Loader2 size={16} className="animate-spin" /> : <UploadCloud size={16} />}
+                        {isUploading ? 'Uploading...' : 'Upload Video File'}
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => setShowUrlInput(true)}
+                        disabled={isUploading}
+                        className="w-full h-10 rounded-xl border border-gray-300 dark:border-white/10 flex items-center justify-center gap-2 hover:bg-gray-100 dark:hover:bg-white/5 transition-all text-xs font-bold text-gray-600 dark:text-white/40 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        <Globe size={14} />
+                        Or Use Video Link
+                    </button>
+                </div>
+            ) : (
+                <div className="space-y-2">
+                    <div className="p-4 rounded-xl bg-gray-100 dark:bg-white/5 border border-gray-300 dark:border-white/10 space-y-3">
+                        <input
+                            type="url"
+                            value={urlInput}
+                            onChange={(e) => setUrlInput(e.target.value)}
+                            onKeyPress={(e) => {
+                                if (e.key === 'Enter' && urlInput.trim()) {
+                                    handleUrlSubmit();
+                                }
+                            }}
+                            placeholder="Paste YouTube or Google Drive link..."
+                            className="w-full px-4 py-2 rounded-lg bg-white dark:bg-black/20 border border-gray-300 dark:border-white/10 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-white/20 focus:outline-none focus:border-[#a6b1ff] transition-all text-sm"
+                        />
+                        <div className="flex gap-2">
+                            <button
+                                type="button"
+                                onClick={handleUrlSubmit}
+                                disabled={!urlInput.trim()}
+                                className="flex-1 px-4 py-2 bg-[#a6b1ff] text-black rounded-lg font-bold uppercase text-xs tracking-wider hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                            >
+                                Add Link
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setShowUrlInput(false);
+                                    setUrlInput('');
+                                }}
+                                className="px-4 py-2 bg-gray-200 dark:bg-white/10 text-gray-700 dark:text-white/60 rounded-lg font-bold uppercase text-xs tracking-wider hover:bg-gray-300 dark:hover:bg-white/20 transition-colors"
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                    <button
+                        type="button"
+                        onClick={handleSwitchToUpload}
+                        className="w-full h-10 rounded-xl border border-gray-300 dark:border-white/10 flex items-center justify-center gap-2 hover:bg-gray-100 dark:hover:bg-white/5 transition-all text-xs font-bold text-gray-600 dark:text-white/40"
+                    >
+                        <UploadCloud size={14} />
+                        Or Upload File
+                    </button>
+                </div>
+            )}
+            
+            <p className="text-[10px] text-gray-500 dark:text-white/30 text-center uppercase tracking-widest">Max 5 additional modules</p>
+        </div>
+    );
+};

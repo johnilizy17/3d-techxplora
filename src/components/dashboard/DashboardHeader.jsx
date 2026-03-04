@@ -36,7 +36,7 @@ export default function DashboardHeader({ user }) {
                                 className="relative z-10 p-1 rounded-[2rem] bg-gradient-to-br from-accent/50 to-transparent border border-border shadow-2xl overflow-hidden"
                             >
                                 <Avatar className="w-16 h-16 md:w-20 md:h-20 rounded-[1.8rem]">
-                                    <AvatarImage src={user?.avatar || "https://github.com/shadcn.png"} className="object-cover" />
+                                    <AvatarImage src={user?.photo || "https://github.com/shadcn.png"} className="object-cover" />
                                     <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white font-black text-2xl">
                                         {user?.fullname?.charAt(0) || user?.name?.charAt(0) || "U"}
                                     </AvatarFallback>
@@ -94,8 +94,8 @@ export default function DashboardHeader({ user }) {
                                     <DaimondIcon size={18} />
                                 </div>
                                 <div className="flex flex-col items-start pr-2">
-                                    <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest leading-none mb-1">XP Points</span>
-                                    <span className="text-xl font-black text-foreground leading-none italic">{user?.xp || 0}</span>
+                                    <span className="text-[10px] font-black text-gray-500 dark:text-muted-foreground uppercase tracking-widest leading-none mb-1">XP Points</span>
+                                    <span className="text-xl font-black text-gray-700 dark:text-foreground leading-none italic">{user?.xp || 0}</span>
                                 </div>
                             </motion.button>
                         </Link>

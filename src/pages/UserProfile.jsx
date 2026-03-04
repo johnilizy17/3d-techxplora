@@ -13,6 +13,8 @@ import { useUpdateStudentProfileMutation } from '@/redux/api/studentApi';
 import { useUpdateTeacherProfileMutation } from '@/redux/api/teacherApi';
 import { uploadToCloudinary } from '@/lib/cloudinary';
 import { toast } from 'sonner';
+import { nigeriaStates } from '@/data/nigeriaStates';
+import { usaStates } from '@/data/usaStates';
 
 export default function UserProfile() {
     const navigate = useNavigate();
@@ -32,36 +34,132 @@ export default function UserProfile() {
         country: '',
         state: '',
         lga: '',
+        city: '',
         postal_code: '',
         date_of_birth: '',
         photo: ''
     });
 
     const [isUploading, setIsUploading] = useState(false);
+    const [availableStates, setAvailableStates] = useState([]);
+    const [availableLGAs, setAvailableLGAs] = useState([]);
 
     useEffect(() => {
         if (user) {
-            const fullName = user.name || user.fullname || '';
-            const names = fullName ? fullName.split(' ') : ['', ''];
+            // Handle different data structures from API
+            let normalizedState = user.state || '';
+            let normalizedCountry = user.country || '';
+            
+            // Normalize country name
+            if (normalizedCountry) {
+                const countryLower = normalizedCountry.toLowerCase();
+                if (countryLower === 'nigeria') {
+                    normalizedCountry = 'Nigeria';
+                } else if (countryLower === 'usa' || countryLower === 'united states') {
+                    normalizedCountry = 'USA';
+                }
+            }
 
-            setFormData({
-                first_name: names[0] || '',
-                last_name: names.slice(1).join(' ') || '',
+            // Normalize state name to match dropdown options (proper case)
+            if (normalizedState && normalizedCountry) {
+                const countryLower = normalizedCountry.toLowerCase();
+                if (countryLower === 'nigeria') {
+                    const matchedState = nigeriaStates.find(s => s.name.toLowerCase() === normalizedState.toLowerCase());
+                    if (matchedState) {
+                        normalizedState = matchedState.name;
+                    }
+                } else if (countryLower === 'usa') {
+                    const matchedState = usaStates.find(s => s.name.toLowerCase() === normalizedState.toLowerCase());
+                    if (matchedState) {
+                        normalizedState = matchedState.name;
+                    }
+                }
+            }
+
+            const userData = {
+                ...user,
+                first_name: user.first_name || user.name?.split(' ')[0] || user.fullname?.split(' ')[0] || '',
+                last_name: user.last_name || user.name?.split(' ').slice(1).join(' ') || user.fullname?.split(' ').slice(1).join(' ') || '',
                 email: user.email || '',
-                phone_number: user.phone_number || user.mobile || user.phone || '', // Handle different naming conventions
+                phone_number: user.phone_number || user.mobile || user.phone || '',
                 alternate_phone_number: user.alternate_phone_number || user.alternate_phone || '',
-                country: user.country || '',
-                state: user.state || '',
+                country: normalizedCountry,
+                state: normalizedState,
                 lga: user.lga || '',
+                city: user.city || user.address || '',
                 postal_code: user.postal_code || '',
                 date_of_birth: user.date_of_birth || '',
-                photo: user.avatar || user.photo || ''
-            });
+             };
+
+            setFormData(userData);
+
+            // Set available states based on country
+            if (normalizedCountry) {
+                const countryLower = normalizedCountry.toLowerCase();
+                if (countryLower === 'nigeria') {
+                    setAvailableStates(nigeriaStates.map(s => s.name));
+                    
+                    // Set available LGAs if state is already selected
+                    if (normalizedState) {
+                        const selectedState = nigeriaStates.find(s => s.name === normalizedState);
+                        if (selectedState) {
+                            setAvailableLGAs(selectedState.lgas);
+                        }
+                    }
+                } else if (countryLower === 'usa') {
+                    setAvailableStates(usaStates.map(s => s.name));
+                    
+                    // Set available LGAs/Counties if state is already selected
+                    if (normalizedState) {
+                        const selectedState = usaStates.find(s => s.name === normalizedState);
+                        if (selectedState) {
+                            setAvailableLGAs(selectedState.counties);
+                        }
+                    }
+                }
+            }
         }
     }, [user]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
+
+        // Handle country change to update states
+        if (name === 'country') {
+            if (value === 'Nigeria') {
+                setAvailableStates(nigeriaStates.map(s => s.name));
+            } else if (value === 'USA') {
+                setAvailableStates(usaStates.map(s => s.name));
+            } else {
+                setAvailableStates([]);
+            }
+            setAvailableLGAs([]);
+            setFormData(prev => ({ ...prev, country: value, state: '', lga: '' })); // Reset state and LGA when country changes
+            return; // Exit early to prevent duplicate state update
+        }
+
+        // Handle state change to update LGAs/Counties
+        if (name === 'state') {
+            if (formData.country === 'Nigeria') {
+                const selectedState = nigeriaStates.find(s => s.name === value);
+                if (selectedState) {
+                    setAvailableLGAs(selectedState.lgas);
+                } else {
+                    setAvailableLGAs([]);
+                }
+            } else if (formData.country === 'USA') {
+                const selectedState = usaStates.find(s => s.name === value);
+                if (selectedState) {
+                    setAvailableLGAs(selectedState.counties);
+                } else {
+                    setAvailableLGAs([]);
+                }
+            }
+            setFormData(prev => ({ ...prev, state: value, lga: '' })); // Reset LGA when state changes
+            return; // Exit early to prevent duplicate state update
+        }
+
+        // For all other fields
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
@@ -91,13 +189,13 @@ export default function UserProfile() {
             // The API endpoints usually expect specific fields. 
             // Assuming the backend handles 'name' or 'first_name'/'last_name' update via 'updateProfile' logic.
             // Let's construct a payload that matches common patterns.
-
             const payload = {
                 ...formData,
                 name: `${formData.first_name} ${formData.last_name}`.trim(),
                 first_name: formData.first_name,
                 last_name: formData.last_name,
-                id: user.id
+                id: user.id,
+                photo:formData.photo
             };
 
             if (isTeacher) {
@@ -149,7 +247,7 @@ export default function UserProfile() {
                                 </div>
                                 <div className="text-center">
                                     <p className="text-sm font-black text-white uppercase tracking-widest">Profile Photo</p>
-                                    <p className="text-white/40 text-xs mt-1">Click the camera icon to update</p>
+                                    <p className="text-gray-600 dark:text-white/40 text-xs mt-1">Click the camera icon to update</p>
                                 </div>
                             </div>
 
@@ -178,9 +276,33 @@ export default function UserProfile() {
                                     <h3 className="text-sm font-black text-white uppercase tracking-widest">Location Details</h3>
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <InputField label="Country" name="country" value={formData.country} onChange={handleChange} placeholder="Country" />
-                                    <InputField label="State" name="state" value={formData.state} onChange={handleChange} placeholder="State" />
-                                    <InputField label="LGA / City" name="lga" value={formData.lga} onChange={handleChange} placeholder="Local Govt Area" />
+                                    <SelectField 
+                                        label="Country" 
+                                        name="country" 
+                                        value={formData.country} 
+                                        onChange={handleChange}
+                                        options={['Nigeria', 'USA']}
+                                        placeholder="Select Country"
+                                    />
+                                    <SelectField 
+                                        label="State" 
+                                        name="state" 
+                                        value={formData.state} 
+                                        onChange={handleChange}
+                                        options={availableStates}
+                                        placeholder="Select State"
+                                        disabled={!formData.country}
+                                    />
+                                    <SelectField 
+                                        label={formData.country === 'USA' ? 'County' : 'LGA'} 
+                                        name="lga" 
+                                        value={formData.lga} 
+                                        onChange={handleChange}
+                                        options={availableLGAs}
+                                        placeholder={formData.country === 'USA' ? 'Select County' : 'Select LGA'}
+                                        disabled={!formData.state}
+                                    />
+                                    <InputField label="City" name="city" value={formData.city} onChange={handleChange} placeholder="City" />
                                     <InputField label="Postal Code" name="postal_code" value={formData.postal_code} onChange={handleChange} placeholder="Zip Code" />
                                 </div>
                             </div>
@@ -191,7 +313,7 @@ export default function UserProfile() {
                                     type="button"
                                     onClick={() => navigate(-1)}
                                     variant="ghost"
-                                    className="h-14 px-8 rounded-2xl text-white/60 hover:text-white hover:bg-white/5 font-black uppercase tracking-widest"
+                                    className="h-14 px-8 rounded-2xl text-gray-600 dark:text-white/60 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/5 font-black uppercase tracking-widest"
                                 >
                                     Cancel
                                 </Button>
@@ -216,13 +338,35 @@ export default function UserProfile() {
 // Helper Component for consistent input styling
 const InputField = ({ label, icon: Icon, className = "", ...props }) => (
     <div className="space-y-2">
-        <Label className="text-[10px] font-black text-white/40 uppercase tracking-widest ml-1">{label}</Label>
+        <Label className="text-[10px] font-black text-gray-600 dark:text-white/40 uppercase tracking-widest ml-1">{label}</Label>
         <div className="relative">
             <Input
                 {...props}
-                className={`bg-black/20 border-white/10 h-16 text-white rounded-2xl focus:border-[#a6b1ff] focus:ring-[#a6b1ff]/10 px-6 text-base font-bold placeholder:text-white/20 transition-all ${Icon ? 'pl-12' : ''} ${className}`}
+                className={`bg-gray-50 dark:bg-black/20 border-gray-300 dark:border-white/10 h-16 text-gray-900 dark:text-white rounded-2xl focus:border-[#a6b1ff] focus:ring-[#a6b1ff]/10 px-6 text-base font-bold placeholder:text-gray-400 dark:placeholder:text-white/20 transition-all ${Icon ? 'pl-12' : ''} ${className}`}
             />
-            {Icon && <Icon size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30" />}
+            {Icon && <Icon size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-white/30" />}
         </div>
+    </div>
+);
+
+// Helper Component for select dropdown
+const SelectField = ({ label, options, className = "", disabled = false, placeholder = "Select...", ...props }) => (
+    <div className="space-y-2">
+        <Label className="text-[10px] font-black text-gray-600 dark:text-white/40 uppercase tracking-widest ml-1">{label}</Label>
+        <select
+            {...props}
+            disabled={disabled}
+            className={`bg-gray-50 dark:bg-black/20 border border-gray-300 dark:border-white/10 h-16 text-gray-900 dark:text-white rounded-2xl focus:border-[#a6b1ff] focus:ring-[#a6b1ff]/10 px-6 text-base font-bold transition-all w-full ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'} ${className}`}
+            style={{ 
+                color: props.value ? undefined : 'rgba(128, 128, 128, 0.5)',
+            }}
+        >
+            <option value="" className="bg-white dark:bg-[#0a0a0a] text-gray-400 dark:text-white/40">{placeholder}</option>
+            {options.map((option) => (
+                <option key={option} value={option} className="bg-white dark:bg-[#0a0a0a] text-gray-900 dark:text-white">
+                    {option}
+                </option>
+            ))}
+        </select>
     </div>
 );

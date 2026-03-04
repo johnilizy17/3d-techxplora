@@ -19,7 +19,8 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from '../ui/use-toast';
 import { selectTempStorage, setTemporaryStorage, selectCurrentUser } from '@/redux/slices/authSlice';
 import { useGetQuizResultsQuery } from '@/redux/api/questionApi';
-import { useUpdateQuizMutation } from '@/redux/api/teacherApi';
+import { useUpdateQuizMutation, useGetQuizzesQuery } from '@/redux/api/teacherApi';
+import { useVerifyQuizQuery } from '@/redux/api/questionApi';
 import { calculateQuizResultsStats } from '@/utils/excelUtils';
 import { formatDistanceToNow, format } from 'date-fns';
 import {
@@ -42,9 +43,20 @@ export default function QuizResults() {
     const tempStorage = useSelector(selectTempStorage);
     const user = useSelector(selectCurrentUser);
     const quizId = tempStorage?.id;
-
+    const quizCode = tempStorage?.quiz_code;
+    const type = user?.accountable_type === "App\\Models\\Student" ? "student" : "teacher";
+   
     const { data: resultsResults, isLoading } = useGetQuizResultsQuery(quizId, {
         skip: !quizId
+    });
+
+    const { data: verifyData, refetch: refetchQuiz } = useVerifyQuizQuery(quizCode, {
+        skip: !quizCode
+    });
+
+    // Add query for refetching quizzes list
+    const { refetch: refetchQuizzesList } = useGetQuizzesQuery({ type, id: user?.id }, {
+        skip: !user?.id
     });
 
     const [updateQuiz, { isLoading: isUpdating }] = useUpdateQuizMutation();
@@ -89,18 +101,57 @@ export default function QuizResults() {
         }
 
         try {
-            const updatedQuiz = await updateQuiz({
-                ...tempStorage, id: quizId,
-                ...formData
-            }).unwrap();
+            // Include all required fields from tempStorage
+            const updatePayload = {
+                ...tempStorage,
+                id: quizId,
+                title: tempStorage.title,
+                description: tempStorage.description || '',
+                mode_id: tempStorage.mode_id,
+                group_code: tempStorage.group_code,
+                admin_code: tempStorage.admin_code,
+                teacher_id: tempStorage.teacher_id,
+                duration: tempStorage.duration,
+                is_duration_per_question: tempStorage.is_duration_per_question || false,
+                min_age: tempStorage.min_age,
+                max_age: tempStorage.max_age,
+                class: tempStorage.class,
+                is_ai: tempStorage.is_ai || false,
+                status: tempStorage.status !== undefined ? tempStorage.status : true,
+                // Updated fields from form
+                start_at: formData.start_at,
+                end_at: formData.end_at,
+                xp: formData.xp,
+                p_xp: formData.p_xp
+            };
 
-            dispatch(setTemporaryStorage(updatedQuiz));
+            const updatedQuiz = await updateQuiz(updatePayload).unwrap();
+
+            // Refetch the quiz data to get the latest information
+            await refetchQuiz();
+            
+            // Refetch the quizzes list
+            await refetchQuizzesList();
+
+            // Update temp storage with the updated quiz data
+            dispatch(setTemporaryStorage({
+                ...tempStorage,
+                start_at: formData.start_at,
+                end_at: formData.end_at,
+                xp: formData.xp,
+                p_xp: formData.p_xp
+            }));
+            
             setIsDrawerOpen(false);
 
             toast({
                 title: "Quiz updated",
                 description: "Parameters synchronized successfully."
             });
+
+            // Navigate to dashboard after successful update with a small delay
+         
+
         } catch (error) {
             console.error('Update failed:', error);
             toast({
@@ -232,7 +283,7 @@ export default function QuizResults() {
                                                 <div>
                                                     <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40 mb-1">XP Balance Status</p>
                                                     <p className={`text-lg font-black italic ${(user?.xp || 0) + (tempStorage?.xp || 0) - formData.xp < 0 ? 'text-rose-400' : 'text-indigo-400'}`}>
-                                                        {(user?.xp || 0) + (tempStorage?.xp || 0) - formData.xp} XP Remaining
+                                                        {(user?.xp || 0) - formData.xp} XP Remaining
                                                     </p>
                                                 </div>
                                                 <div className="w-10 h-10 rounded-xl bg-indigo-500/20 flex items-center justify-center">

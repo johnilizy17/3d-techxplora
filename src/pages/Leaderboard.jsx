@@ -48,12 +48,16 @@ export default function Leaderboard() {
 
     return (
         <DashboardLayout>
-            <div className="min-h-screen pb-24 lg:pb-10">
-                <div className="w-full relative px-6 lg:px-10">
+            <div className="min-h-screen pb-24 lg:pb-10 bg-white dark:bg-black">
+                {/* Visual Background Elements */}
+                <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-200/20 dark:bg-indigo-600/5 rounded-full blur-[120px] -mr-64 -mt-64" />
+                <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-purple-200/20 dark:bg-purple-600/5 rounded-full blur-[100px] -ml-40 -mb-40" />
+                
+                <div className="w-full relative z-10 px-6 lg:px-10">
 
                     {/* Modern & User-Friendly Header */}
                     <header className="pt-10 pb-8 relative">
-                        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8 pb-8 border-b border-white/5">
+                        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8 pb-8 border-b border-gray-200 dark:border-white/5">
                             <div className="space-y-2">
                                 <div className="flex items-center gap-3">
                                     <div className="flex -space-x-2">
@@ -63,13 +67,13 @@ export default function Leaderboard() {
                                             </div>
                                         ))}
                                     </div>
-                                    <span className="text-[10px] font-bold text-[#a6b1ff] uppercase tracking-widest">Global Rankings</span>
+                                    <span className="text-[10px] font-bold text-indigo-600 dark:text-[#a6b1ff] uppercase tracking-widest">Global Rankings</span>
                                 </div>
-                                <h1 className="text-4xl sm:text-5xl font-black text-foreground dark:text-white tracking-tight uppercase italic leading-none">
-                                    The <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#a6b1ff] to-foreground dark:to-white">Top 20</span>
+                                <h1 className="text-4xl sm:text-5xl font-black text-gray-900 dark:text-white tracking-tight uppercase italic leading-none">
+                                    Weekly <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-[#a6b1ff] dark:to-white">Leaderboard </span>
                                 </h1>
-                                <p className="text-sm font-medium text-muted-foreground dark:text-white/40 max-w-md">
-                                    Track the world's most active Xploras and their journey through the Quiz.
+                                <p className="text-sm font-medium text-gray-600 dark:text-white/40 max-w-md">
+                                    See the top players and their amazing quiz scores!
                                 </p>
                             </div>
 
@@ -77,13 +81,13 @@ export default function Leaderboard() {
 
                                 {/* Search Bar - Sleek & Integrated */}
                                 <div className="relative w-full sm:w-64 group">
-                                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30 group-focus-within:text-[#a6b1ff] transition-colors" size={16} />
+                                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-white/30 group-focus-within:text-[#a6b1ff] transition-colors" size={16} />
                                     <input
                                         type="text"
                                         placeholder="Find an Xplora..."
                                         value={searchQuery}
                                         onChange={(e) => setSearchQuery(e.target.value)}
-                                        className="w-full h-11 pl-11 pr-4 bg-white/5 dark:bg-white/5 border border-gray-300 dark:border-white/10 rounded-2xl text-foreground dark:text-white placeholder:text-muted-foreground dark:placeholder:text-white/20 focus:outline-none focus:border-[#a6b1ff]/30 focus:bg-white/10 transition-all text-sm font-medium"
+                                        className="w-full h-11 pl-11 pr-4 bg-gray-100 dark:bg-white/5 border border-gray-300 dark:border-white/10 rounded-2xl text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-white/20 focus:outline-none focus:border-[#a6b1ff]/50 focus:bg-white dark:focus:bg-white/10 transition-all text-sm font-medium"
                                     />
                                 </div>
                             </div>
@@ -91,12 +95,12 @@ export default function Leaderboard() {
                     </header>
 
                     {isLoading ? (
-                        <div className="py-24 flex flex-col items-center justify-center gap-4">
+                            <div className="py-24 flex flex-col items-center justify-center gap-4">
                             <div className="relative w-16 h-16">
-                                <div className="absolute inset-0 rounded-full border-4 border-[#a6b1ff]/20"></div>
-                                <div className="absolute inset-0 rounded-full border-t-4 border-[#a6b1ff] animate-spin"></div>
+                                <div className="absolute inset-0 rounded-full border-4 border-indigo-200 dark:border-[#a6b1ff]/20"></div>
+                                <div className="absolute inset-0 rounded-full border-t-4 border-indigo-600 dark:border-[#a6b1ff] animate-spin"></div>
                             </div>
-                            <p className="text-[#a6b1ff] font-black uppercase tracking-widest animate-pulse">Gathering Xploras...</p>
+                            <p className="text-indigo-600 dark:text-[#a6b1ff] font-black uppercase tracking-widest animate-pulse">Loading Players...</p>
                         </div>
                     ) : (
                         <>
@@ -111,14 +115,14 @@ export default function Leaderboard() {
                                             transition={{ delay: 0.2, duration: 0.8 }}
                                             className="relative flex flex-col items-center"
                                         >
-                                            <AvatarBadge user={topThree[1]} color="#e2e8f0" size="lg" />
+                                            <AvatarBadge user={topThree[1]} color="#4a5552ff" size="lg" />
                                             <div className="w-24 sm:w-32 lg:w-40 h-32 sm:h-40 lg:h-48 mt-4 relative group">
                                                 <div className="absolute inset-x-0 bottom-0 h-full bg-gradient-to-b from-[#718096]/40 to-[#2d3748]/80 backdrop-blur-xl border-t border-x border-white/20 rounded-t-3xl shadow-2xl skew-x-[-10deg] transform origin-bottom transition-transform group-hover:scale-105" />
                                                 <div className="absolute inset-0 flex flex-col items-center justify-center -skew-x-[-10deg]">
-                                                    <span className="text-4xl sm:text-5xl lg:text-6xl font-black text-[#e2e8f0]/30 italic leading-none">2</span>
+                                                    <span className="text-4xl sm:text-5xl lg:text-6xl font-black text-[#a1e3f4] dark:text-[#e2e8f0]/30 italic leading-none">2</span>
                                                     <div className="mt-2 text-center">
                                                         <p className="text-[10px] sm:text-xs font-black text-foreground dark:text-white/90 uppercase tracking-tighter truncate w-20 sm:w-28">{topThree[1].name}</p>
-                                                        <p className="text-[8px] sm:text-[10px] font-bold text-[#718096] dark:text-[#e2e8f0] uppercase italic">{topThree[1].xp} XP</p>
+                                                        <p className="text-[8px] sm:text-[10px] font-bold text-[#d97706] dark:text-[#e2e8f0] uppercase italic">{topThree[1].xp || 0} XP</p>
                                                     </div>
                                                 </div>
                                             </div>
@@ -185,21 +189,23 @@ export default function Leaderboard() {
                             <div className="max-w-4xl mx-auto space-y-3 relative">
                                 <div className="flex items-center justify-between mb-8 px-2">
                                     <div className="flex items-center gap-4">
-                                        <div className="w-8 h-px bg-gradient-to-r from-[#a6b1ff] to-transparent" />
-                                        <h3 className="text-xs font-black text-muted-foreground dark:text-white/60 uppercase tracking-[0.3em] italic">Full Standings</h3>
+                                        <div className="w-12 h-1 bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-[#a6b1ff] dark:to-[#a6b1ff] rounded-full" />
+                                        <h3 className="text-sm font-black text-gray-800 dark:text-white/80 uppercase tracking-[0.2em]">All Players</h3>
                                     </div>
                                     {searchQuery && (
-                                        <p className="text-[10px] font-bold text-[#a6b1ff] uppercase tracking-widest italic">
-                                            Found {filteredData.length} Results
-                                        </p>
+                                        <div className="px-4 py-2 bg-indigo-100 dark:bg-indigo-500/10 border-2 border-indigo-300 dark:border-indigo-500/20 rounded-xl">
+                                            <p className="text-[10px] font-black text-indigo-700 dark:text-indigo-400 uppercase tracking-widest">
+                                                {filteredData.length} Found
+                                            </p>
+                                        </div>
                                     )}
                                 </div>
 
-                                <div className="flex items-center px-8 py-2 text-[10px] font-black text-muted-foreground dark:text-white/30 uppercase tracking-[0.2em] italic">
-                                    <span className="w-12 text-center">Rank</span>
-                                    <span className="flex-1 ml-4 text-left">Xplora</span>
-                                    <span className="hidden sm:block w-32 text-center">Level</span>
-                                    <span className="w-24 text-right">XP Total</span>
+                                <div className="flex items-center px-8 py-3 mb-4 bg-gray-100 dark:bg-white/5 rounded-2xl border-2 border-gray-200 dark:border-white/5">
+                                    <span className="w-14 text-center text-[10px] font-black text-gray-600 dark:text-white/40 uppercase tracking-wider">Rank</span>
+                                    <span className="flex-1 ml-2 text-left text-[10px] font-black text-gray-600 dark:text-white/40 uppercase tracking-wider">Player</span>
+                                    <span className="hidden sm:block w-32 text-center text-[10px] font-black text-gray-600 dark:text-white/40 uppercase tracking-wider">Progress</span>
+                                    <span className="w-28 text-right text-[10px] font-black text-gray-600 dark:text-white/40 uppercase tracking-wider">Points</span>
                                 </div>
 
                                 <AnimatePresence mode="popLayout">
@@ -212,59 +218,62 @@ export default function Leaderboard() {
                                                 animate={{ opacity: 1, x: 0 }}
                                                 exit={{ opacity: 0, scale: 0.95 }}
                                                 transition={{ delay: index * 0.05 }}
-                                                className={`group flex items-center px-6 sm:px-8 py-4 bg-white/5 backdrop-blur-md rounded-2xl border border-white/5 hover:border-[#a6b1ff]/30 hover:bg-white/10 transition-all cursor-pointer relative overflow-hidden ${user?.id === item.id ? 'ring-2 ring-inset ring-[#a6b1ff]/50 bg-[#a6b1ff]/5' : ''
-                                                    }`}
+                                                className={`group flex items-center px-6 sm:px-8 py-5 bg-white dark:bg-white/5 backdrop-blur-md rounded-2xl border-2 ${user?.id === item.id ? 'border-indigo-400 dark:border-[#a6b1ff]/50 bg-indigo-50 dark:bg-[#a6b1ff]/5 shadow-lg shadow-indigo-200/50 dark:shadow-none' : 'border-gray-200 dark:border-white/5 hover:border-indigo-300 dark:hover:border-[#a6b1ff]/30'} hover:bg-gray-50 dark:hover:bg-white/10 hover:shadow-md transition-all cursor-pointer relative overflow-hidden`}
                                             >
                                                 {user?.id === item.id && (
-                                                    <div className="absolute inset-y-0 left-0 w-1.5 bg-[#a6b1ff] shadow-[0_0_15px_rgba(166,177,255,0.5)]" />
+                                                    <div className="absolute inset-y-0 left-0 w-1 bg-gradient-to-b from-indigo-500 to-purple-600 dark:from-[#a6b1ff] dark:to-[#a6b1ff] shadow-[0_0_15px_rgba(99,102,241,0.5)] dark:shadow-[0_0_15px_rgba(166,177,255,0.5)]" />
                                                 )}
 
                                                 {/* Rank */}
-                                                <div className="w-12 flex justify-center">
-                                                    <span className={`text-lg font-black italic tracking-tighter ${item.rank <= 3 ? 'text-[#a6b1ff]' : 'text-white/40 dark:text-white/40 group-hover:text-foreground dark:group-hover:text-white group-hover:font-extrabold'}`}>
-                                                        #{item.rank}
-                                                    </span>
+                                                <div className="w-14 flex justify-center">
+                                                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-black text-base ${item.rank <= 3 ? 'bg-gradient-to-br from-indigo-500 to-purple-600 dark:from-[#a6b1ff] dark:to-[#a6b1ff] text-white shadow-lg' : 'bg-gray-200 dark:bg-white/10 text-gray-600 dark:text-white/60 group-hover:bg-gray-300 dark:group-hover:bg-white/20'}`}>
+                                                        {item.rank}
+                                                    </div>
                                                 </div>
 
                                                 {/* Profile */}
-                                                <div className="flex-1 ml-4 flex items-center gap-4 min-w-0">
-                                                    <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-white/10 to-white/20 border border-white/10 flex items-center justify-center relative overflow-hidden shrink-0">
-                                                        <User size={20} className="text-white/40" />
+                                                <div className="flex-1 ml-2 flex items-center gap-4 min-w-0">
+                                                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-100 to-purple-100 dark:from-white/10 dark:to-white/20 border-2 border-indigo-200 dark:border-white/10 flex items-center justify-center relative overflow-hidden shrink-0 shadow-sm">
+                                                        <User size={24} className="text-indigo-400 dark:text-white/40" />
                                                         {item.avatar && <img src={item.avatar} alt={item.name} className="absolute inset-0 w-full h-full object-cover" />}
                                                     </div>
                                                     <div className="truncate">
-                                                        <h4 className="text-sm font-black text-foreground dark:text-white uppercase italic tracking-tight group-hover:text-[#a6b1ff] transition-colors truncate">
-                                                            {item.name} {user?.id === item.id && "(YOU)"}
+                                                        <h4 className="text-base font-black text-gray-900 dark:text-white uppercase italic tracking-tight group-hover:text-indigo-600 dark:group-hover:text-[#a6b1ff] transition-colors truncate">
+                                                            {item.name} {user?.id === item.id && <span className="text-indigo-600 dark:text-[#a6b1ff]">(YOU)</span>}
                                                         </h4>
-                                                        <p className="text-[10px] font-bold text-muted-foreground dark:text-white/30 uppercase tracking-widest leading-none mt-0.5">
+                                                        <p className="text-[10px] font-bold text-gray-500 dark:text-white/30 uppercase tracking-widest leading-none mt-1">
                                                             {item.role}
                                                         </p>
                                                     </div>
                                                 </div>
 
                                                 {/* Level */}
-                                                <div className="hidden sm:flex w-32 justify-center items-center gap-2">
-                                                    <div className="w-16 h-1.5 bg-white/5 rounded-full overflow-hidden">
-                                                        <div
-                                                            className="h-full bg-gradient-to-r from-[#a6b1ff] to-white/20"
-                                                            style={{ width: `${(item.level % 10) * 10}%` }}
-                                                        />
+                                                <div className="hidden sm:flex w-32 justify-center items-center gap-3">
+                                                    <div className="flex flex-col items-center gap-1">
+                                                        <div className="w-20 h-2 bg-gray-200 dark:bg-white/5 rounded-full overflow-hidden shadow-inner">
+                                                            <div
+                                                                className="h-full bg-gradient-to-r from-indigo-500 to-purple-600 dark:from-[#a6b1ff] dark:to-[#a6b1ff] shadow-sm"
+                                                                style={{ width: `${(item.level % 10) * 10}%` }}
+                                                            />
+                                                        </div>
+                                                        <span className="text-[9px] font-black text-gray-600 dark:text-white/60 uppercase tracking-wider">Level {item.level}</span>
                                                     </div>
-                                                    <span className="text-[10px] font-black text-muted-foreground dark:text-white/60 uppercase">Lv.{item.level}</span>
                                                 </div>
 
                                                 {/* Points */}
-                                                <div className="w-24 text-right flex flex-col items-end">
-                                                    <span className="text-sm sm:text-lg font-black text-foreground dark:text-white italic tracking-tighter">
-                                                        {item.xp.toLocaleString()}
-                                                    </span>
+                                                <div className="w-28 text-right flex flex-col items-end gap-1">
+                                                    <div className="px-3 py-1.5 bg-gradient-to-r from-amber-100 to-yellow-100 dark:from-amber-500/10 dark:to-yellow-500/10 border-2 border-amber-300 dark:border-amber-500/20 rounded-xl shadow-sm">
+                                                        <span className="text-base font-black text-amber-700 dark:text-amber-400 italic tracking-tight">
+                                                            {item.xp.toLocaleString()}
+                                                        </span>
+                                                    </div>
                                                     <div className="flex items-center gap-1">
-                                                        {item.trend === 'up' && <ArrowUp size={10} className="text-emerald-500" />}
-                                                        {item.trend === 'down' && <ArrowDown size={10} className="text-rose-500" />}
-                                                        <span className={`text-[8px] font-black uppercase italic ${item.trend === 'up' ? 'text-emerald-500' :
-                                                            item.trend === 'down' ? 'text-rose-500' : 'text-white/20'
+                                                        {item.trend === 'up' && <ArrowUp size={12} className="text-emerald-600 dark:text-emerald-500" />}
+                                                        {item.trend === 'down' && <ArrowDown size={12} className="text-rose-600 dark:text-rose-500" />}
+                                                        <span className={`text-[9px] font-black uppercase ${item.trend === 'up' ? 'text-emerald-600 dark:text-emerald-500' :
+                                                            item.trend === 'down' ? 'text-rose-600 dark:text-rose-500' : 'text-gray-500 dark:text-white/30'
                                                             }`}>
-                                                            {item.trend === 'same' ? 'Stable' : item.trend}
+                                                            {item.trend === 'same' ? 'Same' : item.trend}
                                                         </span>
                                                     </div>
                                                 </div>
@@ -279,8 +288,8 @@ export default function Leaderboard() {
                             </div>
 
                             {/* Footer / Disclaimer */}
-                            <p className="mt-12 text-center text-muted-foreground dark:text-white/20 text-[10px] font-bold uppercase tracking-[0.3em] pb-10">
-                                Rankings are updated in real-time based on XP earnings
+                            <p className="mt-12 text-center text-gray-500 dark:text-white/20 text-[10px] font-bold uppercase tracking-[0.3em] pb-10">
+                                Rankings update in real-time based on quiz scores!
                             </p>
                         </>
                     )}

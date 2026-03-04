@@ -87,6 +87,14 @@ export const questionApi = baseApi.injectEndpoints({
             providesTags: (result, error, quizId) => [{ type: 'Quiz', id: quizId }],
         }),
 
+        // Get student's specific quiz result
+        getStudentQuizResult: builder.query({
+            query: ({ studentId, quizCode }) => `/answers/student/${studentId}/quiz/${quizCode}`,
+            providesTags: (result, error, { studentId, quizCode }) => [
+                { type: 'Answer', id: `${studentId}-${quizCode}` }
+            ],
+        }),
+
         // Get questions by quiz ID
         getQuestionsByQuizId: builder.query({
             query: (quizId) => `/get-questions/${quizId}`,
@@ -111,6 +119,7 @@ export const {
     useCreateQuizMutation,
     useSubmitQuizMutation,
     useGetQuizResultsQuery,
+    useGetStudentQuizResultQuery,
     useGetQuestionsByQuizIdQuery,
     useVerifyQuizQuery,
 } = questionApi;

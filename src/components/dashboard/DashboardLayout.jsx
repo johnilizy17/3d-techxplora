@@ -29,7 +29,7 @@ export default function DashboardLayout({ children }) {
     const isStudent = user?.accountable_type === "App\\Models\\Student" || user?.role === 'student';
 
     // Fetch fresh profile data
-    const { data: studentProfile } = useGetStudentProfileQuery(undefined, {
+    const { data: studentProfile } = useGetStudentProfileQuery(user?.id, {
         skip: !user?.id || !isStudent
     });
 
@@ -39,12 +39,13 @@ export default function DashboardLayout({ children }) {
 
     const currentProfile = isStudent ? studentProfile : teacherProfile;
     // Handle potential nested data structure
-    const fetchedXp = currentProfile?.data?.xp !== undefined ? currentProfile.data.xp : currentProfile?.xp;
+    const fetchedXp = currentProfile?.data ? currentProfile.data : currentProfile;
 
     // Sync XP with Redux state if it changes from API
     useEffect(() => {
+        console.log(currentProfile, user, "currentProfile")
         if (fetchedXp !== undefined && fetchedXp !== user?.xp) {
-            dispatch(updateUser({ xp: fetchedXp }));
+            dispatch(updateUser({...fetchedXp }));
         }
     }, [fetchedXp, user?.xp, dispatch]);
 

@@ -30,7 +30,8 @@ export default function Quizzes() {
     const [currentPage, setCurrentPage] = useState(1);
 
     const { data: quizzesData, isLoading } = useGetQuizzesQuery({ type, id: user?.id }, {
-        skip: !user?.id
+        skip: !user?.id,
+        refetchOnMountOrArgChange: true
     });
 
     const { data: quizDataResults } = useGetQuizDataQuery(undefined, {
@@ -89,8 +90,12 @@ export default function Quizzes() {
 
     return (
         <DashboardLayout>
-            <div className="min-h-screen pb-24 lg:pb-10">
-                <div className="w-full relative">
+            <div className="min-h-screen pb-24 lg:pb-10 bg-white dark:bg-black">
+                {/* Visual Background Elements */}
+                <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-200/20 dark:bg-indigo-600/5 rounded-full blur-[120px] -mr-64 -mt-64" />
+                <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-purple-200/20 dark:bg-purple-600/5 rounded-full blur-[100px] -ml-40 -mb-40" />
+                
+                <div className="w-full relative z-10">
                     {/* Promotional Banner */}
                     <PromotionalBanner quizzes={quizzes} quizData={quizData} groups={groups} />
 
@@ -98,14 +103,14 @@ export default function Quizzes() {
                     <div className="px-6 lg:px-10 mt-12">
                         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
                             <div>
-                                <h2 className="text-3xl font-black text-white tracking-tight leading-none mb-2 uppercase italic">
+                                <h2 className="text-3xl font-black text-gray-900 dark:text-white tracking-tight leading-none mb-2 uppercase italic">
                                     All Quizzes
                                 </h2>
-                                <div className="h-1 w-16 bg-gradient-to-r from-[#a6b1ff] to-transparent rounded-full" />
+                                <div className="h-1 w-16 bg-gradient-to-r from-indigo-600 dark:from-[#a6b1ff] to-transparent rounded-full" />
                             </div>
 
                             {/* Filters */}
-                            <div className="flex items-center gap-2 p-1.5 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl">
+                            <div className="flex items-center gap-2 p-1.5 bg-gray-100 dark:bg-white/5 backdrop-blur-xl border-2 border-gray-200 dark:border-white/10 rounded-2xl shadow-sm">
                                 {filters.map((filter) => {
                                     const Icon = filter.icon;
                                     const isActive = activeFilter === filter.label;
@@ -114,8 +119,8 @@ export default function Quizzes() {
                                             key={filter.label}
                                             onClick={() => setActiveFilter(filter.label)}
                                             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-300 ${isActive
-                                                ? `bg-gradient-to-r ${filter.color} text-white shadow-lg shadow-black/20 scale-105`
-                                                : 'text-white/40 dark:text-white/40 hover:text-foreground dark:hover:text-white hover:bg-white/5 hover:font-extrabold'
+                                                ? `bg-gradient-to-r ${filter.color} text-white shadow-lg shadow-black/10 dark:shadow-black/20 scale-105`
+                                                : 'text-gray-500 dark:text-white/40 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200 dark:hover:bg-white/5 hover:font-extrabold'
                                                 }`}
                                         >
                                             <Icon size={14} className={isActive ? "animate-pulse" : ""} />
@@ -137,19 +142,19 @@ export default function Quizzes() {
                             <motion.div
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                className="bg-white/5 border border-white/10 rounded-[2rem] p-12 text-center"
+                                className="bg-gray-100 dark:bg-white/5 border-2 border-gray-200 dark:border-white/10 rounded-[2rem] p-12 text-center shadow-sm"
                             >
                                 <EmptyState
                                     title={activeFilter === 'All' ? "No Quizzes Found" : `No ${activeFilter} Quizzes`}
                                     description={activeFilter === 'All'
-                                        ? "Launch your first challenge or join one to see it here."
-                                        : `There are currently no quizzes in the ${activeFilter} category.`
+                                        ? "Start your first quiz or join one to see it here!"
+                                        : `There are no quizzes in the ${activeFilter} category right now.`
                                     }
                                 />
                                 {activeFilter !== 'All' && (
                                     <button
                                         onClick={() => setActiveFilter('All')}
-                                        className="mt-6 text-[#a6b1ff] font-black uppercase text-xs tracking-widest hover:underline"
+                                        className="mt-6 text-indigo-600 dark:text-[#a6b1ff] font-black uppercase text-xs tracking-widest hover:underline"
                                     >
                                         Show All Quizzes
                                     </button>
@@ -164,6 +169,7 @@ export default function Quizzes() {
                                             quiz={quiz}
                                             index={index}
                                             onClick={() => handleQuizClick(quiz)}
+                                            isTeacher={type === "teacher"}
                                         />
                                     ))}
                                 </div>

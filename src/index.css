@@ -265,6 +265,61 @@
     background: hsl(var(--background)) !important;
   }
   
+  /* COMPREHENSIVE TEXT COLOR OVERRIDES */
+  html:not(.dark) .text-gray-300,
+  html:not(.dark) .text-gray-400,
+  html:not(.dark) .text-gray-500 {
+    color: rgb(31, 41, 55) !important; /* gray-800 */
+    font-weight: 600 !important;
+  }
+  
+  html:not(.dark) .text-gray-200 {
+    color: rgb(17, 24, 39) !important; /* gray-900 */
+    font-weight: 700 !important;
+  }
+  
+  html:not(.dark) .text-white:not(.gradient-text-shine):not(.gradient-text-shine *):not([class*="bg-gradient"]):not([class*="bg-indigo"]):not([class*="bg-purple"]):not([class*="bg-blue"]):not([class*="bg-emerald"]):not([class*="bg-amber"]):not([class*="bg-rose"]) {
+    color: rgb(17, 24, 39) !important; /* gray-900 */
+    font-weight: 700 !important;
+  }
+  
+  /* Specific overrides for muted text */
+  html:not(.dark) .text-muted-foreground {
+    color: rgb(55, 65, 81) !important; /* gray-700 */
+    font-weight: 600 !important;
+  }
+  
+  /* Headings in light mode */
+  html:not(.dark) h1:not([class*="gradient"]):not([class*="bg-clip-text"]),
+  html:not(.dark) h2:not([class*="gradient"]):not([class*="bg-clip-text"]),
+  html:not(.dark) h3:not([class*="gradient"]):not([class*="bg-clip-text"]),
+  html:not(.dark) h4:not([class*="gradient"]):not([class*="bg-clip-text"]),
+  html:not(.dark) h5:not([class*="gradient"]):not([class*="bg-clip-text"]),
+  html:not(.dark) h6:not([class*="gradient"]):not([class*="bg-clip-text"]) {
+    color: rgb(17, 24, 39) !important; /* gray-900 */
+    font-weight: 800 !important;
+  }
+  
+  /* Paragraph text */
+  html:not(.dark) p:not([class*="text-"]):not([class*="gradient"]) {
+    color: rgb(31, 41, 55) !important; /* gray-800 */
+    font-weight: 600 !important;
+  }
+  
+  /* List items */
+  html:not(.dark) li:not([class*="text-"]) {
+    color: rgb(31, 41, 55) !important; /* gray-800 */
+    font-weight: 600 !important;
+  }
+  
+  /* Span elements */
+  html:not(.dark) span.text-gray-300,
+  html:not(.dark) span.text-gray-400,
+  html:not(.dark) span.text-gray-500 {
+    color: rgb(31, 41, 55) !important; /* gray-800 */
+    font-weight: 600 !important;
+  }
+  
   /* Dialog and modal backgrounds */
   html:not(.dark) [role="dialog"],
   html:not(.dark) [role="alertdialog"],
@@ -326,16 +381,6 @@
     border-color: hsl(var(--border)) !important;
   }
   
-  /* All text that should be foreground color */
-  html:not(.dark) h1:not([class*="gradient"]),
-  html:not(.dark) h2:not([class*="gradient"]),
-  html:not(.dark) h3:not([class*="gradient"]),
-  html:not(.dark) h4:not([class*="gradient"]),
-  html:not(.dark) h5:not([class*="gradient"]),
-  html:not(.dark) h6:not([class*="gradient"]) {
-    color: hsl(var(--foreground)) !important;
-  }
-  
   /* Backdrop overlays */
   html:not(.dark) [data-radix-dialog-overlay],
   html:not(.dark) [data-radix-alert-dialog-overlay] {
@@ -357,6 +402,74 @@
   
   html:not(.dark) .to-\[#0a0a0a\] {
     --tw-gradient-to: hsl(var(--background)) !important;
+  }
+  
+  /* Background color overrides for common dark classes */
+  html:not(.dark) .bg-\[#0a0a0a\],
+  html:not(.dark) .bg-\[#12121a\],
+  html:not(.dark) .bg-\[#0d0d0d\] {
+    background: hsl(var(--background)) !important;
+  }
+  
+  /* Border color overrides */
+  html:not(.dark) .border-white\/10,
+  html:not(.dark) .border-white\/5,
+  html:not(.dark) .border-white\/20,
+  html:not(.dark) .border-white\/30 {
+    border-color: hsl(var(--border)) !important;
+  }
+  
+  /* Hover text colors */
+  html:not(.dark) .hover\:text-white:hover,
+  html:not(.dark) .hover\:text-gray-300:hover,
+  html:not(.dark) .hover\:text-gray-200:hover {
+    color: rgb(17, 24, 39) !important; /* gray-900 */
+  }
+  
+  /* Group hover text colors */
+  html:not(.dark) .group-hover\:text-white,
+  html:not(.dark) .group:hover .group-hover\:text-white {
+    color: rgb(17, 24, 39) !important; /* gray-900 */
+  }
+  
+  /* Description text */
+  html:not(.dark) [class*="Description"],
+  html:not(.dark) [class*="description"] {
+    color: rgb(55, 65, 81) !important; /* gray-700 */
+    font-weight: 600 !important;
+  }
+  
+  /* Label text */
+  html:not(.dark) label:not([class*="text-"]) {
+    color: rgb(31, 41, 55) !important; /* gray-800 */
+    font-weight: 600 !important;
+  }
+  
+  /* Button text on colored backgrounds should stay white */
+  html:not(.dark) button[class*="bg-gradient"] *,
+  html:not(.dark) button[class*="bg-indigo"] *,
+  html:not(.dark) button[class*="bg-purple"] *,
+  html:not(.dark) button[class*="bg-blue"] *,
+  html:not(.dark) button[class*="bg-emerald"] *,
+  html:not(.dark) button[class*="bg-amber"] *,
+  html:not(.dark) button[class*="bg-rose"] *,
+  html:not(.dark) [class*="bg-gradient"] button *,
+  html:not(.dark) [class*="bg-indigo"] button *,
+  html:not(.dark) [class*="bg-purple"] button *,
+  html:not(.dark) [class*="bg-blue"] button *,
+  html:not(.dark) [class*="bg-emerald"] button *,
+  html:not(.dark) [class*="bg-amber"] button *,
+  html:not(.dark) [class*="bg-rose"] button * {
+    color: white !important;
+  }
+  
+  /* Ensure colored card text stays visible */
+  html:not(.dark) [class*="from-blue-"][class*="to-indigo-"] *:not(button):not([class*="bg-gradient"]),
+  html:not(.dark) [class*="from-purple-"][class*="to-pink-"] *:not(button):not([class*="bg-gradient"]),
+  html:not(.dark) [class*="from-emerald-"][class*="to-teal-"] *:not(button):not([class*="bg-gradient"]),
+  html:not(.dark) [class*="from-amber-"][class*="to-orange-"] *:not(button):not([class*="bg-gradient"]),
+  html:not(.dark) [class*="from-rose-"][class*="to-pink-"] *:not(button):not([class*="bg-gradient"]) {
+    color: rgb(17, 24, 39) !important; /* gray-900 */
   }
 
   @supports (prefers-reduced-motion: reduce) {

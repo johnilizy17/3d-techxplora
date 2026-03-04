@@ -16,7 +16,8 @@ export default function RecentQuizzes() {
     const type = user?.accountable_type === "App\\Models\\Student" ? "student" : "teacher";
 
     const { data: quizzesData, isLoading } = useGetQuizzesQuery({ type, id: user?.id }, {
-        skip: !user?.id
+        skip: !user?.id,
+        refetchOnMountOrArgChange: true
     });
 
     const quizzes = Array.isArray(quizzesData) ? quizzesData : (quizzesData?.data || []);
@@ -68,7 +69,13 @@ export default function RecentQuizzes() {
             ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 px-6 lg:px-0 pb-6">
                     {displayQuizzes.map((quiz, index) => (
-                        <QuizCard key={quiz.id || index} quiz={quiz} index={index} onClick={() => handleQuizClick(quiz)} />
+                        <QuizCard 
+                            key={quiz.id || index} 
+                            quiz={quiz} 
+                            index={index} 
+                            onClick={() => handleQuizClick(quiz)}
+                            isTeacher={type === "teacher"}
+                        />
                     ))}
                 </div>
             )}

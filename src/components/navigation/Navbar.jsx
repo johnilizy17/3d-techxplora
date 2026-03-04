@@ -128,7 +128,7 @@ export default function Navbar() {
                         {darkMode ? (
                             <Sun className="w-5 h-5 text-amber-500" />
                         ) : (
-                            <Moon className="w-5 h-5 text-indigo-600" />
+                            <Moon color="#000" className="w-5 h-5" />
                         )}
                     </button>
 

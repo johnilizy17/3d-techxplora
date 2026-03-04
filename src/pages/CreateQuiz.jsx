@@ -14,7 +14,8 @@ import {
     CheckCircle2,
     Gamepad2,
     Info,
-    AlertTriangle
+    AlertTriangle,
+    Save
 } from 'lucide-react';
 import {
     useCreateQuizMutation,
@@ -36,6 +37,7 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { saveQuizDraft, loadQuizDraft, clearQuizDraft, hasQuizDraft } from '@/utils/quizCreationStorage';
 
 const STEPS = [
     { title: 'Basic Info', icon: BookOpen },
@@ -50,6 +52,7 @@ export default function CreateQuiz() {
     const [currentStep, setCurrentStep] = useState(1);
     const [createQuiz, { isLoading: isSubmitting }] = useCreateQuizMutation();
     const [showXpAlert, setShowXpAlert] = useState(false);
+    const [draftRestored, setDraftRestored] = useState(false);
 
     // Fetch individual data sources
     const { data: quizModesResults } = useGetQuizModesQuery();
@@ -77,6 +80,32 @@ export default function CreateQuiz() {
     });
 
     const [errors, setErrors] = useState({});
+
+    // Load saved draft on mount
+    useEffect(() => {
+        if (!draftRestored) {
+            const savedDraft = loadQuizDraft();
+            
+            if (savedDraft) {
+                setFormData(savedDraft.formData);
+                setCurrentStep(savedDraft.currentStep || 1);
+                
+                toast.success('Draft Restored!', {
+                    description: 'Your quiz creation progress has been restored',
+                    duration: 4000
+                });
+            }
+            
+            setDraftRestored(true);
+        }
+    }, [draftRestored]);
+
+    // Save draft whenever form data or step changes
+    useEffect(() => {
+        if (draftRestored && currentStep < 3) {
+            saveQuizDraft(formData, currentStep);
+        }
+    }, [formData, currentStep, draftRestored]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -160,6 +189,10 @@ export default function CreateQuiz() {
 
             await createQuiz(payload).unwrap();
             toast.success('Quiz created successfully!');
+            
+            // Clear draft after successful creation
+            clearQuizDraft();
+            
             setShowXpAlert(false);
             setCurrentStep(3);
         } catch (error) {
@@ -190,11 +223,11 @@ export default function CreateQuiz() {
             <div className="min-h-screen pb-24 lg:pb-10">
                 <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
                     {/* Sticky Progress Header */}
-                    <div className="sticky top-0 z-30 pt-4 pb-6 bg-[#0a0a0a]/80 backdrop-blur-xl border-b border-white/5 mb-8">
-                        <div className="flex items-center justify-between">
+                    <div className="sticky top-0 z-30 pt-4 pb-6 bg-white dark:bg-[#0a0a0a]/80 backdrop-blur-xl border-b border-gray-200 dark:border-white/5 mb-8">
+                        <div className="flex items-center justify-between mb-4">
                             <button
                                 onClick={handleBack}
-                                className="flex items-center gap-2 text-white/60 hover:text-white transition-colors group"
+                                className="flex items-center gap-2 text-gray-600 dark:text-white/60 hover:text-gray-900 dark:hover:text-white transition-colors group"
                             >
                                 <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
                                 <span className="font-black text-sm uppercase tracking-wider">
@@ -209,18 +242,58 @@ export default function CreateQuiz() {
                                             ? 'bg-emerald-500 text-white'
                                             : currentStep === idx + 1
                                                 ? 'bg-[#a6b1ff] text-[#0a0a0a] scale-110 shadow-lg shadow-[#a6b1ff]/20'
-                                                : 'bg-white/5 text-white/30 border border-white/10'
+                                                : 'bg-gray-200 dark:bg-white/5 text-gray-400 dark:text-white/30 border border-gray-300 dark:border-white/10'
                                             }`}>
                                             <step.icon size={18} />
                                         </div>
                                         {idx < STEPS.length - 1 && (
-                                            <div className={`w-4 sm:w-8 h-0.5 mx-1 sm:mx-2 rounded-full transition-all duration-500 ${currentStep > idx + 1 ? 'bg-emerald-500/50' : 'bg-white/10'
+                                            <div className={`w-4 sm:w-8 h-0.5 mx-1 sm:mx-2 rounded-full transition-all duration-500 ${currentStep > idx + 1 ? 'bg-emerald-500/50' : 'bg-gray-300 dark:bg-white/10'
                                                 }`} />
                                         )}
                                     </div>
                                 ))}
                             </div>
                         </div>
+
+                        {/* Draft Restored Indicator */}
+                        {draftRestored && loadQuizDraft() && currentStep < 3 && (
+                            <motion.div
+                                initial={{ opacity: 0, y: -10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="flex items-center justify-between gap-4 px-4 py-3 bg-gradient-to-r from-emerald-100 to-teal-100 dark:from-emerald-500/10 dark:to-teal-500/10 border-2 border-emerald-300 dark:border-emerald-500/20 rounded-xl shadow-sm"
+                            >
+                                <div className="flex items-center gap-2">
+                                    <Save size={16} className="text-emerald-600 dark:text-emerald-400" />
+                                    <span className="text-[10px] font-black text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">
+                                        Draft Auto-Saved
+                                    </span>
+                                </div>
+                                <button
+                                    onClick={() => {
+                                        clearQuizDraft();
+                                        setFormData({
+                                            title: '',
+                                            description: '',
+                                            duration: '',
+                                            model_id: '',
+                                            group_code: '',
+                                            class: '',
+                                            start_at: '',
+                                            end_at: '',
+                                            xp: 0,
+                                            p_xp: 0,
+                                            min_age: '',
+                                            max_age: ''
+                                        });
+                                        setCurrentStep(1);
+                                        toast.info('Draft cleared');
+                                    }}
+                                    className="text-[9px] font-bold text-emerald-700 dark:text-emerald-400 hover:text-emerald-900 dark:hover:text-emerald-300 uppercase tracking-wider underline"
+                                >
+                                    Clear Draft
+                                </button>
+                            </motion.div>
+                        )}
                     </div>
 
                     <AnimatePresence mode="wait">
@@ -437,11 +510,11 @@ const Step2 = ({ formData, handleChange, errors, handleSubmit, isSubmitting, use
                                     <Info size={20} className={isOverBudget ? 'text-rose-400' : 'text-indigo-400'} />
                                 </div>
                                 <div>
-                                    <h4 className={`text-sm font-black uppercase tracking-wider mb-1 ${isOverBudget ? 'text-rose-400' : 'text-white'}`}>
+                                    <h4 className={`text-sm font-black uppercase tracking-wider mb-1 ${isOverBudget ? 'text-rose-400' : 'text-gray-900 dark:text-white'}`}>
                                         {isOverBudget ? 'Not Enough Points' : 'Points Info'}
                                     </h4>
-                                    <p className="text-xs text-white/50 font-medium leading-relaxed">
-                                        Points Left: <span className={`${isOverBudget ? 'text-rose-400' : 'text-indigo-400'} font-bold`}>{remainingXp} Points</span>.
+                                    <p className="text-xs text-gray-600 dark:text-white/50 font-medium leading-relaxed">
+                                        Points Left: <span className={`${isOverBudget ? 'text-rose-400' : 'text-indigo-600 dark:text-indigo-400'} font-bold`}>{remainingXp} Points</span>.
                                         {isOverBudget
                                             ? " You don't have enough points to create this quiz."
                                             : " These points will be saved for this quiz until it ends."
@@ -565,7 +638,10 @@ const SuccessStep = ({ navigate }) => (
                     Go to Quizzes
                 </button>
                 <button
-                    onClick={() => window.location.reload()}
+                    onClick={() => {
+                        clearQuizDraft();
+                        window.location.reload();
+                    }}
                     className="w-full sm:w-auto px-10 py-4 rounded-2xl bg-white/5 border border-white/10 text-white font-black uppercase tracking-wider hover:bg-white/10 transition-all"
                 >
                     Create Another
@@ -591,22 +667,22 @@ const InputField = ({ label, icon: Icon, error, ...props }) => (
 
 const SelectField = ({ label, options, icon: Icon, error, ...props }) => (
     <div className="space-y-2 text-left">
-        <label className="text-xs font-black text-white/40 uppercase tracking-widest pl-1">{label}</label>
+        <label className="text-xs font-black text-gray-500 dark:text-white/40 uppercase tracking-widest pl-1">{label}</label>
         <div className="relative">
             <select
                 {...props}
-                className={`w-full bg-white/5 border ${error ? 'border-rose-500/50' : 'border-white/10'} rounded-2xl px-12 py-4 text-white appearance-none focus:outline-none focus:border-[#a6b1ff]/50 transition-all font-medium cursor-pointer`}
+                className={`w-full bg-gray-100 dark:bg-white/5 border ${error ? 'border-rose-500/50' : 'border-gray-300 dark:border-white/10'} rounded-2xl px-12 py-4 text-gray-900 dark:text-white appearance-none focus:outline-none focus:border-[#a6b1ff]/50 transition-all font-medium cursor-pointer`}
             >
-                <option value="" className="bg-[#121431]">Select option</option>
+                <option value="" className="bg-white dark:bg-[#121431] text-gray-500 dark:text-white/40">Select option</option>
                 {options.map(opt => (
-                    <option key={opt.value} value={opt.value} className="bg-[#121431]">
+                    <option key={opt.value} value={opt.value} className="bg-white dark:bg-[#121431] text-gray-900 dark:text-white">
                         {opt.label}
                     </option>
                 ))}
             </select>
-            {Icon && <Icon size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20" />}
+            {Icon && <Icon size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-white/20" />}
             <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
-                <ArrowRight size={14} className="text-white/20 rotate-90" />
+                <ArrowRight size={14} className="text-gray-400 dark:text-white/20 rotate-90" />
             </div>
         </div>
         {error && <p className="text-rose-400 text-[10px] font-bold mt-1 uppercase tracking-wider">{error}</p>}

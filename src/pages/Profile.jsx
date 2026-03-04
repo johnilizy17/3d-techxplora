@@ -67,7 +67,7 @@ export default function Profile() {
 
                         <div className="flex items-center gap-6 p-6 lg:p-8 bg-card border border-border rounded-[2.5rem] backdrop-blur-xl shadow-2xl">
                             <Avatar className="w-20 h-20 border-4 border-[#a6b1ff]/30 shadow-2xl">
-                                <AvatarImage src={user?.avatar || "https://github.com/shadcn.png"} />
+                                <AvatarImage src={user?.photo || "https://github.com/shadcn.png"} />
                                 <AvatarFallback className="bg-indigo-500 text-white text-2xl font-black italic">
                                     {user?.fullname?.charAt(0) || "U"}
                                 </AvatarFallback>

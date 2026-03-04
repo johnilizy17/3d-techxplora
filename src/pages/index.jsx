@@ -47,6 +47,7 @@ import CreateGroupTeacher from "./CreateGroup.jsx";
 import ManageCourses from "./ManageCourses.jsx";
 import CreateCourse from "./CreateCourse.jsx";
 import ViewManagedCourse from "./ViewManagedCourse.jsx";
+import CaseStudyResults from "./CaseStudyResults.jsx";
 import EditCourse from './EditCourse';
 import Docs from './Docs.jsx';
 import Pin from "./auth/Pin.jsx";
@@ -54,6 +55,7 @@ import EditQuiz from "./EditQuiz.jsx";
 import AddManual from "./AddManual.jsx";
 import KYC from "./auth/KYC.jsx";
 import Support from "./Support.jsx";
+import Toolkit from "./Toolkit.jsx";
 
 // Mapping of page names for Layout highlighting (optional)
 const PAGES = {
@@ -116,11 +118,13 @@ function PagesContent() {
         <Route path="/dashboard/profile" element={<Profile />} />
         <Route path="/dashboard/profile/edit" element={<UserProfile />} />
         <Route path="/support" element={<Support />} />
+        <Route path="/dashboard/toolkit" element={<Toolkit />} />
 
         {/* Course Directed Routes */}
         <Route path="/dashboard/courses" element={<ManageCourses />} />
         <Route path="/dashboard/courses/create" element={<CreateCourse />} />
         <Route path="/dashboard/courses/view/:courseId" element={<ViewManagedCourse />} />
+        <Route path="/dashboard/courses/:courseId/case-study-results" element={<CaseStudyResults />} />
         <Route path="/dashboard/courses/edit/:courseId" element={<EditCourse />} />
         <Route path="/auth/login" element={<Auth />} />
         <Route path="/auth/start" element={<Start />} />

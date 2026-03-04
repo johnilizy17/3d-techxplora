@@ -124,6 +124,25 @@ export default function EditCourse() {
     };
 
     const handleFileUpload = async (e, field) => {
+        // Check if this is a URL input (no files but has url property)
+        if (e.target.url) {
+            const videoUrl = e.target.url.trim();
+            
+            // Validate URL format
+            const isValidUrl = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be|drive\.google\.com|.*\.(mp4|webm|ogg)).*$/i.test(videoUrl);
+            
+            if (!isValidUrl) {
+                toast.error("Please enter a valid YouTube, Google Drive, or direct video link");
+                return;
+            }
+
+            // Set the video URL directly without uploading
+            setFormData(prev => ({ ...prev, [`${field}_url`]: videoUrl }));
+            toast.success("Video link added successfully");
+            return;
+        }
+
+        // Handle file upload
         const file = e.target.files[0];
         if (!file) return;
 
@@ -259,7 +278,7 @@ export default function EditCourse() {
 
                     <AnimatePresence mode="wait">
                         {currentStep === 1 && <Step1 formData={formData} handleChange={handleChange} onNext={() => setCurrentStep(2)} />}
-                        {currentStep === 2 && <Step2 formData={formData} handleChange={handleChange} handleFileUpload={handleFileUpload} handleLearnChange={handleLearnChange} addLearnPoint={() => setFormData(p => ({ ...p, learn: [...p.learn, ''] }))} removeLearnPoint={(i) => setFormData(p => ({ ...p, learn: p.learn.filter((_, idx) => idx !== i) }))} removeOtherVideo={removeOtherVideo} isUploading={isUploading} onNext={() => setCurrentStep(3)} onPrev={() => setCurrentStep(1)} />}
+                        {currentStep === 2 && <Step2 formData={formData} setFormData={setFormData} handleChange={handleChange} handleFileUpload={handleFileUpload} handleLearnChange={handleLearnChange} addLearnPoint={() => setFormData(p => ({ ...p, learn: [...p.learn, ''] }))} removeLearnPoint={(i) => setFormData(p => ({ ...p, learn: p.learn.filter((_, idx) => idx !== i) }))} removeOtherVideo={removeOtherVideo} isUploading={isUploading} onNext={() => setCurrentStep(3)} onPrev={() => setCurrentStep(1)} />}
                         {currentStep === 3 && <Step3Questions formData={formData} setFormData={setFormData} quizzes={quizzes} addQuestion={addQuestion} removeQuestion={(i) => setFormData(p => ({ ...p, questions: p.questions.filter((_, idx) => idx !== i) }))} updateQuestion={updateQuestion} updateOption={updateOption} addOption={addOption} onNext={() => setCurrentStep(4)} onPrev={() => setCurrentStep(2)} />}
                         {currentStep === 4 && <Step4Assessment formData={formData} setFormData={setFormData} quizzes={quizzes} onLaunch={handleSubmit} isSubmitting={isSubmitting} onPrev={() => setCurrentStep(3)} navigate={navigate} />}
                     </AnimatePresence>
@@ -290,13 +309,13 @@ const Step1 = ({ formData, handleChange, onNext }) => (
     </motion.div>
 );
 
-const Step2 = ({ formData, handleChange, handleFileUpload, handleLearnChange, addLearnPoint, removeLearnPoint, removeOtherVideo, isUploading, onNext, onPrev }) => (
+const Step2 = ({ formData, setFormData, handleChange, handleFileUpload, handleLearnChange, addLearnPoint, removeLearnPoint, removeOtherVideo, isUploading, onNext, onPrev }) => (
     <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="bg-white/5 backdrop-blur-3xl border border-white/10 rounded-[2.5rem] p-8 lg:p-12 shadow-2xl space-y-8">
         <h1 className="text-3xl font-black text-white uppercase italic">Visuals & <span className="text-[#a6b1ff]">Content</span></h1>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
             <div className="space-y-6">
-                <FileUploadField label="Banner" field="banner" url={formData.banner_url} isUploading={isUploading.banner} onUpload={handleFileUpload} />
-                <FileUploadField label="Main Video" field="video" url={formData.video_url} isUploading={isUploading.video} onUpload={handleFileUpload} isVideo />
+                <FileUploadField label="Banner" field="banner" url={formData.banner_url} isUploading={isUploading.banner} onUpload={handleFileUpload} setFormData={setFormData} />
+                <FileUploadField label="Main Video" field="video" url={formData.video_url} isUploading={isUploading.video} onUpload={handleFileUpload} isVideo setFormData={setFormData} />
             </div>
             <div className="space-y-6">
                 <div className="p-6 bg-white/5 rounded-2xl border border-white/10 space-y-4">
@@ -524,9 +543,11 @@ const SelectField = ({ label, options, icon: Icon, error, ...props }) => (
     </div>
 );
 
-const FileUploadField = ({ label, field, url, isUploading, onUpload, isVideo = false }) => {
+const FileUploadField = ({ label, field, url, isUploading, onUpload, isVideo = false, setFormData }) => {
     const inputRef = React.useRef(null);
     const [isDragging, setIsDragging] = React.useState(false);
+    const [showUrlInput, setShowUrlInput] = React.useState(false);
+    const [urlInput, setUrlInput] = React.useState('');
 
     const handleDragOver = (e) => {
         e.preventDefault();
@@ -547,35 +568,125 @@ const FileUploadField = ({ label, field, url, isUploading, onUpload, isVideo = f
         }
     };
 
+    const handleUrlSubmit = () => {
+        if (urlInput.trim()) {
+            onUpload({ target: { files: [], url: urlInput.trim() } }, field);
+            setUrlInput('');
+            setShowUrlInput(false);
+        }
+    };
+
+    const handleRemoveVideo = (e) => {
+        e.stopPropagation();
+        if (setFormData) {
+            setFormData(prev => ({ ...prev, [`${field}_url`]: '' }));
+            setShowUrlInput(false);
+            toast.success("Video removed");
+        }
+    };
+
     return (
         <div className="space-y-2">
-            <label className="text-xs font-black text-white/40 uppercase tracking-widest pl-1">{label}</label>
-            <div
-                onClick={() => inputRef.current?.click()}
-                onDragOver={handleDragOver}
-                onDragLeave={handleDragLeave}
-                onDrop={handleDrop}
-                className={`relative h-32 rounded-3xl bg-white/5 border-2 border-dashed ${isDragging ? 'border-[#a6b1ff] bg-[#a6b1ff]/10' : 'border-white/10'} hover:border-[#a6b1ff]/30 transition-all overflow-hidden group cursor-pointer`}
-            >
-                {url ? (
-                    <div className="w-full h-full relative">
-                        {isVideo ? <div className="w-full h-full flex flex-col items-center justify-center bg-black/40 gap-1"><Video size={24} className="text-emerald-400" /><span className="text-[10px] text-white/40 font-black uppercase">Ready</span></div> : <img src={url} className="w-full h-full object-cover" />}
-                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-[10px] font-black text-white uppercase underline"><span className="cursor-pointer">Change</span></div>
+            <label className="text-xs font-black text-gray-600 dark:text-white/40 uppercase tracking-widest pl-1">{label}</label>
+            
+            {isVideo && !url && (
+                <div className="flex gap-2 mb-2">
+                    <button
+                        type="button"
+                        onClick={() => setShowUrlInput(false)}
+                        className={`flex-1 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all ${
+                            !showUrlInput 
+                                ? 'bg-[#a6b1ff] text-black' 
+                                : 'bg-gray-200 dark:bg-white/5 text-gray-600 dark:text-white/40'
+                        }`}
+                    >
+                        Upload File
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => setShowUrlInput(true)}
+                        className={`flex-1 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all ${
+                            showUrlInput 
+                                ? 'bg-[#a6b1ff] text-black' 
+                                : 'bg-gray-200 dark:bg-white/5 text-gray-600 dark:text-white/40'
+                        }`}
+                    >
+                        Use Link
+                    </button>
+                </div>
+            )}
+
+            {isVideo && showUrlInput && !url ? (
+                <div className="space-y-3">
+                    <div className="p-6 rounded-3xl bg-gray-100 dark:bg-white/5 border-2 border-gray-300 dark:border-white/10">
+                        <div className="space-y-3">
+                            <input
+                                type="url"
+                                value={urlInput}
+                                onChange={(e) => setUrlInput(e.target.value)}
+                                placeholder="Paste YouTube or Google Drive link..."
+                                className="w-full px-4 py-3 rounded-xl bg-white dark:bg-black/20 border border-gray-300 dark:border-white/10 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-white/20 focus:outline-none focus:border-[#a6b1ff] transition-all text-sm"
+                            />
+                            <button
+                                type="button"
+                                onClick={handleUrlSubmit}
+                                disabled={!urlInput.trim()}
+                                className="w-full px-4 py-3 bg-[#a6b1ff] text-black rounded-xl font-bold uppercase text-xs tracking-wider hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                            >
+                                Add Video Link
+                            </button>
+                        </div>
+                        <p className="text-xs text-gray-500 dark:text-white/30 mt-3 text-center">
+                            Supports YouTube, Google Drive, and direct video links
+                        </p>
                     </div>
-                ) : (
-                    <div className="w-full h-full flex flex-col items-center justify-center gap-2 text-white/20 dark:text-white/20 hover:text-foreground dark:hover:text-white/60 transition-all hover:font-bold">
-                        {isUploading ? <Loader2 size={24} className="animate-spin text-[#a6b1ff]" /> : <UploadCloud size={24} />}
-                        <span className="text-[10px] font-black uppercase tracking-widest">{isUploading ? 'Uploading...' : (isDragging ? 'Drop File Here' : `Upload ${field}`)}</span>
-                    </div>
-                )}
-                <input
-                    ref={inputRef}
-                    type="file"
-                    className="hidden"
-                    accept={isVideo ? "video/*" : "image/*"}
-                    onChange={(e) => onUpload(e, field)}
-                />
-            </div>
+                </div>
+            ) : (
+                <div
+                    onClick={() => inputRef.current?.click()}
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
+                    className={`relative h-32 rounded-3xl bg-gray-100 dark:bg-white/5 border-2 border-dashed ${isDragging ? 'border-[#a6b1ff] bg-[#a6b1ff]/10' : 'border-gray-300 dark:border-white/10'} hover:border-[#a6b1ff]/30 transition-all overflow-hidden group cursor-pointer`}
+                >
+                    {url ? (
+                        <div className="w-full h-full relative">
+                            {isVideo ? (
+                                <div className="w-full h-full flex flex-col items-center justify-center bg-gray-200 dark:bg-black/40 gap-2">
+                                    <Video className="text-emerald-500" size={24} />
+                                    <span className="text-[10px] font-black uppercase text-gray-600 dark:text-white/60">Video Ready</span>
+                                    <button
+                                        type="button"
+                                        onClick={handleRemoveVideo}
+                                        className="mt-2 px-4 py-1 bg-rose-500 text-white rounded-lg text-xs font-bold uppercase hover:bg-rose-600 transition-colors"
+                                    >
+                                        Remove
+                                    </button>
+                                </div>
+                            ) : (
+                                <img src={url} className="w-full h-full object-cover" />
+                            )}
+                            {!isVideo && (
+                                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-[10px] font-black text-white uppercase underline">
+                                    <span className="cursor-pointer">Change</span>
+                                </div>
+                            )}
+                        </div>
+                    ) : (
+                        <div className="w-full h-full flex flex-col items-center justify-center gap-2 text-gray-400 dark:text-white/20 group-hover:text-gray-600 dark:group-hover:text-white/40 transition-colors">
+                            {isUploading ? <Loader2 size={24} className="animate-spin text-[#a6b1ff]" /> : <UploadCloud size={24} />}
+                            <span className="text-[10px] font-black uppercase tracking-widest">{isUploading ? 'Uploading...' : (isDragging ? 'Drop File Here' : `Upload ${field}`)}</span>
+                        </div>
+                    )}
+                    <input
+                        ref={inputRef}
+                        type="file"
+                        className="hidden"
+                        accept={isVideo ? "video/*" : "image/*"}
+                        onChange={(e) => onUpload(e, field)}
+                    />
+                </div>
+            )}
         </div>
     );
 };

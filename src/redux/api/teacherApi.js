@@ -190,7 +190,14 @@ export const teacherApi = baseApi.injectEndpoints({
                 method: 'PUT',
                 body: quizData,
             }),
-            invalidatesTags: (result, error, { id }) => [{ type: 'Quiz', id }],
+            invalidatesTags: (result, error, { id }) => [{ type: 'Quiz', id }, 'Quiz'],
+        }),
+        deleteQuiz: builder.mutation({
+            query: (id) => ({
+                url: `/quizzes/${id}`,
+                method: 'DELETE',
+            }),
+            invalidatesTags: ['Quiz'],
         }),
         getQuizzesByGroupId: builder.query({
             query: (groupId) => `/quizzes/group/${groupId}`,
@@ -229,6 +236,7 @@ export const {
     useGetQuizModesQuery,
     useCreateQuizMutation,
     useUpdateQuizMutation,
+    useDeleteQuizMutation,
     useGetQuizzesByGroupIdQuery,
     useGetGroupStudentsQuery,
     useGetCoursesByAdminCodeQuery,

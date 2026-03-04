@@ -57,18 +57,22 @@ export default function Groups() {
 
     return (
         <DashboardLayout>
-            <div className="min-h-screen pb-24 lg:pb-10">
-                <div className="w-full relative">
+            <div className="min-h-screen pb-24 lg:pb-10 bg-white dark:bg-black relative overflow-hidden">
+                {/* Visual Background Elements */}
+                <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-200/20 dark:bg-indigo-600/5 rounded-full blur-[120px] -mr-64 -mt-64" />
+                <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-purple-200/20 dark:bg-purple-600/5 rounded-full blur-[100px] -ml-40 -mb-40" />
+                
+                <div className="w-full relative z-10">
                     {/* Promotional Banner */}
                     <PromotionalBanner groups={groups} quizzes={quizzes} quizData={quizData} />
 
                     {/* Groups Section */}
                     <div className="px-6 lg:px-10 mt-12">
                         <div className="mb-8">
-                            <h2 className="text-3xl font-black text-white tracking-tight leading-none mb-2 uppercase italic">
+                            <h2 className="text-3xl font-black text-gray-900 dark:text-white tracking-tight leading-none mb-2 uppercase italic">
                                 All Groups
                             </h2>
-                            <div className="h-1 w-16 bg-gradient-to-r from-[#a6b1ff] to-transparent rounded-full" />
+                            <div className="h-1 w-16 bg-gradient-to-r from-purple-600 dark:from-[#a6b1ff] to-transparent rounded-full" />
                         </div>
 
                         {isLoading ? (
@@ -79,7 +83,7 @@ export default function Groups() {
                                 </div>
                             </div>
                         ) : groups.length === 0 ? (
-                            <div className="bg-white/5 border border-white/10 rounded-[2rem] p-12">
+                            <div className="bg-gray-100 dark:bg-white/5 border-2 border-gray-200 dark:border-white/10 rounded-[2rem] p-12 shadow-sm">
                                 <EmptyState title="No Groups Found" description="You haven't joined or created any groups yet." />
                             </div>
                         ) : (
@@ -357,55 +361,55 @@ const GroupCard = ({ group, index, onClick }) => {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.1 * index, duration: 0.4 }}
             onClick={onClick}
-            className="rounded-[2.5rem] bg-[#1a1a1a]/40 backdrop-blur-xl border border-white/5 hover:border-[#a6b1ff]/30 transition-all duration-500 cursor-pointer p-6 relative group overflow-hidden shadow-2xl flex flex-col min-h-[220px]"
+            className="rounded-[2.5rem] bg-white dark:bg-[#1a1a1a]/40 backdrop-blur-xl border-2 border-purple-200 dark:border-white/5 hover:border-purple-400 dark:hover:border-[#a6b1ff]/30 transition-all duration-500 cursor-pointer p-6 relative group overflow-hidden shadow-lg hover:shadow-xl flex flex-col min-h-[220px]"
         >
-            <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/[0.01] to-white/[0.04] pointer-events-none" />
-            <div className="absolute -top-12 -right-12 w-32 h-32 bg-purple-500/10 rounded-full blur-[60px] group-hover:bg-purple-500/20 transition-all duration-700" />
+            <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-purple-100/20 dark:via-white/[0.01] to-pink-100/20 dark:to-white/[0.04] pointer-events-none" />
+            <div className="absolute -top-12 -right-12 w-32 h-32 bg-purple-200/30 dark:bg-purple-500/10 rounded-full blur-[60px] group-hover:bg-purple-300/40 dark:group-hover:bg-purple-500/20 transition-all duration-700" />
 
             <div className="flex items-start gap-5 mb-8 relative z-10">
                 <div className="relative">
-                    <Avatar className="h-16 w-16 rounded-2xl group-hover:border-[#a6b1ff]/50 transition-all duration-500 shadow-xl group-hover:scale-110">
+                    <Avatar className="h-16 w-16 rounded-2xl border-2 border-purple-200 dark:border-transparent group-hover:border-purple-400 dark:group-hover:border-[#a6b1ff]/50 transition-all duration-500 shadow-xl group-hover:scale-110">
                         <AvatarImage src={group.image} className="object-cover" />
-                        <AvatarFallback className="bg-gradient-to-br from-[#a6b1ff]/20 to-[#c7aff8]/20 text-[#a6b1ff] font-black text-xl italic uppercase">
+                        <AvatarFallback className="bg-gradient-to-br from-purple-100 to-pink-100 dark:from-[#a6b1ff]/20 dark:to-[#c7aff8]/20 text-purple-700 dark:text-[#a6b1ff] font-black text-xl italic uppercase">
                             {group.title?.charAt(0) || <Users size={24} />}
                         </AvatarFallback>
                     </Avatar>
-                    <div className="absolute -bottom-2 -right-2 p-1.5 rounded-lg bg-[#0a0a0a] border border-white/10 shadow-lg">
-                        <Users size={12} className="text-[#a6b1ff]" />
+                    <div className="absolute -bottom-2 -right-2 p-1.5 rounded-lg bg-white dark:bg-[#0a0a0a] border-2 border-purple-200 dark:border-white/10 shadow-lg">
+                        <Users size={12} className="text-purple-600 dark:text-[#a6b1ff]" />
                     </div>
                 </div>
 
                 <div className="flex-1 min-w-0 pt-1">
                     <div className="flex items-center gap-2 mb-1.5">
-                        <div className={`flex items-center gap-1 px-2.5 py-0.5 rounded-full ${isActive ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'} text-[9px] font-black uppercase tracking-tighter italic shadow-sm`}>
+                        <div className={`flex items-center gap-1 px-2.5 py-0.5 rounded-full ${isActive ? 'bg-emerald-100 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-2 border-emerald-300 dark:border-emerald-500/20' : 'bg-rose-100 dark:bg-rose-500/10 text-rose-700 dark:text-rose-400 border-2 border-rose-300 dark:border-rose-500/20'} text-[9px] font-black uppercase tracking-tighter italic shadow-sm`}>
                             {isActive ? <ShieldCheck size={10} /> : <ShieldAlert size={10} />}
                             {isActive ? 'Active' : 'Disabled'}
                         </div>
-                        <span className="text-[9px] font-bold text-white/30 uppercase tracking-widest">{timeAgo(group.created_at)}</span>
+                        <span className="text-[9px] font-bold text-gray-500 dark:text-white/30 uppercase tracking-widest">{timeAgo(group.created_at)}</span>
                     </div>
-                    <h3 className="text-xl font-black text-white italic line-clamp-1 uppercase tracking-tighter group-hover:text-[#a6b1ff] transition-colors leading-tight">{group.title}</h3>
-                    <p className="text-xs text-white/40 line-clamp-1 font-medium italic mt-1">{group.description || "No group description available"}</p>
+                    <h3 className="text-xl font-black text-gray-900 dark:text-white italic line-clamp-1 uppercase tracking-tighter group-hover:text-purple-600 dark:group-hover:text-[#a6b1ff] transition-colors leading-tight">{group.title}</h3>
+                    <p className="text-xs text-gray-600 dark:text-white/40 line-clamp-1 font-medium italic mt-1">{group.description || "No description available"}</p>
                 </div>
             </div>
 
-            <div className="mt-auto flex items-center justify-between relative z-10 pt-6 border-t border-white/5">
+            <div className="mt-auto flex items-center justify-between relative z-10 pt-6 border-t-2 border-gray-200 dark:border-white/5">
                 <div className="flex -space-x-2">
                     {[1, 2].map((i) => (
-                        <div key={i} className="w-8 h-8 rounded-xl bg-white/5 border border-[#0a0a0a] flex items-center justify-center backdrop-blur-md">
-                            <span className="text-[10px] text-white/40 font-black italic">?</span>
+                        <div key={i} className="w-8 h-8 rounded-xl bg-gray-100 dark:bg-white/5 border-2 border-white dark:border-[#0a0a0a] flex items-center justify-center backdrop-blur-md">
+                            <span className="text-[10px] text-gray-500 dark:text-white/40 font-black italic">?</span>
                         </div>
                     ))}
-                    <div className="w-8 h-8 rounded-xl bg-[#a6b1ff]/10 border border-[#0a0a0a] flex items-center justify-center backdrop-blur-md">
-                        <span className="text-[9px] text-[#a6b1ff] font-black italic">10+</span>
+                    <div className="w-8 h-8 rounded-xl bg-purple-100 dark:bg-[#a6b1ff]/10 border-2 border-white dark:border-[#0a0a0a] flex items-center justify-center backdrop-blur-md">
+                        <span className="text-[9px] text-purple-700 dark:text-[#a6b1ff] font-black italic">10+</span>
                     </div>
                 </div>
 
                 <div className="flex items-center gap-3">
                     <div className="flex flex-col items-end mr-2">
-                        <span className="text-[8px] font-black text-white/20 uppercase tracking-[0.2em] leading-none mb-1">Group Code</span>
-                        <span className="text-sm font-black text-[#a6b1ff] uppercase tracking-wider leading-none italic">{group.group_code}</span>
+                        <span className="text-[8px] font-black text-gray-500 dark:text-white/20 uppercase tracking-[0.2em] leading-none mb-1">Group Code</span>
+                        <span className="text-sm font-black text-purple-600 dark:text-[#a6b1ff] uppercase tracking-wider leading-none italic">{group.group_code}</span>
                     </div>
-                    <div className="p-3 rounded-2xl bg-white/5 border border-white/10 hover:bg-[#a6b1ff] hover:text-[#0a0a0a] transition-all duration-300 group/link">
+                    <div className="p-3 rounded-2xl bg-purple-100 dark:bg-white/5 border-2 border-purple-200 dark:border-white/10 hover:bg-purple-600 dark:hover:bg-[#a6b1ff] hover:text-white dark:hover:text-[#0a0a0a] transition-all duration-300 group/link shadow-sm">
                         <ArrowUpRight size={18} className="group-hover/link:scale-110 transition-transform" />
                     </div>
                 </div>

@@ -19,13 +19,13 @@ function ModalCard({ icon, title, description, to, onClick }) {
         onClick();
         navigate(to);
       }}
-      className="glass-morphism p-6 rounded-2xl hover:bg-white/10 transition-all duration-300 text-left w-full group"
+      className="glass-morphism p-6 rounded-2xl hover:bg-white/10 transition-all duration-300 text-left w-full group border-2 border-white/10 hover:border-white/30"
     >
       <div className="text-4xl mb-3">{icon}</div>
-      <h3 className="text-xl font-bold mb-2 text-white group-hover:gradient-text-shine transition-all">
+      <h3 className="text-xl font-bold mb-2 text-white group-hover:gradient-text-shine transition-all drop-shadow-lg">
         {title}
       </h3>
-      <p className="text-gray-400 text-sm leading-relaxed">{description}</p>
+      <p className="text-gray-200 dark:text-gray-300 text-sm leading-relaxed font-semibold">{description}</p>
     </button>
   );
 }
@@ -47,9 +47,9 @@ export default function HeroSection() {
       <div className="relative z-10 max-w-6xl mx-auto px-6 py-16 md:py-20 text-center">
         <div className="animate-in fade-in slide-in-from-bottom duration-700">
           {/* Badge */}
-          <div className="mb-8 inline-flex items-center gap-2 glass-morphism px-5 py-2 rounded-full">
-            <Sparkles className="w-4 h-4 text-[#ffb585]" />
-            <span className="text-sm text-gray-300 tracking-[0.15em] uppercase font-medium">
+          <div className="mb-8 inline-flex items-center gap-2 glass-morphism px-5 py-2 rounded-full border-2 border-white/20">
+            <Sparkles className="w-4 h-4 text-amber-400" />
+            <span className="text-sm text-white font-bold tracking-[0.15em] uppercase drop-shadow-lg">
               Play, Learn, and Win Rewards
             </span>
           </div>
@@ -60,7 +60,7 @@ export default function HeroSection() {
           </h1>
 
           {/* Description */}
-          <p className="text-xl md:text-2xl text-gray-400 font-light max-w-3xl mx-auto leading-relaxed mb-12">
+          <p className="text-xl md:text-2xl text-gray-900 dark:text-gray-100 font-bold max-w-3xl mx-auto leading-relaxed mb-12 drop-shadow-sm">
             TechXplora turns learning into a fun game! Answer quiz questions, earn points, and see how you're doing.
           </p>
 

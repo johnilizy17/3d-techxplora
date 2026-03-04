@@ -89,7 +89,7 @@ export const studentApi = baseApi.injectEndpoints({
 
         // Get student profile
         getStudentProfile: builder.query({
-            query: () => `/students/${id}`,
+            query: (id) => `/students/${id}`,
             providesTags: ['Student'],
         }),
 

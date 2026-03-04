@@ -183,7 +183,7 @@ export default function Courses() {
                                             {/* Description */}
                                             <div className='flex items-center justify-between gap-1'>
                                                 {course.description && (
-                                                    <p className="text-sm text-gray-400 line-clamp-2">
+                                                    <p className="text-sm text-gray-300 dark:text-gray-300 line-clamp-2 font-medium group-hover:text-white dark:group-hover:text-white transition-colors">
                                                         {course.description}
                                                     </p>
                                                 )}

@@ -96,10 +96,119 @@ export default function FAQ() {
     const [activeTab, setActiveTab] = useState('students'); // 'students' or 'sponsors'
     const currentFaqs = activeTab === 'students' ? studentFaqs : sponsorFaqs;
 
+    // Bold colorful alternating color schemes for FAQ items
+    const colorSchemes = [
+        {
+            // Blue theme - bold and vibrant
+            lightBg: "from-blue-200 to-indigo-200",
+            lightBorder: "border-blue-500",
+            lightHover: "hover:from-blue-300 hover:to-indigo-300 hover:border-blue-600",
+            lightOpenBg: "data-[state=open]:from-blue-300 data-[state=open]:to-indigo-300",
+            lightOpenBorder: "data-[state=open]:border-blue-700",
+            darkBg: "dark:from-blue-900/50 dark:to-indigo-900/50",
+            darkBorder: "dark:border-blue-500/50",
+            darkHover: "dark:hover:from-blue-800/60 dark:hover:to-indigo-800/60 dark:hover:border-blue-400",
+            darkOpenBg: "dark:data-[state=open]:from-blue-800/70 dark:data-[state=open]:to-indigo-800/70",
+            darkOpenBorder: "dark:data-[state=open]:border-blue-400",
+            textColor: "text-blue-950 font-black",
+            hoverText: "hover:text-blue-900",
+            openText: "group-data-[state=open]:text-blue-900",
+            darkTextColor: "dark:text-blue-100 dark:font-black",
+            darkHoverText: "dark:hover:text-blue-50",
+            darkOpenText: "dark:group-data-[state=open]:text-blue-50",
+            contentText: "text-blue-950 font-extrabold",
+            darkContentText: "dark:text-blue-50 dark:font-extrabold"
+        },
+        {
+            // Purple theme - bold and vibrant
+            lightBg: "from-purple-200 to-pink-200",
+            lightBorder: "border-purple-500",
+            lightHover: "hover:from-purple-300 hover:to-pink-300 hover:border-purple-600",
+            lightOpenBg: "data-[state=open]:from-purple-300 data-[state=open]:to-pink-300",
+            lightOpenBorder: "data-[state=open]:border-purple-700",
+            darkBg: "dark:from-purple-900/50 dark:to-pink-900/50",
+            darkBorder: "dark:border-purple-500/50",
+            darkHover: "dark:hover:from-purple-800/60 dark:hover:to-pink-800/60 dark:hover:border-purple-400",
+            darkOpenBg: "dark:data-[state=open]:from-purple-800/70 dark:data-[state=open]:to-pink-800/70",
+            darkOpenBorder: "dark:data-[state=open]:border-purple-400",
+            textColor: "text-purple-950 font-black",
+            hoverText: "hover:text-purple-900",
+            openText: "group-data-[state=open]:text-purple-900",
+            darkTextColor: "dark:text-purple-100 dark:font-black",
+            darkHoverText: "dark:hover:text-purple-50",
+            darkOpenText: "dark:group-data-[state=open]:text-purple-50",
+            contentText: "text-purple-950 font-extrabold",
+            darkContentText: "dark:text-purple-50 dark:font-extrabold"
+        },
+        {
+            // Emerald theme - bold and vibrant
+            lightBg: "from-emerald-200 to-teal-200",
+            lightBorder: "border-emerald-500",
+            lightHover: "hover:from-emerald-300 hover:to-teal-300 hover:border-emerald-600",
+            lightOpenBg: "data-[state=open]:from-emerald-300 data-[state=open]:to-teal-300",
+            lightOpenBorder: "data-[state=open]:border-emerald-700",
+            darkBg: "dark:from-emerald-900/50 dark:to-teal-900/50",
+            darkBorder: "dark:border-emerald-500/50",
+            darkHover: "dark:hover:from-emerald-800/60 dark:hover:to-teal-800/60 dark:hover:border-emerald-400",
+            darkOpenBg: "dark:data-[state=open]:from-emerald-800/70 dark:data-[state=open]:to-teal-800/70",
+            darkOpenBorder: "dark:data-[state=open]:border-emerald-400",
+            textColor: "text-emerald-950 font-black",
+            hoverText: "hover:text-emerald-900",
+            openText: "group-data-[state=open]:text-emerald-900",
+            darkTextColor: "dark:text-emerald-100 dark:font-black",
+            darkHoverText: "dark:hover:text-emerald-50",
+            darkOpenText: "dark:group-data-[state=open]:text-emerald-50",
+            contentText: "text-emerald-950 font-extrabold",
+            darkContentText: "dark:text-emerald-50 dark:font-extrabold"
+        },
+        {
+            // Amber theme - bold and vibrant
+            lightBg: "from-amber-200 to-orange-200",
+            lightBorder: "border-amber-500",
+            lightHover: "hover:from-amber-300 hover:to-orange-300 hover:border-amber-600",
+            lightOpenBg: "data-[state=open]:from-amber-300 data-[state=open]:to-orange-300",
+            lightOpenBorder: "data-[state=open]:border-amber-700",
+            darkBg: "dark:from-amber-900/50 dark:to-orange-900/50",
+            darkBorder: "dark:border-amber-500/50",
+            darkHover: "dark:hover:from-amber-800/60 dark:hover:to-orange-800/60 dark:hover:border-amber-400",
+            darkOpenBg: "dark:data-[state=open]:from-amber-800/70 dark:data-[state=open]:to-orange-800/70",
+            darkOpenBorder: "dark:data-[state=open]:border-amber-400",
+            textColor: "text-amber-950 font-black",
+            hoverText: "hover:text-amber-900",
+            openText: "group-data-[state=open]:text-amber-900",
+            darkTextColor: "dark:text-amber-100 dark:font-black",
+            darkHoverText: "dark:hover:text-amber-50",
+            darkOpenText: "dark:group-data-[state=open]:text-amber-50",
+            contentText: "text-amber-950 font-extrabold",
+            darkContentText: "dark:text-amber-50 dark:font-extrabold"
+        },
+        {
+            // Rose theme - bold and vibrant
+            lightBg: "from-rose-200 to-pink-200",
+            lightBorder: "border-rose-500",
+            lightHover: "hover:from-rose-300 hover:to-pink-300 hover:border-rose-600",
+            lightOpenBg: "data-[state=open]:from-rose-300 data-[state=open]:to-pink-300",
+            lightOpenBorder: "data-[state=open]:border-rose-700",
+            darkBg: "dark:from-rose-900/50 dark:to-pink-900/50",
+            darkBorder: "dark:border-rose-500/50",
+            darkHover: "dark:hover:from-rose-800/60 dark:hover:to-pink-800/60 dark:hover:border-rose-400",
+            darkOpenBg: "dark:data-[state=open]:from-rose-800/70 dark:data-[state=open]:to-pink-800/70",
+            darkOpenBorder: "dark:data-[state=open]:border-rose-400",
+            textColor: "text-rose-950 font-black",
+            hoverText: "hover:text-rose-900",
+            openText: "group-data-[state=open]:text-rose-900",
+            darkTextColor: "dark:text-rose-100 dark:font-black",
+            darkHoverText: "dark:hover:text-rose-50",
+            darkOpenText: "dark:group-data-[state=open]:text-rose-50",
+            contentText: "text-rose-950 font-extrabold",
+            darkContentText: "dark:text-rose-50 dark:font-extrabold"
+        }
+    ];
+
     return (
         <div className="w-full max-w-4xl mx-auto px-6 py-24">
             <div className="text-center mb-16">
-                <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-8 tracking-tight font-['Bricolage_Grotesque']">
+                <h2 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-8 tracking-tight font-['Bricolage_Grotesque'] drop-shadow-sm">
                     Questions & Answers
                 </h2>
 
@@ -109,7 +218,7 @@ export default function FAQ() {
                         onClick={() => setActiveTab('students')}
                         className={`px-8 py-3 rounded-xl transition-all duration-500 font-bold tracking-wide text-sm ${activeTab === 'students'
                             ? 'bg-gradient-to-r from-[#a6b1ff] to-[#c7aff8] text-[#0a0a0a] shadow-lg scale-[1.02]'
-                            : 'text-muted-foreground hover:text-foreground'
+                            : 'text-gray-700 dark:text-muted-foreground hover:text-gray-900 dark:hover:text-foreground'
                             }`}
                     >
                         Students/Teachers
@@ -118,13 +227,13 @@ export default function FAQ() {
                         onClick={() => setActiveTab('sponsors')}
                         className={`px-8 py-3 rounded-xl transition-all duration-500 font-bold tracking-wide text-sm ${activeTab === 'sponsors'
                             ? 'bg-gradient-to-r from-[#c7aff8] to-[#ffb585] text-[#0a0a0a] shadow-lg scale-[1.02]'
-                            : 'text-muted-foreground hover:text-foreground'
+                            : 'text-gray-700 dark:text-muted-foreground hover:text-gray-900 dark:hover:text-foreground'
                             }`}
                     >
                         Sponsors/Partners
                     </button>
                 </div>
-                <p className="text-muted-foreground text-lg font-light tracking-wide max-w-2xl mx-auto">
+                <p className="text-gray-800 dark:text-gray-200 text-lg font-bold tracking-wide max-w-2xl mx-auto">
                     {activeTab === 'students'
                         ? "Everything you need to know about using TechXplora!"
                         : "How your company can help students learn and grow."}
@@ -132,22 +241,27 @@ export default function FAQ() {
             </div>
 
             <Accordion type="single" collapsible className="w-full space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
-                {currentFaqs.map((faq, index) => (
-                    <AccordionItem
-                        key={`${activeTab}-${index}`}
-                        value={`item-${index}`}
-                        className="border border-border rounded-2xl px-6 bg-card hover:bg-accent data-[state=open]:bg-accent data-[state=open]:border-[#a6b1ff]/20 transition-all duration-300"
-                    >
-                        <AccordionTrigger className="text-foreground hover:text-[#a6b1ff] text-lg font-semibold py-6 text-left hover:no-underline transition-colors group">
-                            <span className="group-data-[state=open]:text-[#a6b1ff] transition-colors">
-                                {faq.question}
-                            </span>
-                        </AccordionTrigger>
-                        <AccordionContent className="text-muted-foreground text-base leading-relaxed pb-6 font-light">
-                            {faq.answer}
-                        </AccordionContent>
-                    </AccordionItem>
-                ))}
+                {currentFaqs.map((faq, index) => {
+                    // Cycle through color schemes
+                    const colorScheme = colorSchemes[index % colorSchemes.length];
+                    
+                    return (
+                        <AccordionItem
+                            key={`${activeTab}-${index}`}
+                            value={`item-${index}`}
+                            className={`border-2 ${colorScheme.lightBorder} ${colorScheme.darkBorder} rounded-2xl px-6 bg-gradient-to-br ${colorScheme.lightBg} ${colorScheme.darkBg} ${colorScheme.lightHover} ${colorScheme.darkHover} ${colorScheme.lightOpenBg} ${colorScheme.darkOpenBg} ${colorScheme.lightOpenBorder} ${colorScheme.darkOpenBorder} transition-all duration-300 shadow-lg hover:shadow-xl`}
+                        >
+                            <AccordionTrigger className={`${colorScheme.textColor} ${colorScheme.darkTextColor} ${colorScheme.hoverText} ${colorScheme.darkHoverText} text-lg py-6 text-left hover:no-underline transition-colors group uppercase italic tracking-tight`}>
+                                <span className={`${colorScheme.openText} ${colorScheme.darkOpenText} transition-colors`}>
+                                    {faq.question}
+                                </span>
+                            </AccordionTrigger>
+                            <AccordionContent className={`${colorScheme.contentText} ${colorScheme.darkContentText} text-base leading-relaxed pb-6`}>
+                                {faq.answer}
+                            </AccordionContent>
+                        </AccordionItem>
+                    );
+                })}
             </Accordion>
         </div>
     );

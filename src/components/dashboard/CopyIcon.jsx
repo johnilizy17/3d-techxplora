@@ -20,9 +20,9 @@ export default function CopyIcon({ code, className }) {
             title="Copy code"
         >
             {copied ? (
-                <Check size={14} className="text-green-400" />
+                <Check size={14} color='green' className="text-green-400" />
             ) : (
-                <Copy size={14} className="text-gray-400 group-hover:text-white" />
+                <Copy size={14} color='green' className="text-dark-400" />
             )}
         </button>
     );

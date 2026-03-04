@@ -26,54 +26,110 @@ import { Button } from "@/components/ui/button";
 const learnSteps = [
   {
     icon: UserPlus,
-    title: "Sign up for free",
-    description: "Choose Student or Teacher - it's quick and easy!",
-    color: "#a6b1ff",
+    title: "Sign Up Free!",
+    description: "Pick Student or Teacher - super quick and easy!",
+    color: "#6366f1", // indigo
+    bgGradient: "from-blue-400 to-indigo-500",
+    cardBg: "from-blue-50 to-indigo-50",
+    cardBorder: "border-blue-300",
+    cardHover: "hover:from-blue-100 hover:to-indigo-100 hover:border-blue-400",
+    darkCardBg: "dark:from-blue-900/50 dark:to-indigo-900/50",
+    darkCardBorder: "dark:border-blue-500/50",
+    darkCardHover: "dark:hover:from-blue-800/60 dark:hover:to-indigo-800/60 dark:hover:border-blue-400",
   },
   {
     icon: Hash,
-    title: "Enter your class code",
-    description: "Type in the code your teacher gives you.",
-    color: "#c7aff8",
+    title: "Enter Your Code",
+    description: "Type the code your teacher gives you.",
+    color: "#8b5cf6", // purple
+    bgGradient: "from-purple-400 to-pink-500",
+    cardBg: "from-purple-50 to-pink-50",
+    cardBorder: "border-purple-300",
+    cardHover: "hover:from-purple-100 hover:to-pink-100 hover:border-purple-400",
+    darkCardBg: "dark:from-purple-900/50 dark:to-pink-900/50",
+    darkCardBorder: "dark:border-purple-500/50",
+    darkCardHover: "dark:hover:from-purple-800/60 dark:hover:to-pink-800/60 dark:hover:border-purple-400",
   },
   {
     icon: Sparkles,
-    title: "Play and earn points",
-    description: "Answer questions every day and win coins!",
-    color: "#ffb585",
+    title: "Play & Win Points!",
+    description: "Answer fun questions and collect coins!",
+    color: "#f59e0b", // amber
+    bgGradient: "from-amber-400 to-orange-500",
+    cardBg: "from-amber-50 to-orange-50",
+    cardBorder: "border-amber-300",
+    cardHover: "hover:from-amber-100 hover:to-orange-100 hover:border-amber-400",
+    darkCardBg: "dark:from-amber-900/50 dark:to-orange-900/50",
+    darkCardBorder: "dark:border-amber-500/50",
+    darkCardHover: "dark:hover:from-amber-800/60 dark:hover:to-orange-800/60 dark:hover:border-amber-400",
   },
   {
     icon: Trophy,
-    title: "See how you're doing",
-    description: "Check your score and compete with friends!",
-    color: "#a8d8ff",
+    title: "Check Your Score!",
+    description: "See how you're doing and race with friends!",
+    color: "#10b981", // emerald
+    bgGradient: "from-emerald-400 to-teal-500",
+    cardBg: "from-emerald-50 to-teal-50",
+    cardBorder: "border-emerald-300",
+    cardHover: "hover:from-emerald-100 hover:to-teal-100 hover:border-emerald-400",
+    darkCardBg: "dark:from-emerald-900/50 dark:to-teal-900/50",
+    darkCardBorder: "dark:border-emerald-500/50",
+    darkCardHover: "dark:hover:from-emerald-800/60 dark:hover:to-teal-800/60 dark:hover:border-emerald-400",
   }
 ];
 
 const sponsorSteps = [
   {
     icon: Building2,
-    title: "Create a challenge",
-    description: "Pick a topic and set up your quiz challenge.",
-    color: "#a6b1ff",
+    title: "Create a Challenge",
+    description: "Pick a fun topic and set up your quiz!",
+    color: "#6366f1", // indigo
+    bgGradient: "from-blue-400 to-indigo-500",
+    cardBg: "from-blue-50 to-indigo-50",
+    cardBorder: "border-blue-300",
+    cardHover: "hover:from-blue-100 hover:to-indigo-100 hover:border-blue-400",
+    darkCardBg: "dark:from-blue-900/50 dark:to-indigo-900/50",
+    darkCardBorder: "dark:border-blue-500/50",
+    darkCardHover: "dark:hover:from-blue-800/60 dark:hover:to-indigo-800/60 dark:hover:border-blue-400",
   },
   {
     icon: Rocket,
-    title: "Invite schools to join",
-    description: "Share with schools and get students excited!",
-    color: "#c7aff8",
+    title: "Invite Schools",
+    description: "Share with schools and get kids excited!",
+    color: "#8b5cf6", // purple
+    bgGradient: "from-purple-400 to-pink-500",
+    cardBg: "from-purple-50 to-pink-50",
+    cardBorder: "border-purple-300",
+    cardHover: "hover:from-purple-100 hover:to-pink-100 hover:border-purple-400",
+    darkCardBg: "dark:from-purple-900/50 dark:to-pink-900/50",
+    darkCardBorder: "dark:border-purple-500/50",
+    darkCardHover: "dark:hover:from-purple-800/60 dark:hover:to-pink-800/60 dark:hover:border-purple-400",
   },
   {
     icon: Share2,
-    title: "Students play and learn",
-    description: "Rewards and scores keep students motivated.",
-    color: "#ffb585",
+    title: "Kids Play & Learn",
+    description: "Rewards and scores keep them motivated!",
+    color: "#f59e0b", // amber
+    bgGradient: "from-amber-400 to-orange-500",
+    cardBg: "from-amber-50 to-orange-50",
+    cardBorder: "border-amber-300",
+    cardHover: "hover:from-amber-100 hover:to-orange-100 hover:border-amber-400",
+    darkCardBg: "dark:from-amber-900/50 dark:to-orange-900/50",
+    darkCardBorder: "dark:border-amber-500/50",
+    darkCardHover: "dark:hover:from-amber-800/60 dark:hover:to-orange-800/60 dark:hover:border-amber-400",
   },
   {
     icon: LineChart,
-    title: "See the results",
-    description: "Get reports showing how students did.",
-    color: "#a8d8ff",
+    title: "See the Results",
+    description: "Get cool reports showing how kids did!",
+    color: "#10b981", // emerald
+    bgGradient: "from-emerald-400 to-teal-500",
+    cardBg: "from-emerald-50 to-teal-50",
+    cardBorder: "border-emerald-300",
+    cardHover: "hover:from-emerald-100 hover:to-teal-100 hover:border-emerald-400",
+    darkCardBg: "dark:from-emerald-900/50 dark:to-teal-900/50",
+    darkCardBorder: "dark:border-emerald-500/50",
+    darkCardHover: "dark:hover:from-emerald-800/60 dark:hover:to-teal-800/60 dark:hover:border-emerald-400",
   }
 ];
 
@@ -120,7 +176,7 @@ export default function HowItWorks() {
     >
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-6xl font-bold mb-8 text-foreground tracking-tight">
+          <h2 className="text-4xl md:text-6xl font-bold mb-8 text-gray-900 dark:text-white tracking-tight drop-shadow-sm">
             How It Works
           </h2>
 
@@ -180,21 +236,20 @@ export default function HowItWorks() {
                       }
                     }
                   }}
-                  className="interactive relative h-full glass-morphism bg-card border-border p-8 group hover:border-[#a6b1ff]/30 transition-all duration-500 cursor-pointer"
+                  className={`interactive relative h-full bg-gradient-to-br ${step.cardBg} ${step.darkCardBg} border-2 ${step.cardBorder} ${step.darkCardBorder} p-8 group ${step.cardHover} ${step.darkCardHover} transition-all duration-500 cursor-pointer shadow-lg hover:shadow-xl`}
                 >
                   <div className="relative space-y-6">
                     <div
-                      className="w-16 h-16 rounded-2xl flex items-center justify-center bg-gradient-to-br from-accent/50 to-transparent border border-border group-hover:scale-110 transition-transform duration-500"
-                      style={{ boxShadow: `0 0 40px ${step.color}20` }}
+                      className={`w-16 h-16 rounded-2xl flex items-center justify-center bg-gradient-to-br ${step.bgGradient} border-2 border-white/30 dark:border-white/10 group-hover:scale-110 group-hover:rotate-3 transition-all duration-500 shadow-lg`}
                     >
-                      <Icon className="w-8 h-8" style={{ color: step.color }} />
+                      <Icon className="w-8 h-8 text-white drop-shadow-lg" />
                     </div>
 
                     <div className="space-y-3">
-                      <h3 className="text-xl font-bold text-foreground group-hover:text-[#a6b1ff] transition-colors">
+                      <h3 className="text-xl font-black text-gray-900 dark:text-gray-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-300 transition-colors uppercase italic tracking-tight">
                         {step.title}
                       </h3>
-                      <p className="text-muted-foreground text-sm leading-relaxed font-light">
+                      <p className="text-gray-800 dark:text-gray-200 text-sm leading-relaxed font-bold group-hover:text-gray-900 dark:group-hover:text-gray-100 transition-colors">
                         {step.description}
                       </p>
                     </div>
@@ -225,7 +280,7 @@ export default function HowItWorks() {
                 <ChevronRight className="w-5 h-5" />
               </Button>
             </div>
-            <p className="text-muted-foreground text-sm font-medium tracking-wide">
+            <p className="text-gray-700 dark:text-gray-200 text-sm font-bold tracking-wide">
               No credit card needed - it's free!
             </p>
           </div>
@@ -251,7 +306,7 @@ export default function HowItWorks() {
                 <ChevronRight className="w-5 h-5" />
               </Button>
             </div>
-            <p className="text-muted-foreground text-sm font-medium tracking-wide">
+            <p className="text-gray-700 dark:text-gray-200 text-sm font-bold tracking-wide">
               Help students learn and make a difference!
             </p>
           </div>
@@ -260,25 +315,25 @@ export default function HowItWorks() {
         {/* Video Section */}
         <div className="mt-40 max-w-5xl mx-auto text-center">
           <div className="mb-12 space-y-4">
-            <h3 className="text-3xl md:text-4xl font-bold text-foreground tracking-tight">
+            <h3 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white tracking-tight drop-shadow-sm">
               See TechXplora in 1 Minute
             </h3>
-            <p className="text-muted-foreground text-lg md:text-xl font-light max-w-3xl mx-auto leading-relaxed">
+            <p className="text-gray-800 dark:text-gray-200 text-lg md:text-xl font-bold max-w-3xl mx-auto leading-relaxed">
               Watch how students play quizzes, earn rewards, and track their progress. 
               See how teachers and schools create fun challenges!
             </p>
           </div>
 
-          <div className="relative aspect-video rounded-3xl overflow-hidden glass-morphism border border-border shadow-[0_0_80px_rgba(166,177,255,0.1)] group bg-gray-900 dark:bg-gray-900">
+          <div className="relative aspect-video rounded-3xl overflow-hidden border-2 border-gray-300 dark:border-border shadow-2xl group bg-gray-900">
             {/* Video Banner Image */}
             <img 
               src="/video.png" 
               alt="TechXplora Demo" 
-              className="absolute inset-0 w-full h-full object-cover z-0 opacity-90"
+              className="absolute inset-0 w-full h-full object-cover z-0"
             />
 
             {/* Overlay on hover - adapts to theme */}
-            <div className="absolute inset-0 bg-black/20 dark:bg-black/30 group-hover:bg-black/40 dark:group-hover:bg-black/50 transition-all duration-300 z-[1]" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-black/40 group-hover:from-black/70 group-hover:via-black/30 group-hover:to-black/50 transition-all duration-300 z-[1]" />
 
             <div
               className="absolute inset-0 flex items-center justify-center z-10 cursor-pointer group/play"
@@ -351,7 +406,7 @@ export default function HowItWorks() {
             <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-[#a6b1ff] to-[#c7aff8] bg-clip-text text-transparent italic">
               Account Registration
             </DialogTitle>
-            <DialogDescription className="text-muted-foreground mt-2">
+            <DialogDescription className="text-gray-700 dark:text-muted-foreground mt-2 font-medium">
               Choose your role to start your journey with TechXplora.
             </DialogDescription>
           </DialogHeader>

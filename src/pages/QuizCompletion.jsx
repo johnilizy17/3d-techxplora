@@ -25,6 +25,7 @@ import { selectCurrentUser, selectTempStorage } from '@/redux/slices/authSlice';
 import { useGetQuestionsByQuizIdQuery, useSubmitQuizMutation, useVerifyQuizQuery } from '@/redux/api/questionApi';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { saveQuizProgress, loadQuizProgress, clearQuizProgress, hasQuizProgress, clearExpiredProgress } from '@/utils/quizStorage';
 
 export default function QuizCompletion() {
     const navigate = useNavigate();
@@ -54,10 +55,58 @@ export default function QuizCompletion() {
     const [showResults, setShowResults] = useState(false);
     const [score, setScore] = useState(0);
     const [resultData, setResultData] = useState(null);
+    const [progressRestored, setProgressRestored] = useState(false);
 
     const currentQuestion = questions[currentIndex];
 
-    const finalizeQuiz = async () => {
+    // Load saved progress on mount
+    useEffect(() => {
+        // Clear any expired progress first
+        clearExpiredProgress();
+        
+        if (quizCode && !progressRestored && questions.length > 0) {
+            const savedProgress = loadQuizProgress(quizCode);
+            
+            if (savedProgress) {
+                // Restore progress
+                setCurrentIndex(savedProgress.currentIndex || 0);
+                setSelectedAnswers(savedProgress.selectedAnswers || {});
+                setTimeLeft(savedProgress.timeLeft || 30);
+                
+                toast.success('Progress Restored!', {
+                    description: `Continuing from question ${(savedProgress.currentIndex || 0) + 1} of ${questions.length}`,
+                    duration: 4000
+                });
+            }
+            
+            setProgressRestored(true);
+        }
+    }, [quizCode, progressRestored, questions.length]);
+
+    // Save progress whenever state changes
+    useEffect(() => {
+        if (quizCode && progressRestored && !showResults && questions.length > 0) {
+            const progressData = {
+                currentIndex,
+                selectedAnswers,
+                timeLeft,
+                quizCode,
+                quizTitle: quiz.title,
+                totalQuestions: questions.length
+            };
+            
+            saveQuizProgress(quizCode, progressData);
+        }
+    }, [currentIndex, selectedAnswers, timeLeft, quizCode, progressRestored, showResults, questions.length, quiz.title]);
+
+    // Clear progress when quiz is completed
+    useEffect(() => {
+        if (showResults && quizCode) {
+            clearQuizProgress(quizCode);
+        }
+    }, [showResults, quizCode]);
+
+    const finalizeQuiz = useCallback(async () => {
         // Calculate score locally for immediate feedback, 
         // but normally we'd wait for backend confirmation
         let correctCount = 0;
@@ -84,9 +133,8 @@ export default function QuizCompletion() {
             }
         });
 
-        const xpEarned = Math.round((correctCount / questions.length) * (quiz.xp || 0));
+        const xpEarned = Math.round((correctCount) * (quiz.p_xp || 0));
         setScore(correctCount);
-
         try {
             const submissionPayload = {
                 student_id: user.id,
@@ -116,7 +164,7 @@ export default function QuizCompletion() {
             // Even if submission fails, we show local results for UX
             setShowResults(true);
         }
-    };
+    }, [questions, selectedAnswers, quiz, user, submitQuiz, navigate]);
 
     const handleNext = useCallback(() => {
         if (currentIndex < questions.length - 1) {
@@ -227,7 +275,7 @@ export default function QuizCompletion() {
                                     <Trophy size={48} />
                                 </motion.div>
                                 <h2 className="text-3xl md:text-5xl font-black text-white italic tracking-tighter uppercase">Quiz <span className="text-[#a6b1ff]">Complete!</span></h2>
-                                <p className="text-white/40 font-medium italic uppercase tracking-widest text-sm">Here's How You Did</p>
+                                <p className="text-red/40 font-medium italic uppercase tracking-widest text-sm">You have already taken this quiz, the result show is just for display</p>
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -270,9 +318,9 @@ export default function QuizCompletion() {
 
     return (
         <DashboardLayout>
-            <div className="min-h-screen pb-24 relative overflow-hidden">
+            <div className="min-h-screen pb-24 relative overflow-hidden bg-white dark:bg-black">
                 {/* Decorative BG */}
-                <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-600/5 rounded-full blur-[120px] -mr-64 -mt-64" />
+                <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-200/30 dark:bg-indigo-600/5 rounded-full blur-[120px] -mr-64 -mt-64" />
 
                 <div className="max-w-5xl mx-auto px-6 lg:px-10 py-12 relative z-10 mt-8">
                     {/* Header Controls */}
@@ -283,7 +331,7 @@ export default function QuizCompletion() {
                                     initial={{ opacity: 0, x: -10 }}
                                     animate={{ opacity: 1, x: 0 }}
                                     onClick={() => navigate(`/dashboard/quizzes/details?code=${quiz.quiz_code}`)}
-                                    className="flex items-center gap-2 text-[10px] font-black text-white/20 uppercase tracking-[0.2em] hover:text-[#a6b1ff] transition-colors group"
+                                    className="flex items-center gap-2 text-[10px] font-black text-gray-400 dark:text-white/20 uppercase tracking-[0.2em] hover:text-indigo-600 dark:hover:text-[#a6b1ff] transition-colors group"
                                 >
                                     <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" />
                                     Back to Info
@@ -293,38 +341,50 @@ export default function QuizCompletion() {
                                 <motion.div
                                     initial={{ opacity: 0, x: -10 }}
                                     animate={{ opacity: 1, x: 0 }}
-                                    className="flex items-center gap-2 text-[10px] font-black text-[#a6b1ff] uppercase tracking-[0.3em] italic"
+                                    className="flex items-center gap-2 text-[10px] font-black text-indigo-600 dark:text-[#a6b1ff] uppercase tracking-[0.3em] italic"
                                 >
                                     <Target size={12} />
                                     Node {currentIndex + 1} of {questions.length} Active
                                 </motion.div>
-                                <h2 className="text-2xl md:text-4xl font-black text-white uppercase italic tracking-tighter">Tactical Engagement</h2>
+                                <h2 className="text-2xl md:text-4xl font-black text-gray-900 dark:text-white uppercase italic tracking-tighter">Tactical Engagement</h2>
+                                {progressRestored && loadQuizProgress(quizCode) && (
+                                    <motion.div
+                                        initial={{ opacity: 0, y: -10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-emerald-100 to-teal-100 dark:from-emerald-500/10 dark:to-teal-500/10 border-2 border-emerald-300 dark:border-emerald-500/20 rounded-xl shadow-sm"
+                                    >
+                                        <CheckCircle2 size={14} className="text-emerald-600 dark:text-emerald-400" />
+                                        <span className="text-[9px] font-black text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">
+                                            Progress Restored
+                                        </span>
+                                    </motion.div>
+                                )}
                             </div>
                         </div>
 
-                        <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-[2rem] p-6 flex items-center gap-6">
+                        <div className="bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-white/5 dark:to-white/5 backdrop-blur-xl border-2 border-blue-300 dark:border-white/10 rounded-[2rem] p-6 flex items-center gap-6 shadow-lg">
                             <div className="flex flex-col items-end">
-                                <p className="text-[10px] font-black text-white/20 uppercase tracking-[0.2em]">Time Left</p>
+                                <p className="text-[10px] font-black text-blue-700 dark:text-white/20 uppercase tracking-[0.2em]">Time Left</p>
                                 <div className={cn(
                                     "flex items-center gap-2 font-mono text-3xl font-black italic transition-colors",
-                                    timeLeft <= 10 ? "text-rose-500 animate-pulse" : "text-white"
+                                    timeLeft <= 10 ? "text-rose-600 dark:text-rose-500 animate-pulse" : "text-blue-900 dark:text-white"
                                 )}>
                                     <Clock size={24} />
                                     {timeLeft.toString().padStart(2, '0')}s
                                 </div>
                             </div>
-                            <div className="w-12 h-12 rounded-2xl bg-[#a6b1ff]/10 flex items-center justify-center text-[#a6b1ff]">
+                            <div className="w-12 h-12 rounded-2xl bg-indigo-200 dark:bg-[#a6b1ff]/10 flex items-center justify-center text-indigo-700 dark:text-[#a6b1ff]">
                                 <Zap size={24} fill="currentColor" />
                             </div>
                         </div>
                     </div>
 
                     {/* Progress Bar */}
-                    <div className="h-1.5 w-full bg-white/5 rounded-full mb-16 overflow-hidden">
+                    <div className="h-1.5 w-full bg-gray-200 dark:bg-white/5 rounded-full mb-16 overflow-hidden shadow-inner">
                         <motion.div
                             initial={{ width: 0 }}
                             animate={{ width: `${((currentIndex + 1) / questions.length) * 100}%` }}
-                            className="h-full bg-gradient-to-r from-indigo-500 to-[#a6b1ff] shadow-[0_0_20px_rgba(166,177,255,0.4)]"
+                            className="h-full bg-gradient-to-r from-indigo-500 to-purple-600 dark:from-indigo-500 dark:to-[#a6b1ff] shadow-[0_0_20px_rgba(99,102,241,0.4)] dark:shadow-[0_0_20px_rgba(166,177,255,0.4)]"
                         />
                     </div>
 
@@ -339,17 +399,17 @@ export default function QuizCompletion() {
                                     exit={{ opacity: 0, y: -30 }}
                                     className="space-y-8"
                                 >
-                                    <div className="bg-[#1a1a1a]/40 backdrop-blur-3xl border border-white/10 rounded-[3rem] p-10 lg:p-12 relative overflow-hidden group shadow-2xl">
-                                        <div className="absolute top-0 right-0 p-8 opacity-5">
+                                    <div className="bg-white dark:bg-[#1a1a1a]/40 backdrop-blur-3xl border-2 border-indigo-200 dark:border-white/10 rounded-[3rem] p-10 lg:p-12 relative overflow-hidden group shadow-2xl">
+                                        <div className="absolute top-0 right-0 p-8 opacity-5 dark:opacity-5">
                                             <Brain size={140} />
                                         </div>
 
                                         <div className="relative z-10 space-y-6">
-                                            <div className="flex items-center gap-3 text-[#a6b1ff]">
+                                            <div className="flex items-center gap-3 text-indigo-600 dark:text-[#a6b1ff]">
                                                 <Target size={18} />
                                                 <span className="text-[10px] font-black uppercase tracking-[0.2em]">Primary Objective</span>
                                             </div>
-                                            <h3 className="text-2xl lg:text-3xl font-black text-white leading-tight uppercase italic tracking-tighter">
+                                            <h3 className="text-2xl lg:text-3xl font-black text-gray-900 dark:text-white leading-tight uppercase italic tracking-tighter">
                                                 {currentQuestion?.question}
                                             </h3>
                                         </div>
@@ -369,15 +429,15 @@ export default function QuizCompletion() {
                                                     className={cn(
                                                         "h-20 md:h-24 px-6 md:px-8 rounded-2xl md:rounded-[2rem] flex items-center gap-4 md:gap-6 transition-all border-2 text-left relative overflow-hidden group",
                                                         isSelected
-                                                            ? "bg-[#a6b1ff] border-[#a6b1ff] text-[#0a0a0a] shadow-2xl shadow-[#a6b1ff]/30"
-                                                            : "bg-white/5 border-white/5 text-white/60 hover:bg-white/10 hover:border-white/10"
+                                                            ? "bg-gradient-to-r from-indigo-500 to-purple-600 dark:from-[#a6b1ff] dark:to-[#a6b1ff] border-indigo-600 dark:border-[#a6b1ff] text-white dark:text-[#0a0a0a] shadow-2xl shadow-indigo-500/30 dark:shadow-[#a6b1ff]/30"
+                                                            : "bg-gray-100 dark:bg-white/5 border-gray-300 dark:border-white/5 text-gray-700 dark:text-white/60 hover:bg-gray-200 dark:hover:bg-white/10 hover:border-gray-400 dark:hover:border-white/10 hover:shadow-lg"
                                                     )}
                                                 >
                                                     <div className={cn(
                                                         "w-8 h-8 md:w-10 md:h-10 rounded-lg md:rounded-xl flex items-center justify-center font-black italic shrink-0",
                                                         isSelected
-                                                            ? "bg-black/10 text-black"
-                                                            : "bg-white/5 text-white/30"
+                                                            ? "bg-white/20 dark:bg-black/10 text-white dark:text-black"
+                                                            : "bg-gray-200 dark:bg-white/5 text-gray-600 dark:text-white/30"
                                                     )}>
                                                         {String.fromCharCode(65 + idx)}
                                                     </div>
@@ -387,7 +447,7 @@ export default function QuizCompletion() {
                                                     {isSelected && (
                                                         <motion.div
                                                             layoutId="check"
-                                                            className="h-6 w-6 rounded-full bg-black/10 flex items-center justify-center"
+                                                            className="h-6 w-6 rounded-full bg-white/20 dark:bg-black/10 flex items-center justify-center"
                                                         >
                                                             <CheckCircle2 size={16} />
                                                         </motion.div>
@@ -399,8 +459,8 @@ export default function QuizCompletion() {
                                 </motion.div>
                             </AnimatePresence>
 
-                            <div className="flex items-center justify-between pt-8 border-t border-white/5">
-                                <div className="flex items-center gap-2 text-white/20 italic">
+                            <div className="flex items-center justify-between pt-8 border-t-2 border-gray-200 dark:border-white/5">
+                                <div className="flex items-center gap-2 text-gray-500 dark:text-white/20 italic">
                                     <Shield size={16} />
                                     <span className="text-[10px] font-black uppercase tracking-widest">Protocol Secured</span>
                                 </div>
@@ -409,7 +469,7 @@ export default function QuizCompletion() {
                                     {isLearningMode && currentIndex > 0 && (
                                         <button
                                             onClick={() => setCurrentIndex(prev => prev - 1)}
-                                            className="h-16 md:h-20 px-6 md:px-8 bg-white/5 border border-white/10 text-white rounded-2xl md:rounded-[2.5rem] font-black uppercase tracking-widest text-[10px] sm:text-xs flex items-center gap-3 hover:bg-white/10 transition-all active:scale-95"
+                                            className="h-16 md:h-20 px-6 md:px-8 bg-gray-200 dark:bg-white/5 border-2 border-gray-300 dark:border-white/10 text-gray-700 dark:text-white rounded-2xl md:rounded-[2.5rem] font-black uppercase tracking-widest text-[10px] sm:text-xs flex items-center gap-3 hover:bg-gray-300 dark:hover:bg-white/10 transition-all active:scale-95 shadow-sm"
                                         >
                                             <ChevronLeft size={20} />
                                             Prev Node
@@ -419,7 +479,7 @@ export default function QuizCompletion() {
                                     <button
                                         onClick={handleNext}
                                         disabled={isSubmittingQuiz}
-                                        className="h-16 md:h-20 px-8 md:px-12 bg-white text-black rounded-2xl md:rounded-[2.5rem] font-black uppercase tracking-widest text-[10px] sm:text-xs flex items-center gap-3 md:gap-4 hover:bg-[#a6b1ff] transition-all shadow-2xl shadow-indigo-500/10 active:scale-95 group/btn"
+                                        className="h-16 md:h-20 px-8 md:px-12 bg-gradient-to-r from-indigo-500 to-purple-600 dark:from-white dark:to-white hover:from-indigo-600 hover:to-purple-700 dark:hover:from-[#a6b1ff] dark:hover:to-[#a6b1ff] text-white dark:text-black rounded-2xl md:rounded-[2.5rem] font-black uppercase tracking-widest text-[10px] sm:text-xs flex items-center gap-3 md:gap-4 transition-all shadow-2xl shadow-indigo-500/20 dark:shadow-indigo-500/10 active:scale-95 group/btn"
                                     >
                                         {isSubmittingQuiz ? (
                                             <Loader2 className="animate-spin" />
@@ -436,34 +496,34 @@ export default function QuizCompletion() {
 
                         {/* Sidebar */}
                         <div className="lg:col-span-4 space-y-8">
-                            <div className="bg-white/5 border border-white/10 rounded-[3rem] p-8 space-y-8">
+                            <div className="bg-gradient-to-br from-green-50 to-teal-50 dark:from-white/5 dark:to-white/5 border-2 border-green-200 dark:border-white/10 rounded-[3rem] p-8 space-y-8 shadow-lg">
                                 <div className="flex items-center justify-between">
-                                    <h3 className="text-lg font-black text-white uppercase italic tracking-tighter">Live Status</h3>
-                                    <Sparkles size={20} className="text-[#a6b1ff] animate-pulse" />
+                                    <h3 className="text-lg font-black text-gray-900 dark:text-white uppercase italic tracking-tighter">Live Status</h3>
+                                    <Sparkles size={20} className="text-emerald-600 dark:text-[#a6b1ff] animate-pulse" />
                                 </div>
 
                                 <div className="space-y-6">
-                                    <div className="p-6 bg-white/5 rounded-3xl border border-white/5 space-y-2">
-                                        <p className="text-[10px] font-black text-white/20 uppercase tracking-[0.2em]">Quiz Status</p>
-                                        <p className="text-xl font-black text-emerald-400 italic uppercase tracking-wider">Active</p>
+                                    <div className="p-6 bg-white dark:bg-white/5 rounded-3xl border-2 border-emerald-200 dark:border-white/5 space-y-2 shadow-sm">
+                                        <p className="text-[10px] font-black text-gray-500 dark:text-white/20 uppercase tracking-[0.2em]">Quiz Status</p>
+                                        <p className="text-xl font-black text-emerald-600 dark:text-emerald-400 italic uppercase tracking-wider">Active</p>
                                     </div>
 
                                     <div className="grid grid-cols-2 gap-4">
-                                        <div className="p-6 bg-white/5 rounded-3xl border border-white/5 space-y-2">
-                                            <p className="text-[10px] font-black text-white/20 uppercase tracking-[0.2em]">Questions</p>
-                                            <p className="text-xl font-black text-white italic">{questions.length}</p>
+                                        <div className="p-6 bg-white dark:bg-white/5 rounded-3xl border-2 border-blue-200 dark:border-white/5 space-y-2 shadow-sm">
+                                            <p className="text-[10px] font-black text-gray-500 dark:text-white/20 uppercase tracking-[0.2em]">Questions</p>
+                                            <p className="text-xl font-black text-gray-900 dark:text-white italic">{questions.length}</p>
                                         </div>
-                                        <div className="p-6 bg-white/5 rounded-3xl border border-white/5 space-y-2">
-                                            <p className="text-[10px] font-black text-white/20 uppercase tracking-[0.2em]">Points</p>
-                                            <p className="text-xl font-black text-[#a6b1ff] italic">{quiz.xp || 0}</p>
+                                        <div className="p-6 bg-white dark:bg-white/5 rounded-3xl border-2 border-purple-200 dark:border-white/5 space-y-2 shadow-sm">
+                                            <p className="text-[10px] font-black text-gray-500 dark:text-white/20 uppercase tracking-[0.2em]">Points</p>
+                                            <p className="text-xl font-black text-indigo-600 dark:text-[#a6b1ff] italic">{quiz.xp || 0}</p>
                                         </div>
                                     </div>
                                 </div>
 
-                                <div className="pt-8 border-t border-white/5">
-                                    <div className="flex items-start gap-4 p-5 bg-orange-500/5 rounded-[2rem] border border-orange-500/10">
-                                        <AlertCircle size={20} className="text-orange-500 shrink-0 mt-0.5" />
-                                        <p className="text-[9px] font-bold text-orange-500/60 uppercase tracking-widest leading-loose">
+                                <div className="pt-8 border-t-2 border-gray-200 dark:border-white/5">
+                                    <div className="flex items-start gap-4 p-5 bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-500/5 dark:to-orange-500/5 rounded-[2rem] border-2 border-orange-300 dark:border-orange-500/10 shadow-sm">
+                                        <AlertCircle size={20} className="text-orange-600 dark:text-orange-500 shrink-0 mt-0.5" />
+                                        <p className="text-[9px] font-bold text-orange-700 dark:text-orange-500/60 uppercase tracking-widest leading-loose">
                                             Your answers are final. Make sure you're confident before moving to the next question!
                                         </p>
                                     </div>
@@ -475,18 +535,18 @@ export default function QuizCompletion() {
                                     boxShadow: timeLeft <= 10 ? ["0 0 0px rgba(244,63,94,0)", "0 0 40px rgba(244,63,94,0.3)", "0 0 0px rgba(244,63,94,0)"] : "none"
                                 }}
                                 transition={{ duration: 1.5, repeat: Infinity }}
-                                className="bg-[#1a1a1a]/60 border border-white/5 rounded-[3rem] p-8"
+                                className="bg-gradient-to-br from-rose-50 to-pink-50 dark:from-[#1a1a1a]/60 dark:to-[#1a1a1a]/60 border-2 border-rose-200 dark:border-white/5 rounded-[3rem] p-8 shadow-lg"
                             >
                                 <div className="flex items-center gap-6">
                                     <div className={cn(
                                         "w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-500",
-                                        timeLeft <= 10 ? "bg-rose-500 shadow-[0_0_20px_rgba(244,63,94,0.4)] text-white" : "bg-[#a6b1ff]/10 text-[#a6b1ff]"
+                                        timeLeft <= 10 ? "bg-rose-500 shadow-[0_0_20px_rgba(244,63,94,0.4)] text-white" : "bg-indigo-200 dark:bg-[#a6b1ff]/10 text-indigo-700 dark:text-[#a6b1ff]"
                                     )}>
                                         <Zap size={28} fill="currentColor" />
                                     </div>
                                     <div>
-                                        <p className="text-[10px] font-black text-white/20 uppercase tracking-widest">Timer Status</p>
-                                        <p className="text-lg font-black text-white italic uppercase tracking-tighter">
+                                        <p className="text-[10px] font-black text-gray-500 dark:text-white/20 uppercase tracking-widest">Timer Status</p>
+                                        <p className="text-lg font-black text-gray-900 dark:text-white italic uppercase tracking-tighter">
                                             {timeLeft <= 10 ? "Hurry Up!" : "Going Well"}
                                         </p>
                                     </div>
