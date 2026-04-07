@@ -155,9 +155,9 @@ export default function QuizDetails() {
                         Back to Quizzes
                     </motion.button>
 
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+                    <div className="grid grid-cols-1 xl:grid-cols-3 gap-12">
                         {/* Left: Main Info */}
-                        <div className="lg:col-span-2 space-y-12">
+                        <div className="xl:col-span-2 space-y-12">
                             {/* Quiz Title and Description */}
                             <div className="space-y-6">
                                 <div className="flex items-center gap-4">
@@ -188,12 +188,12 @@ export default function QuizDetails() {
                                 className="relative group"
                             >
                                 <div className="absolute inset-0 bg-gradient-to-r from-indigo-300/40 to-purple-300/40 dark:from-indigo-600/20 dark:to-purple-600/20 rounded-[3rem] blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
-                                <div className="relative bg-white dark:bg-white/[0.03] border-2 border-indigo-200 dark:border-white/10 rounded-[2rem] md:rounded-[3rem] p-6 sm:p-10 lg:p-14 overflow-hidden shadow-xl">
+                                <div className="relative bg-white dark:bg-white/[0.03] border-2 border-indigo-200 dark:border-white/10 rounded-[2rem] md:rounded-[3rem] p-6 sm:p-10 lg:p-14 shadow-xl">
                                     <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-200/30 dark:bg-indigo-500/10 rounded-full blur-[100px] -mr-32 -mt-32" />
 
-                                    <div className="flex flex-col md:flex-row items-center justify-between gap-8 md:gap-12 relative z-10">
+                                    <div className="flex flex-col lg:flex-row items-center justify-between gap-8 lg:gap-12 relative z-10">
                                         <div className="space-y-8 flex-1 w-full">
-                                            <div className="grid grid-cols-2 md:grid-cols-3 gap-8">
+                                            <div className="grid grid-cols-2 lg:grid-cols-3 gap-8">
                                                 <div className="space-y-2">
                                                     <div className="flex items-center gap-2 text-amber-600 dark:text-white/20">
                                                         <Trophy size={14} />
@@ -246,7 +246,7 @@ export default function QuizDetails() {
 
                                         <button
                                             onClick={handleAction}
-                                            className={`shrink-0 w-full md:w-56 h-32 md:h-56 rounded-2xl md:rounded-[3rem] ${isEnded ? 'bg-gradient-to-br from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600' : isStarted ? 'bg-gradient-to-br from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700' : 'bg-gray-300 dark:bg-white/10'} ${isEnded || isStarted ? 'dark:bg-[#a6b1ff] dark:hover:bg-white' : ''} ${isEnded || isStarted ? 'text-black dark:text-black' : 'text-gray-900 dark:text-white/40'} flex flex-col items-center justify-center gap-3 md:gap-4 transition-all hover:scale-105 active:scale-95 shadow-2xl relative overflow-hidden group/btn`}
+                                            className={`shrink-0 w-full lg:w-56 h-32 lg:h-56 rounded-2xl lg:rounded-[3rem] ${isEnded ? 'bg-gradient-to-br from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600' : isStarted ? 'bg-gradient-to-br from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700' : 'bg-gray-300 dark:bg-white/10'} ${isEnded || isStarted ? 'dark:bg-[#a6b1ff] dark:hover:bg-white' : ''} ${isEnded || isStarted ? 'text-black dark:text-black' : 'text-gray-900 dark:text-white/40'} flex flex-col items-center justify-center gap-3 lg:gap-4 transition-all hover:scale-105 active:scale-95 shadow-2xl relative overflow-hidden group/btn`}
                                         >
                                             <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/20 to-transparent -translate-x-full group-hover/btn:translate-x-full transition-transform duration-1000" />
                                             {isEnded ? (
@@ -271,7 +271,7 @@ export default function QuizDetails() {
                             </motion.div>
 
                             {/* Timeline Details */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                                 <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-white/5 dark:to-white/5 border-2 border-blue-200 dark:border-white/5 rounded-3xl p-6 flex items-center gap-5 shadow-lg">
                                     <div className="w-14 h-14 rounded-2xl bg-indigo-200 dark:bg-indigo-500/10 flex items-center justify-center text-indigo-700 dark:text-indigo-400">
                                         <Calendar size={24} />

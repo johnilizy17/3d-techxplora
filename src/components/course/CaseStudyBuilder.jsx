@@ -507,7 +507,7 @@ const SegmentEditor = ({ segment, segmentIndex, isExpanded, onToggle, onUpdate, 
                                     Question Type
                                 </label>
                                 <div className="grid grid-cols-3 gap-2">
-                                    <button
+                                    <div
                                         onClick={() => onUpdate({ questionType: QUESTION_TYPES.SINGLE_CHOICE })}
                                         className={`p-3 rounded-lg border-2 transition-all flex flex-col items-center gap-2 ${segment.questionType === QUESTION_TYPES.SINGLE_CHOICE
                                                 ? 'border-blue-500 bg-blue-500/10'
@@ -516,8 +516,8 @@ const SegmentEditor = ({ segment, segmentIndex, isExpanded, onToggle, onUpdate, 
                                     >
                                         <Circle size={18} className={segment.questionType === QUESTION_TYPES.SINGLE_CHOICE ? 'text-blue-400' : 'text-white/40'} />
                                         <span className="text-[10px] font-bold text-white/60 uppercase">Single</span>
-                                    </button>
-                                    <button
+                                    </div>
+                                    <div
                                         onClick={() => onUpdate({ questionType: QUESTION_TYPES.MULTIPLE_CHOICE })}
                                         className={`p-3 rounded-lg border-2 transition-all flex flex-col items-center gap-2 ${segment.questionType === QUESTION_TYPES.MULTIPLE_CHOICE
                                                 ? 'border-purple-500 bg-purple-500/10'
@@ -526,8 +526,8 @@ const SegmentEditor = ({ segment, segmentIndex, isExpanded, onToggle, onUpdate, 
                                     >
                                         <CheckSquare size={18} className={segment.questionType === QUESTION_TYPES.MULTIPLE_CHOICE ? 'text-purple-400' : 'text-white/40'} />
                                         <span className="text-[10px] font-bold text-white/60 uppercase">Multiple</span>
-                                    </button>
-                                    <button
+                                    </div>
+                                    <div
                                         onClick={() => onUpdate({ questionType: QUESTION_TYPES.SHORT_ANSWER })}
                                         className={`p-3 rounded-lg border-2 transition-all flex flex-col items-center gap-2 ${segment.questionType === QUESTION_TYPES.SHORT_ANSWER
                                                 ? 'border-green-500 bg-green-500/10'
@@ -536,7 +536,7 @@ const SegmentEditor = ({ segment, segmentIndex, isExpanded, onToggle, onUpdate, 
                                     >
                                         <Type size={18} className={segment.questionType === QUESTION_TYPES.SHORT_ANSWER ? 'text-green-400' : 'text-white/40'} />
                                         <span className="text-[10px] font-bold text-white/60 uppercase">Text</span>
-                                    </button>
+                                    </div>
                                 </div>
                             </div>
 

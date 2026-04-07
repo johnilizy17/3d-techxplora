@@ -123,7 +123,7 @@ export default function DepositModal({ trigger }) {
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-4 flex flex-col items-center justify-center text-center">
                                             <TrendingUp size={16} className="text-emerald-400 mb-2" />
-                                            <span className="text-[8px] font-black uppercase tracking-widest text-white/20">Multiplier</span>
+                                            <span className="text-[8px] font-black uppercase tracking-widest text-white/20">Bonus</span>
                                             <span className="text-sm font-bold text-white">1.2x Active</span>
                                         </div>
                                         <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-4 flex flex-col items-center justify-center text-center">

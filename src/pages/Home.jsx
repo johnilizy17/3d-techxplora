@@ -6,6 +6,7 @@ import FAQ from "../components/collectors/FAQ";
 import HeroSection from "../components/collectors/HeroSection";
 import ContactSection from "../components/collectors/ContactSection";
 import DeveloperFooter from "../components/collectors/DeveloperFooter";
+import CountUpStats from "../components/collectors/CountUpStats";
 
 
 export default function Home() {
@@ -24,6 +25,9 @@ export default function Home() {
     <div className="relative bg-background overflow-hidden transition-colors duration-300">
       {/* Hero Section */}
       <HeroSection />
+
+      {/* Count Up Stats Section */}
+      <CountUpStats />
 
       <HowItWorks />
 

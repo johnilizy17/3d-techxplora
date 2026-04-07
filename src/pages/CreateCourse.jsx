@@ -65,7 +65,8 @@ export default function CreateCourse() {
         other: [], // additional videos
         attachments: [], // document modules
         quiz_id: null,
-        questions: []
+        questions: [],
+        manual_quiz: []
     });
 
     const [errors, setErrors] = useState({});
@@ -81,17 +82,17 @@ export default function CreateCourse() {
     useEffect(() => {
         if (!draftRestored) {
             const savedDraft = loadCourseDraft();
-            
+
             if (savedDraft) {
                 setFormData(savedDraft.formData);
                 setCurrentStep(savedDraft.currentStep || 1);
-                
+
                 toast.success('Draft Restored!', {
                     description: 'Your course creation progress has been restored',
                     duration: 4000
                 });
             }
-            
+
             setDraftRestored(true);
         }
     }, [draftRestored]);
@@ -113,10 +114,10 @@ export default function CreateCourse() {
         // Check if this is a URL input (no files but has url property)
         if (e.target.url) {
             const videoUrl = e.target.url.trim();
-            
+
             // Validate URL format
             const isValidUrl = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be|drive\.google\.com|.*\.(mp4|webm|ogg)).*$/i.test(videoUrl);
-            
+
             if (!isValidUrl) {
                 toast.error("Please enter a valid YouTube, Google Drive, or direct video link");
                 return;
@@ -256,15 +257,16 @@ export default function CreateCourse() {
                 difficulty_level: formData.difficulty_level,
                 // Handle new logic: if quiz_code exists, send it in question array as per admin
                 question: formData.quiz_code ? [`quiz: ${formData.quiz_code} `] : formData.questions,
-                quiz_id: formData.quiz_id
+                quiz_id: formData.quiz_id,
+                manual_quiz: formData.manual_quiz
             };
 
             await createCourse(payload).unwrap();
             toast.success("Course launched successfully!");
-            
+
             // Clear draft after successful creation
             clearCourseDraft();
-            
+
             setCurrentStep(5);
         } catch (error) {
             toast.error(error?.data?.message || "Failed to launch course");
@@ -423,14 +425,14 @@ export default function CreateCourse() {
 const Step1 = ({ formData, handleChange, errors, onNext }) => (
     <motion.div
         initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
-        className="bg-white/5 backdrop-blur-3xl border border-white/10 rounded-[2.5rem] p-8 lg:p-12 shadow-2xl space-y-8 relative overflow-hidden"
+        className="bg-white dark:bg-white/5 backdrop-blur-3xl border border-gray-200 dark:border-white/10 rounded-[2.5rem] p-8 lg:p-12 shadow-2xl space-y-8 relative overflow-hidden"
     >
         <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/5 rounded-full blur-[100px]" />
 
         <div className="relative z-10">
             <div className="mb-10 text-center lg:text-left">
-                <h1 className="text-3xl lg:text-4xl font-black text-white uppercase italic mb-2">
-                    Basic <span className="text-[#a6b1ff]">Information</span>
+                <h1 className="text-3xl lg:text-4xl font-black text-gray-900 dark:text-white uppercase italic mb-2">
+                    Basic <span className="text-indigo-600 dark:text-[#a6b1ff]">Information</span>
                 </h1>
                 <p className="text-gray-700 dark:text-white/60 font-medium">Define the core identity of your educational resource</p>
             </div>
@@ -482,35 +484,35 @@ const Step1 = ({ formData, handleChange, errors, onNext }) => (
 const Step2 = ({ formData, setFormData, handleChange, handleFileUpload, handleLearnChange, addLearnPoint, removeLearnPoint, removeOtherVideo, isUploading, errors, onNext, onPrev }) => (
     <motion.div
         initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
-        className="bg-white/5 backdrop-blur-3xl border border-white/10 rounded-[2.5rem] p-8 lg:p-12 shadow-2xl space-y-10 relative overflow-hidden"
+        className="bg-white dark:bg-white/5 backdrop-blur-3xl border border-gray-200 dark:border-white/10 rounded-[2.5rem] p-8 lg:p-12 shadow-2xl space-y-10 relative overflow-hidden"
     >
         <div className="absolute top-0 left-0 w-64 h-64 bg-purple-500/5 rounded-full blur-[100px]" />
 
         <div className="relative z-10">
             <div className="mb-10 text-center lg:text-left">
-                <h1 className="text-3xl lg:text-4xl font-black text-white uppercase italic mb-2">
-                    Visuals & <span className="text-[#a6b1ff]">Content</span>
+                <h1 className="text-3xl lg:text-4xl font-black text-gray-900 dark:text-white uppercase italic mb-2">
+                    Visuals & <span className="text-indigo-600 dark:text-[#a6b1ff]">Content</span>
                 </h1>
-                <p className="text-gray-700 dark:text-white/60 font-medium">Bring your course to life with high-quality media</p>
+                <p className="text-gray-600 dark:text-white/60 font-medium">Bring your course to life with high-quality media</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                 <div className="space-y-8">
-                    <div className="p-6 rounded-3xl bg-white/5 border border-white/10 space-y-6">
-                        <h3 className="text-sm font-black text-white/80 uppercase tracking-widest flex items-center gap-2">
-                            <ImageIcon size={18} className="text-[#a6b1ff]" />
+                    <div className="p-6 rounded-3xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 space-y-6">
+                        <h3 className="text-sm font-black text-gray-700 dark:text-white/80 uppercase tracking-widest flex items-center gap-2">
+                            <ImageIcon size={18} className="text-indigo-600 dark:text-[#a6b1ff]" />
                             Course Assets
                         </h3>
                         <FileUploadField label="Banner Image (16:9)" field="banner" url={formData.banner_url} isUploading={isUploading.banner} onUpload={handleFileUpload} error={errors.banner} setFormData={setFormData} />
                         <FileUploadField label="Main Video" field="video" url={formData.video_url} isUploading={isUploading.video} onUpload={handleFileUpload} isVideo setFormData={setFormData} />
                     </div>
 
-                    <div className="p-6 rounded-3xl bg-white/5 border border-white/10 space-y-6">
-                        <h3 className="text-sm font-black text-white/80 uppercase tracking-widest flex items-center gap-2">
-                            <Plus size={18} className="text-emerald-400" />
+                    <div className="p-6 rounded-3xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 space-y-6">
+                        <h3 className="text-sm font-black text-gray-700 dark:text-white/80 uppercase tracking-widest flex items-center gap-2">
+                            <Plus size={18} className="text-emerald-600 dark:text-emerald-400" />
                             Additional Resources
                         </h3>
-                        <AdditionalResourcesUpload 
+                        <AdditionalResourcesUpload
                             resources={formData.other}
                             onAdd={(url) => {
                                 if (formData.other.length >= 5) {
@@ -527,16 +529,16 @@ const Step2 = ({ formData, setFormData, handleChange, handleFileUpload, handleLe
                         />
                     </div>
 
-                    <div className="p-6 rounded-3xl bg-white/5 border border-white/10 space-y-6">
-                        <h3 className="text-sm font-black text-white/80 uppercase tracking-widest flex items-center gap-2">
-                            <FileText size={18} className="text-blue-400" />
+                    <div className="p-6 rounded-3xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 space-y-6">
+                        <h3 className="text-sm font-black text-gray-700 dark:text-white/80 uppercase tracking-widest flex items-center gap-2">
+                            <FileText size={18} className="text-blue-600 dark:text-blue-400" />
                             Module Documents
                         </h3>
                         <div className="space-y-3">
                             {formData.attachments.map((file, i) => (
-                                <div key={i} className="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/5 text-xs text-white/60 group">
+                                <div key={i} className="flex items-center justify-between p-3 bg-white dark:bg-white/5 rounded-xl border border-gray-200 dark:border-white/5 text-xs text-gray-700 dark:text-white/60 group">
                                     <div className="flex items-center gap-3 truncate min-w-0">
-                                        <FileText size={14} className="text-[#a6b1ff] shrink-0" />
+                                        <FileText size={14} className="text-indigo-600 dark:text-[#a6b1ff] shrink-0" />
                                         <span className="truncate">{file.name}</span>
                                     </div>
                                     <button onClick={() => removeAttachment(i)} className="text-rose-500 hover:text-rose-400 transition-colors shrink-0">
@@ -544,20 +546,20 @@ const Step2 = ({ formData, setFormData, handleChange, handleFileUpload, handleLe
                                     </button>
                                 </div>
                             ))}
-                            <label className={`w-full h-12 rounded-xl border-2 border-dashed border-white/10 flex items-center justify-center gap-2 cursor-pointer hover:border-[#a6b1ff]/30 hover:bg-white/5 transition-all text-sm font-bold text-white/40 ${isUploading.attachment ? 'opacity-50 pointer-events-none' : ''}`}>
+                            <label className={`w-full h-12 rounded-xl border-2 border-dashed border-gray-300 dark:border-white/10 flex items-center justify-center gap-2 cursor-pointer hover:border-[#a6b1ff]/30 hover:bg-gray-100 dark:hover:bg-white/5 transition-all text-sm font-bold text-gray-600 dark:text-white/40 ${isUploading.attachment ? 'opacity-50 pointer-events-none' : ''}`}>
                                 {isUploading.attachment ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} />}
                                 {isUploading.attachment ? 'Uploading...' : 'Add Document (PDF/Doc/Zip)'}
                                 <input type="file" className="hidden" accept=".pdf,.doc,.docx,.txt,.zip,.rar" onChange={(e) => handleFileUpload(e, 'attachment')} />
                             </label>
-                            <p className="text-[10px] text-white/30 text-center uppercase tracking-widest">Course reading materials</p>
+                            <p className="text-[10px] text-gray-500 dark:text-white/30 text-center uppercase tracking-widest">Course reading materials</p>
                         </div>
                     </div>
                 </div>
 
                 <div className="space-y-8">
-                    <div className="p-6 rounded-3xl bg-white/5 border border-white/10 space-y-6">
-                        <h3 className="text-sm font-black text-white/80 uppercase tracking-widest flex items-center gap-2">
-                            <Sparkles size={18} className="text-amber-400" />
+                    <div className="p-6 rounded-3xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 space-y-6">
+                        <h3 className="text-sm font-black text-gray-700 dark:text-white/80 uppercase tracking-widest flex items-center gap-2">
+                            <Sparkles size={18} className="text-amber-600 dark:text-amber-400" />
                             Learning Objectives
                         </h3>
                         <div className="space-y-4">
@@ -568,7 +570,7 @@ const Step2 = ({ formData, setFormData, handleChange, handleFileUpload, handleLe
                                         value={point}
                                         onChange={(e) => handleLearnChange(i, e.target.value)}
                                         placeholder={`Learning outcome #${i + 1}...`}
-                                        className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-[#a6b1ff]/50 transition-all font-medium"
+                                        className="flex-1 bg-white dark:bg-white/5 border border-gray-300 dark:border-white/10 rounded-xl px-4 py-3 text-sm text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-white/20 focus:border-[#a6b1ff]/50 transition-all font-medium"
                                     />
                                     {formData.learn.length > 1 && (
                                         <button onClick={() => removeLearnPoint(i)} className="p-3 text-rose-500/50 hover:text-rose-500 transition-colors">
@@ -577,60 +579,61 @@ const Step2 = ({ formData, setFormData, handleChange, handleFileUpload, handleLe
                                     )}
                                 </div>
                             ))}
-                            <button onClick={addLearnPoint} className="flex items-center gap-2 text-[#a6b1ff] text-xs font-black uppercase tracking-[0.2em] hover:text-[#a6b1ff]/80 transition-all px-1">
+                            <button onClick={addLearnPoint} className="flex items-center gap-2 text-indigo-600 dark:text-[#a6b1ff] text-xs font-black uppercase tracking-widest hover:text-indigo-700 dark:hover:text-[#b8c2ff] transition-colors">
                                 <Plus size={16} /> Add Objective
                             </button>
-                            {errors.learn && <p className="text-rose-400 text-[10px] font-bold uppercase tracking-wider">{errors.learn}</p>}
-                        </div>
+                        {errors.learn && <p className="text-rose-400 text-[10px] font-bold uppercase tracking-wider">{errors.learn}</p>}
                     </div>
+                </div>
 
-                    <div className="space-y-2">
-                        <label className="text-xs font-black text-gray-600 dark:text-white/40 uppercase tracking-widest pl-1">Final Instruction</label>
-                        <textarea
-                            name="instruction"
-                            value={formData.instruction}
-                            onChange={handleChange}
-                            rows={3}
-                            placeholder="Final steps for the students..."
-                            className={`w-full bg-gray-50 dark:bg-white/5 border ${errors.instruction ? 'border-rose-500/50' : 'border-gray-300 dark:border-white/10'} rounded-2xl px-5 py-4 text-gray-900 dark:text-white focus:border-[#a6b1ff]/50 transition-all resize-none font-medium`}
-                        />
-                        {errors.instruction && <p className="text-rose-400 text-[10px] font-bold mt-1 uppercase tracking-wider">{errors.instruction}</p>}
+                <div className="space-y-2">
+                    <label className="text-xs font-black text-gray-600 dark:text-white/40 uppercase tracking-widest pl-1">Final Instruction</label>
+                    <textarea
+                        name="instruction"
+                        value={formData.instruction}
+                        onChange={handleChange}
+                        rows={3}
+                        placeholder="Final steps for the students..."
+                        className={`w-full bg-gray-50 dark:bg-white/5 border ${errors.instruction ? 'border-rose-500/50' : 'border-gray-300 dark:border-white/10'} rounded-2xl px-5 py-4 text-gray-900 dark:text-white focus:border-[#a6b1ff]/50 transition-all resize-none font-medium`}
+                    />
+                    {errors.instruction && <p className="text-rose-400 text-[10px] font-bold mt-1 uppercase tracking-wider">{errors.instruction}</p>}
+                </div>
+
+                <div className="p-6 rounded-3xl bg-gradient-to-br from-purple-100 to-transparent dark:from-purple-500/10 dark:to-transparent border border-purple-300 dark:border-purple-500/20 space-y-4">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-purple-200 dark:bg-purple-500/10 flex items-center justify-center">
+                            <BookOpen size={20} className="text-purple-600 dark:text-purple-400" />
+                        </div>
+                        <h4 className="text-sm font-black text-gray-900 dark:text-white uppercase tracking-wider">Case Study Assessment</h4>
                     </div>
-
-                    <div className="p-6 rounded-3xl bg-gradient-to-br from-purple-500/10 to-transparent border border-purple-500/20 space-y-4">
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center">
-                                <BookOpen size={20} className="text-purple-400" />
-                            </div>
-                            <h4 className="text-sm font-black text-gray-800 dark:text-white uppercase tracking-wider">Case Study Assessment</h4>
-                        </div>
-                        <p className="text-xs text-gray-700 dark:text-white/40 leading-relaxed font-medium">
-                            Create interactive scenario-based assessments in Step 4. Students will make decisions and receive immediate feedback based on their choices.
-                        </p>
-                        <div className="flex items-center gap-2 text-[10px] text-purple-400/60 uppercase tracking-widest font-black">
-                            <ArrowRight size={12} />
-                            Configure in Assessment Step
-                        </div>
+                    <p className="text-xs text-gray-600 dark:text-white/40 leading-relaxed font-medium">
+                        Create interactive scenario-based assessments in Step 4. Students will make decisions and receive immediate feedback based on their choices.
+                    </p>
+                    <div className="flex items-center gap-2 text-[10px] text-purple-600 dark:text-purple-400/60 uppercase tracking-widest font-black">
+                        <ArrowRight size={12} />
+                        Configure in Assessment Step
                     </div>
                 </div>
             </div>
+        </div >
 
-            <div className="mt-12 flex justify-between items-center">
-                <button onClick={onPrev} className="text-gray-600 dark:text-white/40 hover:text-gray-900 dark:hover:text-white font-black uppercase text-xs tracking-widest">Back</button>
-                <motion.button
-                    whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
-                    onClick={onNext}
-                    className="px-10 py-4 rounded-2xl bg-[#a6b1ff] text-[#0a0a0a] font-black uppercase tracking-wider shadow-xl flex items-center gap-3 group"
-                >
-                    Questions
-                    <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
-                </motion.button>
-            </div>
+        <div className="mt-12 flex justify-between items-center">
+            <button onClick={onPrev} className="text-gray-600 dark:text-white/40 hover:text-gray-900 dark:hover:text-white font-black uppercase text-xs tracking-widest">Back</button>
+            <motion.button
+                whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+                onClick={onNext}
+                className="px-10 py-4 rounded-2xl bg-[#a6b1ff] text-[#0a0a0a] font-black uppercase tracking-wider shadow-xl flex items-center gap-3 group"
+            >
+                Questions
+                <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
+            </motion.button>
         </div>
-    </motion.div>
+    </div >
+    </motion.div >
 );
 
 const Step3Questions = ({ formData, setFormData, quizzes, onNext, onPrev }) => {
+    const [activeTab, setActiveTab] = useState('link'); // 'link' or 'manual'
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedQuiz, setSelectedQuiz] = useState(() => {
         const quizCode = formData.questions?.[0]?.toString().startsWith('quiz:')
@@ -642,6 +645,8 @@ const Step3Questions = ({ formData, setFormData, quizzes, onNext, onPrev }) => {
         return null;
     });
 
+    const [manualQuestions, setManualQuestions] = useState(formData.manual_quiz || []);
+
     const filteredQuizzes = quizzes?.filter(q =>
         q.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         q.quiz_code?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -652,91 +657,259 @@ const Step3Questions = ({ formData, setFormData, quizzes, onNext, onPrev }) => {
         setFormData(prev => ({
             ...prev,
             quiz_id: quiz.id,
-            questions: [`quiz: ${quiz.quiz_code}`]
+            questions: [`quiz: ${quiz.quiz_code}`],
+            manual_quiz: [] // Clear manual quiz when selecting a linked quiz
         }));
+        setManualQuestions([]);
         toast.success(`Quiz selected: ${quiz.title}`);
+    };
+
+    const addManualQuestion = () => {
+        const newQuestion = {
+            question: '',
+            options: [
+                { option: '', is_correct: false },
+                { option: '', is_correct: false }
+            ]
+        };
+        const updated = [...manualQuestions, newQuestion];
+        setManualQuestions(updated);
+        setFormData(prev => ({
+            ...prev,
+            manual_quiz: updated,
+            quiz_id: null, // Clear linked quiz when adding manual questions
+            questions: []
+        }));
+        setSelectedQuiz(null);
+    };
+
+    const removeManualQuestion = (index) => {
+        const updated = manualQuestions.filter((_, i) => i !== index);
+        setManualQuestions(updated);
+        setFormData(prev => ({ ...prev, manual_quiz: updated }));
+    };
+
+    const updateManualQuestion = (index, field, value) => {
+        const updated = [...manualQuestions];
+        updated[index] = { ...updated[index], [field]: value };
+        setManualQuestions(updated);
+        setFormData(prev => ({ ...prev, manual_quiz: updated }));
+    };
+
+    const addOption = (questionIndex) => {
+        const updated = [...manualQuestions];
+        updated[questionIndex].options.push({ option: '', is_correct: false });
+        setManualQuestions(updated);
+        setFormData(prev => ({ ...prev, manual_quiz: updated }));
+    };
+
+    const removeOption = (questionIndex, optionIndex) => {
+        const updated = [...manualQuestions];
+        if (updated[questionIndex].options.length > 2) {
+            updated[questionIndex].options = updated[questionIndex].options.filter((_, i) => i !== optionIndex);
+            setManualQuestions(updated);
+            setFormData(prev => ({ ...prev, manual_quiz: updated }));
+        }
+    };
+
+    const updateOption = (questionIndex, optionIndex, field, value) => {
+        const updated = [...manualQuestions];
+        updated[questionIndex].options[optionIndex] = {
+            ...updated[questionIndex].options[optionIndex],
+            [field]: value
+        };
+        setManualQuestions(updated);
+        setFormData(prev => ({ ...prev, manual_quiz: updated }));
     };
 
     return (
         <motion.div
             initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
-            className="bg-white/5 backdrop-blur-3xl border border-white/10 rounded-[2.5rem] p-8 lg:p-12 shadow-2xl space-y-10 relative overflow-hidden"
+            className="bg-white dark:bg-white/5 backdrop-blur-3xl border border-gray-200 dark:border-white/10 rounded-[2.5rem] p-8 lg:p-12 shadow-2xl space-y-10 relative overflow-hidden"
         >
             <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/5 rounded-full blur-[100px]" />
 
             <div className="relative z-10">
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
                     <div>
-                        <h1 className="text-3xl lg:text-4xl font-black text-white uppercase italic mb-2">
-                            Link <span className="text-[#a6b1ff]">Assessment</span>
+                        <h1 className="text-3xl lg:text-4xl font-black text-gray-900 dark:text-white uppercase italic mb-2">
+                            Add <span className="text-indigo-600 dark:text-[#a6b1ff]">Assessment</span>
                         </h1>
-                        <p className="text-gray-700 dark:text-white/60 font-medium">Select an existing quiz to attach to this course</p>
+                        <p className="text-gray-600 dark:text-white/60 font-medium">Link an existing quiz or create manual questions</p>
                     </div>
                 </div>
 
-                <div className="space-y-6">
-                    <div className="flex flex-col gap-4">
-                        <label className="text-xs font-black text-gray-600 dark:text-white/40 uppercase tracking-widest pl-1">Search & Select Quiz</label>
-                        <div className="relative group">
-                            <div className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 dark:text-white/20 group-focus-within:text-[#a6b1ff] transition-colors"><Search size={20} /></div>
-                            <input
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                placeholder="Search by quiz name or unique code..."
-                                className="w-full bg-gray-50 dark:bg-white/5 border border-gray-300 dark:border-white/10 rounded-2xl pl-14 pr-6 py-5 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-white/20 focus:border-[#a6b1ff]/50 outline-none font-medium transition-all"
-                            />
-                        </div>
-                    </div>
+                {/* Tabs */}
+                <div className="flex gap-2 mb-8 p-2 bg-gray-100 dark:bg-white/5 rounded-2xl border border-gray-200 dark:border-white/10">
+                    <button
+                        onClick={() => setActiveTab('link')}
+                        className={`flex-1 py-3 px-6 rounded-xl font-black uppercase text-xs tracking-widest transition-all ${activeTab === 'link'
+                            ? 'bg-[#a6b1ff] text-gray-900 dark:text-black shadow-lg'
+                            : 'text-gray-500 dark:text-white/40 hover:text-gray-700 dark:hover:text-white/60'
+                            }`}
+                    >
+                        Link Quiz
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('manual')}
+                        className={`flex-1 py-3 px-6 rounded-xl font-black uppercase text-xs tracking-widest transition-all ${activeTab === 'manual'
+                            ? 'bg-[#a6b1ff] text-gray-900 dark:text-black shadow-lg'
+                            : 'text-gray-500 dark:text-white/40 hover:text-gray-700 dark:hover:text-white/60'
+                            }`}
+                    >
+                        Manual Quiz
+                    </button>
+                </div>
 
-                    {selectedQuiz ? (
-                        <div className="p-8 rounded-[2rem] border-2 border-[#a6b1ff]/20 bg-[#a6b1ff]/5 flex items-center justify-between gap-6 animate-in zoom-in-95 duration-300 relative overflow-hidden group">
-                            <div className="absolute inset-0 bg-gradient-to-r from-[#a6b1ff]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                            <div className="space-y-2 min-w-0 relative">
-                                <p className="text-[10px] font-black text-[#a6b1ff] uppercase tracking-[0.3em]">Currently Selected</p>
-                                <h4 className="text-2xl font-black text-white truncate italic tracking-tight">{selectedQuiz.title}</h4>
-                                <div className="flex items-center gap-2">
-                                    <div className="px-2 py-1 rounded bg-gray-200 dark:bg-white/10 text-[10px] font-mono text-gray-700 dark:text-white/60">{selectedQuiz.quiz_code}</div>
-                                </div>
+                {/* Tab Content */}
+                {activeTab === 'link' ? (
+                    <div className="space-y-6">
+                        <div className="flex flex-col gap-4">
+                            <label className="text-xs font-black text-gray-600 dark:text-white/40 uppercase tracking-widest pl-1">Search & Select Quiz</label>
+                            <div className="relative group">
+                                <div className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 dark:text-white/20 group-focus-within:text-[#a6b1ff] transition-colors"><Search size={20} /></div>
+                                <input
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    placeholder="Search by quiz name or unique code..."
+                                    className="w-full bg-gray-50 dark:bg-white/5 border border-gray-300 dark:border-white/10 rounded-2xl pl-14 pr-6 py-5 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-white/20 focus:border-[#a6b1ff]/50 outline-none font-medium transition-all"
+                                />
                             </div>
+                        </div>
+
+                        {selectedQuiz ? (
+                            <div className="p-8 rounded-[2rem] border-2 border-[#a6b1ff]/20 bg-blue-50 dark:bg-[#a6b1ff]/5 flex items-center justify-between gap-6 animate-in zoom-in-95 duration-300 relative overflow-hidden group">
+                                <div className="absolute inset-0 bg-gradient-to-r from-[#a6b1ff]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                                <div className="space-y-2 min-w-0 relative">
+                                    <p className="text-[10px] font-black text-indigo-600 dark:text-[#a6b1ff] uppercase tracking-[0.3em]">Currently Selected</p>
+                                    <h4 className="text-2xl font-black text-gray-900 dark:text-white truncate italic tracking-tight">{selectedQuiz.title}</h4>
+                                    <div className="flex items-center gap-2">
+                                        <div className="px-2 py-1 rounded bg-gray-200 dark:bg-white/10 text-[10px] font-mono text-gray-700 dark:text-white/60">{selectedQuiz.quiz_code}</div>
+                                    </div>
+                                </div>
+                                <Button
+                                    onClick={() => { setSelectedQuiz(null); setFormData(prev => ({ ...prev, quiz_id: null, questions: [] })); }}
+                                    className="bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 border border-rose-500/20 rounded-xl px-6 relative"
+                                >
+                                    Detach
+                                </Button>
+                            </div>
+                        ) : (
+                            <div className="border border-gray-200 dark:border-white/10 rounded-[2rem] overflow-hidden bg-gray-50 dark:bg-white/5 max-h-[400px] overflow-y-auto custom-scrollbar">
+                                {filteredQuizzes.length > 0 ? (
+                                    <div className="divide-y divide-gray-200 dark:divide-white/5">
+                                        {filteredQuizzes.map((quiz) => (
+                                            <div
+                                                key={quiz.id}
+                                                onClick={() => handleQuizSelect(quiz)}
+                                                className="p-6 flex items-center justify-between hover:bg-gray-100 dark:hover:bg-white/5 cursor-pointer transition-colors group"
+                                            >
+                                                <div className="min-w-0 space-y-1">
+                                                    <p className="font-bold text-lg text-gray-900 dark:text-white group-hover:text-[#a6b1ff] transition-colors">{quiz.title}</p>
+                                                    <p className="text-[10px] text-gray-500 dark:text-white/30 uppercase tracking-widest">Code: {quiz.quiz_code}</p>
+                                                </div>
+                                                <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-white/5 flex items-center justify-center group-hover:bg-[#a6b1ff] group-hover:text-black transition-all transform group-hover:scale-110">
+                                                    <ArrowRight size={18} />
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="py-24 flex flex-col items-center justify-center text-center px-6">
+                                        <div className="w-16 h-16 rounded-full bg-dashed border-2 border-gray-300 dark:border-white/10 flex items-center justify-center mb-4">
+                                            <Search className="text-gray-400 dark:text-white/20" size={24} />
+                                        </div>
+                                        <p className="text-lg font-bold text-gray-600 dark:text-white/40">No quizzes match "{searchTerm}"</p>
+                                        <p className="text-xs text-gray-400 dark:text-white/20 mt-2 uppercase tracking-widest">Try searching for a different name or code</p>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                ) : (
+                    <div className="space-y-6">
+                        <div className="flex justify-between items-center">
+                            <label className="text-xs font-black text-gray-600 dark:text-white/40 uppercase tracking-widest pl-1">Manual Questions</label>
                             <Button
-                                onClick={() => { setSelectedQuiz(null); setFormData(prev => ({ ...prev, quiz_id: null, questions: [] })); }}
-                                className="bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 border border-rose-500/20 rounded-xl px-6 relative"
+                                onClick={addManualQuestion}
+                                className="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 border border-emerald-500/20 rounded-xl px-4 py-2 flex items-center gap-2"
                             >
-                                Detach
+                                <Plus size={16} color="green" />
+                                Add Question
                             </Button>
                         </div>
-                    ) : (
-                        <div className="border border-white/10 rounded-[2rem] overflow-hidden bg-white/5 max-h-[400px] overflow-y-auto custom-scrollbar">
-                            {filteredQuizzes.length > 0 ? (
-                                <div className="divide-y divide-white/5">
-                                    {filteredQuizzes.map((quiz) => (
-                                        <div
-                                            key={quiz.id}
-                                            onClick={() => handleQuizSelect(quiz)}
-                                            className="p-6 flex items-center justify-between hover:bg-white/5 cursor-pointer transition-colors group"
-                                        >
-                                            <div className="min-w-0 space-y-1">
-                                                <p className="font-bold text-lg text-white group-hover:text-[#a6b1ff] transition-colors">{quiz.title}</p>
-                                                <p className="text-[10px] text-gray-500 dark:text-white/30 uppercase tracking-widest">Code: {quiz.quiz_code}</p>
+
+                        {manualQuestions.length === 0 ? (
+                            <div className="py-24 flex flex-col items-center justify-center text-center px-6 border-2 border-dashed border-gray-300 dark:border-white/10 rounded-[2rem]">
+                                <div className="w-16 h-16 rounded-full bg-gray-200 dark:bg-white/5 flex items-center justify-center mb-4">
+                                    <HelpCircle className="text-gray-400 dark:text-white/20" size={24} />
+                                </div>
+                                <p className="text-lg font-bold text-gray-600 dark:text-white/40">No manual questions yet</p>
+                                <p className="text-xs text-gray-500 dark:text-white/20 mt-2 uppercase tracking-widest">Click "Add Question" to create your first question</p>
+                            </div>
+                        ) : (
+                            <div className="space-y-6 max-h-[500px] overflow-y-auto custom-scrollbar pr-2">
+                                {manualQuestions.map((q, qIndex) => (
+                                    <div key={qIndex} className="p-6 rounded-2xl bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 space-y-4">
+                                        <div className="flex justify-between items-start gap-4">
+                                            <div className="flex-1">
+                                                <label className="text-[10px] font-black text-gray-600 dark:text-white/40 uppercase tracking-widest mb-2 block">Question {qIndex + 1}</label>
+                                                <input
+                                                    value={q.question}
+                                                    onChange={(e) => updateManualQuestion(qIndex, 'question', e.target.value)}
+                                                    placeholder="Enter your question..."
+                                                    className="w-full bg-gray-50 dark:bg-white/5 border border-gray-300 dark:border-white/10 rounded-xl px-4 py-3 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-white/20 focus:border-[#a6b1ff]/50 outline-none font-medium"
+                                                />
                                             </div>
-                                            <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-[#a6b1ff] group-hover:text-black transition-all transform group-hover:scale-110">
-                                                <ArrowRight size={18} />
-                                            </div>
+                                            <Button
+                                                onClick={() => removeManualQuestion(qIndex)}
+                                                className="bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 border border-rose-500/20 rounded-xl p-2"
+                                            >
+                                                <Trash2 size={16} color="red" />
+                                            </Button>
                                         </div>
-                                    ))}
-                                </div>
-                            ) : (
-                                <div className="py-24 flex flex-col items-center justify-center text-center px-6">
-                                    <div className="w-16 h-16 rounded-full bg-dashed border-2 border-white/10 flex items-center justify-center mb-4">
-                                        <Search className="text-gray-400 dark:text-white/20" size={24} />
+
+                                        <div className="space-y-3">
+                                            <div className="flex justify-between items-center">
+                                                <label className="text-[10px] font-black text-gray-600 dark:text-white/40 uppercase tracking-widest">Options</label>
+                                                <Button
+                                                    onClick={() => addOption(qIndex)}
+                                                    className="bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 border border-blue-500/20 rounded-lg px-3 py-1 text-xs"
+                                                >
+                                                    <Plus size={14} color="#2563eb" />
+                                                </Button>
+                                            </div>
+                                            {q.options.map((opt, optIndex) => (
+                                                <div key={optIndex} className="flex items-center gap-3">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={opt.is_correct}
+                                                        onChange={(e) => updateOption(qIndex, optIndex, 'is_correct', e.target.checked)}
+                                                        className="w-5 h-5 rounded border-gray-300 dark:border-white/20 text-emerald-500 focus:ring-emerald-500"
+                                                    />
+                                                    <input
+                                                        value={opt.option}
+                                                        onChange={(e) => updateOption(qIndex, optIndex, 'option', e.target.value)}
+                                                        placeholder={`Option ${optIndex + 1}`}
+                                                        className="flex-1 bg-gray-50 dark:bg-white/5 border border-gray-300 dark:border-white/10 rounded-lg px-4 py-2 text-sm text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-white/20 focus:border-[#a6b1ff]/50 outline-none"
+                                                    />
+                                                    {q.options.length > 2 && (
+                                                        <Button
+                                                            onClick={() => removeOption(qIndex, optIndex)}
+                                                            className="bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 border border-rose-500/20 rounded-lg p-2"
+                                                        >
+                                                            <Trash2 size={14} />
+                                                        </Button>
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
                                     </div>
-                                    <p className="text-lg font-bold text-gray-600 dark:text-white/40">No quizzes match "{searchTerm}"</p>
-                                    <p className="text-xs text-gray-400 dark:text-white/20 mt-2 uppercase tracking-widest">Try searching for a different name or code</p>
-                                </div>
-                            )}
-                        </div>
-                    )}
-                </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                )}
 
                 <div className="mt-12 flex justify-between items-center">
                     <button onClick={onPrev} className="text-gray-600 dark:text-white/40 hover:text-gray-900 dark:hover:text-white font-black uppercase text-xs tracking-widest">Back</button>
@@ -757,26 +930,26 @@ const Step3Questions = ({ formData, setFormData, quizzes, onNext, onPrev }) => {
 const Step4Assessment = ({ formData, setFormData, quizzes, onLaunch, isSubmitting, onPrev, navigate }) => (
     <motion.div
         initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
-        className="bg-white/5 backdrop-blur-3xl border border-white/10 rounded-[2.5rem] p-8 lg:p-12 shadow-2xl space-y-10 relative overflow-hidden"
+        className="bg-white dark:bg-white/5 backdrop-blur-3xl border border-gray-200 dark:border-white/10 rounded-[2.5rem] p-8 lg:p-12 shadow-2xl space-y-10 relative overflow-hidden"
     >
         <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/5 rounded-full blur-[100px]" />
 
         <div className="relative z-10">
             <div className="mb-10 text-center lg:text-left">
-                <h1 className="text-3xl lg:text-4xl font-black text-white uppercase italic mb-2">
-                    Final <span className="text-[#a6b1ff]">Assessment</span>
+                <h1 className="text-3xl lg:text-4xl font-black text-gray-900 dark:text-white uppercase italic mb-2">
+                    Final <span className="text-indigo-600 dark:text-[#a6b1ff]">Assessment</span>
                 </h1>
-                <p className="text-gray-700 dark:text-white/60 font-medium">Configure quizzes and interactive case studies</p>
+                <p className="text-gray-600 dark:text-white/60 font-medium">Configure quizzes and interactive case studies</p>
             </div>
 
             <div className="space-y-10">
                 {/* Quiz Linking Section */}
-                <div className="p-8 rounded-[2rem] bg-white/5 border border-white/10 space-y-6">
+                <div className="p-8 rounded-[2rem] bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 space-y-6">
                     <div className="flex items-center gap-3 mb-4">
-                        <div className="w-10 h-10 rounded-xl bg-indigo-500/10 flex items-center justify-center">
-                            <HelpCircle size={20} className="text-indigo-400" />
+                        <div className="w-10 h-10 rounded-xl bg-indigo-100 dark:bg-indigo-500/10 flex items-center justify-center">
+                            <HelpCircle size={20} className="text-indigo-600 dark:text-indigo-400" />
                         </div>
-                        <h3 className="text-lg font-black text-white uppercase tracking-wider">Certification Quiz</h3>
+                        <h3 className="text-lg font-black text-gray-900 dark:text-white uppercase tracking-wider">Certification Quiz</h3>
                     </div>
 
                     <SelectField
@@ -788,12 +961,12 @@ const Step4Assessment = ({ formData, setFormData, quizzes, onLaunch, isSubmittin
                         icon={HelpCircle}
                     />
 
-                    <div className="p-6 rounded-xl bg-indigo-500/5 border border-indigo-500/10 space-y-3">
+                    <div className="p-6 rounded-xl bg-blue-50 dark:bg-indigo-500/5 border border-blue-200 dark:border-indigo-500/10 space-y-3">
                         <div className="flex items-center gap-2">
-                            <AlertCircle size={16} className="text-indigo-400" />
-                            <h4 className="text-xs font-black text-indigo-400 uppercase tracking-widest">About Certification</h4>
+                            <AlertCircle size={16} className="text-indigo-600 dark:text-indigo-400" />
+                            <h4 className="text-xs font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-widest">About Certification</h4>
                         </div>
-                        <p className="text-xs text-gray-700 dark:text-white/40 leading-relaxed font-medium">
+                        <p className="text-xs text-gray-600 dark:text-white/40 leading-relaxed font-medium">
                             Linking a full quiz allows students to earn a formal certificate upon completion. The in-course questions are used for engagement and quick checks during the lessons.
                         </p>
                     </div>
@@ -808,11 +981,11 @@ const Step4Assessment = ({ formData, setFormData, quizzes, onLaunch, isSubmittin
                 </div>
 
                 {/* Summary Section */}
-                <div className="p-8 rounded-[2.5rem] bg-gradient-to-br from-indigo-500/10 to-transparent border border-white/10 space-y-6 relative group overflow-hidden flex flex-col justify-center">
+                <div className="p-8 rounded-[2.5rem] bg-gradient-to-br from-indigo-100 to-transparent dark:from-indigo-500/10 dark:to-transparent border border-indigo-200 dark:border-white/10 space-y-6 relative group overflow-hidden flex flex-col justify-center">
                     <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
                         <Globe size={120} />
                     </div>
-                    <h3 className="text-xl font-black text-white uppercase italic tracking-tighter">Final Summary</h3>
+                    <h3 className="text-xl font-black text-gray-900 dark:text-white uppercase italic tracking-tighter">Final Summary</h3>
                     <div className="space-y-4">
                         <SummaryItem label="Video Lessons" value={`${formData.other.length + 1} Modules`} />
                         <SummaryItem label="Linked Quiz" value={formData.questions.length > 0 ? 'Connected' : 'None'} />
@@ -844,15 +1017,15 @@ const Step4Assessment = ({ formData, setFormData, quizzes, onLaunch, isSubmittin
 const SuccessStep = ({ navigate }) => (
     <motion.div
         initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
-        className="bg-white/5 backdrop-blur-3xl border border-white/10 rounded-[3rem] p-12 text-center shadow-2xl relative overflow-hidden"
+        className="bg-white dark:bg-white/5 backdrop-blur-3xl border border-gray-200 dark:border-white/10 rounded-[3rem] p-12 text-center shadow-2xl relative overflow-hidden"
     >
         <div className="absolute inset-0 bg-emerald-500/5 blur-[100px]" />
         <div className="relative z-10 py-12">
             <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", damping: 12, stiffness: 200 }} className="w-32 h-32 bg-emerald-500 rounded-2xl mx-auto flex items-center justify-center mb-10 shadow-2xl shadow-emerald-500/30 rotate-12">
                 <CheckCircle2 size={64} className="text-white" />
             </motion.div>
-            <h1 className="text-4xl lg:text-6xl font-black text-white uppercase italic mb-4">Academy <span className="text-emerald-400">Live!</span></h1>
-            <p className="text-white/60 text-lg font-medium max-w-md mx-auto mb-16 leading-relaxed uppercase tracking-tighter">Your knowledge is now shared. Keep inspiring and empowering your students!</p>
+            <h1 className="text-4xl lg:text-6xl font-black text-gray-900 dark:text-white uppercase italic mb-4">Academy <span className="text-emerald-600 dark:text-emerald-400">Live!</span></h1>
+            <p className="text-gray-600 dark:text-white/60 text-lg font-medium max-w-md mx-auto mb-16 leading-relaxed uppercase tracking-tighter">Your knowledge is now shared. Keep inspiring and empowering your students!</p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
                 <Button onClick={() => navigate('/dashboard/courses')} className="w-full sm:w-auto px-12 py-7 rounded-2xl bg-white text-[#0a0a0a] font-black uppercase tracking-widest hover:bg-white/90 shadow-xl transition-all">My Courses</Button>
                 <Button onClick={() => {
@@ -939,28 +1112,26 @@ const FileUploadField = ({ label, field, url, isUploading, onUpload, isVideo = f
     return (
         <div className="space-y-2">
             <label className="text-xs font-black text-gray-600 dark:text-white/40 uppercase tracking-widest pl-1 italic">{label}</label>
-            
+
             {isVideo && !url && (
                 <div className="flex gap-2 mb-2">
                     <button
                         type="button"
                         onClick={() => setShowUrlInput(false)}
-                        className={`flex-1 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all ${
-                            !showUrlInput 
-                                ? 'bg-[#a6b1ff] text-black' 
-                                : 'bg-gray-200 dark:bg-white/5 text-gray-600 dark:text-white/40'
-                        }`}
+                        className={`flex-1 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all ${!showUrlInput
+                            ? 'bg-[#a6b1ff] text-black'
+                            : 'bg-gray-200 dark:bg-white/5 text-gray-600 dark:text-white/40'
+                            }`}
                     >
                         Upload File
                     </button>
                     <button
                         type="button"
                         onClick={() => setShowUrlInput(true)}
-                        className={`flex-1 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all ${
-                            showUrlInput 
-                                ? 'bg-[#a6b1ff] text-black' 
-                                : 'bg-gray-200 dark:bg-white/5 text-gray-600 dark:text-white/40'
-                        }`}
+                        className={`flex-1 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all ${showUrlInput
+                            ? 'bg-[#a6b1ff] text-black'
+                            : 'bg-gray-200 dark:bg-white/5 text-gray-600 dark:text-white/40'
+                            }`}
                     >
                         Use Link
                     </button>
@@ -1061,7 +1232,7 @@ const AdditionalResourcesUpload = ({ resources, onAdd, onRemove, isUploading, se
 
         // Use the parent's handleFileUpload function which uploads to Cloudinary
         await onFileUpload(e, 'other');
-        
+
         // Reset file input to allow uploading the same file again
         if (fileInputRef.current) {
             fileInputRef.current.value = '';
@@ -1072,7 +1243,7 @@ const AdditionalResourcesUpload = ({ resources, onAdd, onRemove, isUploading, se
         if (urlInput.trim()) {
             // Validate URL format
             const isValidUrl = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be|drive\.google\.com|.*\.(mp4|webm|ogg)).*$/i.test(urlInput.trim());
-            
+
             if (!isValidUrl) {
                 toast.error("Please enter a valid YouTube, Google Drive, or direct video link");
                 return;
@@ -1104,14 +1275,14 @@ const AdditionalResourcesUpload = ({ resources, onAdd, onRemove, isUploading, se
     return (
         <div className="space-y-3">
             {resources.map((url, i) => (
-                <div key={i} className="flex items-center justify-between p-3 bg-gray-100 dark:bg-white/5 rounded-xl border border-gray-300 dark:border-white/5 text-xs text-gray-700 dark:text-white/60 group">
+                <div key={i} className="flex items-center justify-between p-3 bg-white dark:bg-white/5 rounded-xl border border-gray-200 dark:border-white/5 text-xs text-gray-700 dark:text-white/60 group">
                     <div className="flex items-center gap-2 truncate min-w-0">
-                        <Video size={14} className="text-emerald-500 shrink-0" />
+                        <Video size={14} className="text-emerald-600 dark:text-emerald-500 shrink-0" />
                         <span className="truncate max-w-[200px]">{url}</span>
                     </div>
-                    <button 
+                    <button
                         type="button"
-                        onClick={() => onRemove(i)} 
+                        onClick={() => onRemove(i)}
                         className="text-rose-500 hover:text-rose-400 transition-colors shrink-0"
                     >
                         <Trash2 size={16} />
@@ -1120,11 +1291,11 @@ const AdditionalResourcesUpload = ({ resources, onAdd, onRemove, isUploading, se
             ))}
 
             {/* Hidden file input - always present */}
-            <input 
+            <input
                 ref={fileInputRef}
-                type="file" 
-                className="hidden" 
-                accept="video/*" 
+                type="file"
+                className="hidden"
+                accept="video/*"
                 onChange={handleFileUpload}
                 disabled={isUploading}
             />
@@ -1196,7 +1367,7 @@ const AdditionalResourcesUpload = ({ resources, onAdd, onRemove, isUploading, se
                     </button>
                 </div>
             )}
-            
+
             <p className="text-[10px] text-gray-500 dark:text-white/30 text-center uppercase tracking-widest">Max 5 additional modules</p>
         </div>
     );

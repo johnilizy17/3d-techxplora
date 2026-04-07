@@ -206,7 +206,7 @@ export default function FAQ() {
     ];
 
     return (
-        <div className="w-full max-w-4xl mx-auto px-6 py-24">
+        <div className="relative z-10 w-full max-w-4xl mx-auto px-6 py-24">
             <div className="text-center mb-16">
                 <h2 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-8 tracking-tight font-['Bricolage_Grotesque'] drop-shadow-sm">
                     Questions & Answers

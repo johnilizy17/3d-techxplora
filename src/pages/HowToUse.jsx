@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { BookOpen, GraduationCap, Trophy, ChevronRight, X, Users, Handshake, Building } from 'lucide-react';
+import { BookOpen, GraduationCap, Award, ChevronRight, X, Users, Handshake, Building } from 'lucide-react';
 import VisualBackground from "@/components/collectors/VisualBackground";
 import { Link } from 'react-router-dom';
 import {
@@ -203,6 +203,13 @@ export default function HowToUse() {
                             title="Teacher"
                             description="Create quizzes or manage results"
                             to="/auth/group"
+                            onClick={() => setIsStudentTeacherOpen(false)}
+                        />
+                        <ModalCard
+                            icon={Award}
+                            title="I'm an NJFP Fellow/Alumni"
+                            description="Access NJFP courses and track progress"
+                            to="/auth/alumni"
                             onClick={() => setIsStudentTeacherOpen(false)}
                         />
                     </div>

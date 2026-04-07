@@ -76,7 +76,8 @@ export default function CreateQuiz() {
         xp: 0,
         p_xp: 0,
         min_age: '',
-        max_age: ''
+        max_age: '',
+        attempt: ''
     });
 
     const [errors, setErrors] = useState({});
@@ -283,7 +284,8 @@ export default function CreateQuiz() {
                                             xp: 0,
                                             p_xp: 0,
                                             min_age: '',
-                                            max_age: ''
+                                            max_age: '',
+                                            attempt: ''
                                         });
                                         setCurrentStep(1);
                                         toast.info('Draft cleared');
@@ -571,6 +573,16 @@ const Step2 = ({ formData, handleChange, errors, handleSubmit, isSubmitting, use
                                     icon={Users}
                                 />
                             </div>
+                            <InputField
+                                label="Max Attempts"
+                                name="attempt"
+                                type="number"
+                                value={formData.attempt}
+                                onChange={handleChange}
+                                error={errors.attempt}
+                                placeholder="e.g. 3 (leave empty for unlimited)"
+                                icon={Target}
+                            />
                         </div>
                     </div>
                 </div>

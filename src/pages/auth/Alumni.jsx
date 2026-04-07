@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { GoogleOAuthProvider, useGoogleLogin } from "@react-oauth/google";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -14,9 +14,7 @@ import {
     EyeOff,
     Loader2,
     AlertCircle,
-    Check,
-    GraduationCap,
-    Shield
+    Award
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,16 +25,16 @@ import { cn } from "@/lib/utils";
 import AuthLayout from "./AuthLayout";
 import GoogleIcon from "@/components/icons/GoogleIcon";
 import { useDispatch } from "react-redux";
-import { useLoginMutation, useGoogleLoginMutation, useRegisterStudentMutation, useRegisterTeacherMutation } from "@/redux/api/authApi";
+import { useLoginMutation, useGoogleLoginMutation, useRegisterAlumniMutation } from "@/redux/api/authApi";
 import { setCredentials } from "@/redux/slices/authSlice";
 
 const GOOGLE_CLIENT_ID = "965781692825-d9242mpmjtqqk5svl8hvsnu000hh1f2m.apps.googleusercontent.com";
 
-// Signup validation schema
-const signupSchema = z.object({
+// Alumni signup validation schema
+const alumniSignupSchema = z.object({
     first_name: z.string().min(2, "First name is required"),
     last_name: z.string().min(2, "Last name is required"),
-    other_name: z.string().min(2, "other name is required"),
+    other_name: z.string().min(2, "Other name is required"),
     email: z.string().email("Please enter a valid email address"),
     password: z.string()
         .min(8, "Password must be at least 8 characters")
@@ -49,39 +47,21 @@ const signupSchema = z.object({
     path: ["password_confirmation"],
 });
 
-function SignupContent() {
+function AlumniSignupContent() {
     const dispatch = useDispatch();
     const navigate = useNavigate();
-    const [searchParams] = useSearchParams();
 
-    // URL parameters detection
-    const pageParam = searchParams.get("page");
-    const codeParam = searchParams.get("code");
-    const [login, { isLoading: isLoginLoading }] = useLoginMutation();
-    const [googleLogin, { isLoading: isGoogleLoginLoading }] = useGoogleLoginMutation();
+    const [login] = useLoginMutation();
+    const [googleLogin] = useGoogleLoginMutation();
+    const [registerAlumni, { isLoading: isAlumniLoading }] = useRegisterAlumniMutation();
 
-    const [registerStudent, { isLoading: isStudentLoading }] = useRegisterStudentMutation();
-    const [registerTeacher, { isLoading: isTeacherLoading }] = useRegisterTeacherMutation();
-
-    const [role, setRole] = useState("student"); // "student" | "teacher"
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [authFeedback, setAuthFeedback] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
 
-    // Sync role with URL parameters on mount
-    useEffect(() => {
-        if (codeParam) {
-            setRole("teacher");
-        } else if (pageParam === "3" || pageParam === "2") {
-            setRole("teacher");
-        }
-    }, [pageParam, codeParam]);
-
-    const isRegisterLoading = isStudentLoading || isTeacherLoading;
-
     const form = useForm({
-        resolver: zodResolver(signupSchema),
+        resolver: zodResolver(alumniSignupSchema),
         defaultValues: {
             first_name: "",
             last_name: "",
@@ -102,7 +82,6 @@ function SignupContent() {
             });
             const googleUser = await userInfoResponse.json();
 
-            // Porting v1 logic: password is sub + given_name
             const registrationData = {
                 first_name: googleUser.given_name,
                 last_name: googleUser.family_name || googleUser.name,
@@ -114,24 +93,13 @@ function SignupContent() {
                 is_branch: 0
             };
 
-            let response;
-            if (role === "teacher" || codeParam) {
-                response = await registerTeacher({
-                    ...registrationData,
-                    is_admin: pageParam === "3",
-                    admin_code: codeParam
-                }).unwrap();
-            } else {
-                response = await registerStudent(registrationData).unwrap();
-            }
-
+            await registerAlumni(registrationData).unwrap();
 
             setAuthFeedback({
                 type: "success",
-                message: `Registration successful! Welcome as a ${role}.`,
+                message: "Registration successful! Welcome as an NJFP Fellow/Alumni.",
             });
 
-            // Use Google login endpoint instead of regular login
             const googleLoginData = {
                 google_id: googleUser.sub,
                 email: googleUser.email.trim().toLowerCase(),
@@ -141,7 +109,6 @@ function SignupContent() {
 
             const logged = await googleLogin(googleLoginData).unwrap();
 
-            // Save credentials to Redux
             dispatch(setCredentials({
                 user: logged.data.user || logged.data,
                 token: logged.data.token,
@@ -149,7 +116,7 @@ function SignupContent() {
 
             toast({
                 title: "Welcome!",
-                description: "Your account has been created successfully.",
+                description: "Your NJFP Fellow/Alumni account has been created successfully.",
             });
             setTimeout(() => navigate("/auth/kyc"), 1500);
 
@@ -184,21 +151,10 @@ function SignupContent() {
                 is_branch: 0
             };
 
-            let response;
-            if (role === "teacher" || codeParam) {
-                response = await registerTeacher({
-                    ...registrationData,
-                    is_admin: pageParam === "3",
-                    admin_code: codeParam
-                }).unwrap();
-            } else {
-                response = await registerStudent(registrationData).unwrap();
-            }
-
+            await registerAlumni(registrationData).unwrap();
 
             const logged = await login(registrationData).unwrap();
 
-            // Save credentials to Redux
             dispatch(setCredentials({
                 user: logged.data.user || logged.data,
                 token: logged.data.token,
@@ -206,7 +162,7 @@ function SignupContent() {
 
             toast({
                 title: "Welcome!",
-                description: "Your account has been created successfully.",
+                description: "Your NJFP Fellow/Alumni account has been created successfully.",
             });
             setTimeout(() => navigate("/auth/kyc"), 1500);
 
@@ -228,56 +184,21 @@ function SignupContent() {
                 {/* Header */}
                 <div className="text-center space-y-4">
                     <div className="flex justify-center gap-2 mb-6">
-                        <div className={cn("w-3 h-3 rounded-full transition-all duration-500", role === "student" ? "bg-[#A78BFA] shadow-[0_0_10px_#A78BFA]" : "bg-white/20")} />
-                        <div className={cn("w-3 h-3 rounded-full transition-all duration-500", role === "teacher" ? "bg-[#4ADE80] shadow-[0_0_10px_#4ADE80]" : "bg-white/20")} />
+                        <div className="w-3 h-3 rounded-full bg-[#60A5FA] shadow-[0_0_10px_#60A5FA]" />
                     </div>
 
-                    <div className="mx-auto w-16 h-16 bg-white/5 backdrop-blur-xl border border-white/10 rounded-full flex items-center justify-center text-3xl mb-2">
-                        {role === "student" ? "🎓" : "👨‍🏫"}
+                    <div className="mx-auto w-16 h-16 bg-white/5 backdrop-blur-xl border border-white/10 rounded-full flex items-center justify-center mb-2">
+                        <Award className="w-8 h-8 text-[#60A5FA]" />
                     </div>
 
-                    <h2 className="text-3xl font-bold text-white tracking-tight">Create your profile</h2>
-                    <p className="text-gray-400">Join the explorer's community</p>
-                </div>
-
-                {/* Role Switcher - Disable if forced by code or page param */}
-                <div className={cn(
-                    "flex p-1.5 bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl w-full max-w-[480px] mx-auto overflow-hidden",
-                    (codeParam || pageParam) && "opacity-50 pointer-events-none"
-                )}>
-                    <button
-                        onClick={() => setRole("student")}
-                        className={cn(
-                            "flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl transition-all duration-300 font-medium text-sm",
-                            role === "student"
-                                ? "bg-white/10 text-[#A78BFA] shadow-[0_0_20px_rgba(167,139,250,0.1)]"
-                                : "text-gray-500 hover:text-gray-300"
-                        )}
-                    >
-                        <GraduationCap className="h-4 w-4" />
-                        Student
-                    </button>
-                    <button
-                        onClick={() => setRole("teacher")}
-                        className={cn(
-                            "flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl transition-all duration-300 font-medium text-sm",
-                            role === "teacher"
-                                ? "bg-white/10 text-[#4ADE80] shadow-[0_0_20px_rgba(74,222,128,0.1)]"
-                                : "text-gray-500 hover:text-gray-300"
-                        )}
-                    >
-                        <Shield className="h-4 w-4" />
-                        Teacher
-                    </button>
+                    <h2 className="text-3xl font-bold text-white tracking-tight">NJFP Fellows & Alumni</h2>
+                    <p className="text-gray-400">Join the NJFP community and access exclusive courses</p>
                 </div>
 
                 {/* Glass Card Form */}
                 <div className="p-8 rounded-3xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.4)] relative overflow-hidden group">
                     {/* Glow effect */}
-                    <div className={cn(
-                        "absolute -inset-1 blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none",
-                        role === "student" ? "bg-gradient-to-r from-[#A78BFA]/10 to-transparent" : "bg-gradient-to-r from-[#4ADE80]/10 to-transparent"
-                    )} />
+                    <div className="absolute -inset-1 bg-gradient-to-r from-[#60A5FA]/10 to-transparent blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
 
                     <div className="relative space-y-6">
                         {/* Auth Feedback Alert */}
@@ -307,7 +228,7 @@ function SignupContent() {
                             type="button"
                             onClick={() => signupWithGoogle()}
                             className="w-full h-12 bg-white text-black hover:bg-gray-100 font-medium rounded-xl flex items-center justify-center gap-3 transition-transform hover:scale-[1.02]"
-                            disabled={isLoading || isRegisterLoading}
+                            disabled={isLoading || isAlumniLoading}
                         >
                             <GoogleIcon />
                             Sign up with Google
@@ -324,11 +245,11 @@ function SignupContent() {
                                 <div className="space-y-2">
                                     <Label className="text-gray-400 ml-1">First Name</Label>
                                     <div className="relative group">
-                                        <User className="absolute left-4 top-3.5 h-5 w-5 text-gray-400 group-focus-within:text-[#A78BFA] transition-colors" />
+                                        <User className="absolute left-4 top-3.5 h-5 w-5 text-gray-400 group-focus-within:text-[#60A5FA] transition-colors" />
                                         <Input
                                             {...form.register("first_name")}
-                                            placeholder="Azusa"
-                                            className="pl-12 h-12 bg-black/30 border-white/10 text-white placeholder:text-gray-500 focus:border-[#A78BFA] focus:ring-1 focus:ring-[#A78BFA] rounded-xl transition-all"
+                                            placeholder="John"
+                                            className="pl-12 h-12 bg-black/30 border-white/10 text-white placeholder:text-gray-500 focus:border-[#60A5FA] focus:ring-1 focus:ring-[#60A5FA] rounded-xl transition-all"
                                         />
                                     </div>
                                     {form.formState.errors.first_name && (
@@ -338,11 +259,11 @@ function SignupContent() {
                                 <div className="space-y-2">
                                     <Label className="text-gray-400 ml-1">Last Name</Label>
                                     <div className="relative group">
-                                        <User className="absolute left-4 top-3.5 h-5 w-5 text-gray-400 group-focus-within:text-[#A78BFA] transition-colors" />
+                                        <User className="absolute left-4 top-3.5 h-5 w-5 text-gray-400 group-focus-within:text-[#60A5FA] transition-colors" />
                                         <Input
                                             {...form.register("last_name")}
-                                            placeholder="Nakano"
-                                            className="pl-12 h-12 bg-black/30 border-white/10 text-white placeholder:text-gray-500 focus:border-[#A78BFA] focus:ring-1 focus:ring-[#A78BFA] rounded-xl transition-all"
+                                            placeholder="Doe"
+                                            className="pl-12 h-12 bg-black/30 border-white/10 text-white placeholder:text-gray-500 focus:border-[#60A5FA] focus:ring-1 focus:ring-[#60A5FA] rounded-xl transition-all"
                                         />
                                     </div>
                                     {form.formState.errors.last_name && (
@@ -354,11 +275,11 @@ function SignupContent() {
                             <div className="space-y-2">
                                 <Label className="text-gray-400 ml-1">Other Name</Label>
                                 <div className="relative group">
-                                    <User className="absolute left-4 top-3.5 h-5 w-5 text-gray-400 group-focus-within:text-[#A78BFA] transition-colors" />
+                                    <User className="absolute left-4 top-3.5 h-5 w-5 text-gray-400 group-focus-within:text-[#60A5FA] transition-colors" />
                                     <Input
                                         {...form.register("other_name")}
-                                        placeholder="Azusa"
-                                        className="pl-12 h-12 bg-black/30 border-white/10 text-white placeholder:text-gray-500 focus:border-[#A78BFA] focus:ring-1 focus:ring-[#A78BFA] rounded-xl transition-all"
+                                        placeholder="Middle name"
+                                        className="pl-12 h-12 bg-black/30 border-white/10 text-white placeholder:text-gray-500 focus:border-[#60A5FA] focus:ring-1 focus:ring-[#60A5FA] rounded-xl transition-all"
                                     />
                                 </div>
                             </div>
@@ -366,12 +287,12 @@ function SignupContent() {
                             <div className="space-y-2">
                                 <Label className="text-gray-400 ml-1">Email Address</Label>
                                 <div className="relative group">
-                                    <Mail className="absolute left-4 top-3.5 h-5 w-5 text-gray-400 group-focus-within:text-[#A78BFA] transition-colors" />
+                                    <Mail className="absolute left-4 top-3.5 h-5 w-5 text-gray-400 group-focus-within:text-[#60A5FA] transition-colors" />
                                     <Input
                                         {...form.register("email")}
                                         type="email"
-                                        placeholder="explorer@example.com"
-                                        className="pl-12 h-12 bg-black/30 border-white/10 text-white placeholder:text-gray-500 focus:border-[#A78BFA] focus:ring-1 focus:ring-[#A78BFA] rounded-xl transition-all"
+                                        placeholder="fellow@njfp.org"
+                                        className="pl-12 h-12 bg-black/30 border-white/10 text-white placeholder:text-gray-500 focus:border-[#60A5FA] focus:ring-1 focus:ring-[#60A5FA] rounded-xl transition-all"
                                     />
                                 </div>
                                 {form.formState.errors.email && (
@@ -382,12 +303,12 @@ function SignupContent() {
                             <div className="space-y-2">
                                 <Label className="text-gray-400 ml-1">Password</Label>
                                 <div className="relative group">
-                                    <Lock className="absolute left-4 top-3.5 h-5 w-5 text-gray-400 group-focus-within:text-[#A78BFA] transition-colors" />
+                                    <Lock className="absolute left-4 top-3.5 h-5 w-5 text-gray-400 group-focus-within:text-[#60A5FA] transition-colors" />
                                     <Input
                                         {...form.register("password")}
                                         type={showPassword ? "text" : "password"}
                                         placeholder="••••••••"
-                                        className="pl-12 pr-12 h-12 bg-black/30 border-white/10 text-white placeholder:text-gray-500 focus:border-[#A78BFA] focus:ring-1 focus:ring-[#A78BFA] rounded-xl transition-all"
+                                        className="pl-12 pr-12 h-12 bg-black/30 border-white/10 text-white placeholder:text-gray-500 focus:border-[#60A5FA] focus:ring-1 focus:ring-[#60A5FA] rounded-xl transition-all"
                                     />
                                     <button
                                         type="button"
@@ -405,12 +326,12 @@ function SignupContent() {
                             <div className="space-y-2">
                                 <Label className="text-gray-400 ml-1">Confirm Password</Label>
                                 <div className="relative group">
-                                    <Lock className="absolute left-4 top-3.5 h-5 w-5 text-gray-400 group-focus-within:text-[#A78BFA] transition-colors" />
+                                    <Lock className="absolute left-4 top-3.5 h-5 w-5 text-gray-400 group-focus-within:text-[#60A5FA] transition-colors" />
                                     <Input
                                         {...form.register("password_confirmation")}
                                         type={showConfirmPassword ? "text" : "password"}
                                         placeholder="••••••••"
-                                        className="pl-12 pr-12 h-12 bg-black/30 border-white/10 text-white placeholder:text-gray-500 focus:border-[#A78BFA] focus:ring-1 focus:ring-[#A78BFA] rounded-xl transition-all"
+                                        className="pl-12 pr-12 h-12 bg-black/30 border-white/10 text-white placeholder:text-gray-500 focus:border-[#60A5FA] focus:ring-1 focus:ring-[#60A5FA] rounded-xl transition-all"
                                     />
                                     <button
                                         type="button"
@@ -427,19 +348,14 @@ function SignupContent() {
 
                             <Button
                                 type="submit"
-                                className={cn(
-                                    "w-full h-14 mt-4 text-[#022c22] text-lg font-bold rounded-xl active:shadow-none active:translate-y-[4px] transition-all flex items-center justify-center gap-2",
-                                    role === "student"
-                                        ? "bg-[#A78BFA] hover:bg-[#8B5CF6] shadow-[0_4px_0_#6D28D9] text-white"
-                                        : "bg-[#4ADE80] hover:bg-[#22c55e] shadow-[0_4px_0_#15803d]"
-                                )}
-                                disabled={isLoading || isRegisterLoading}
+                                className="w-full h-14 mt-4 bg-[#60A5FA] hover:bg-[#3B82F6] shadow-[0_4px_0_#1E40AF] text-white text-lg font-bold rounded-xl active:shadow-none active:translate-y-[4px] transition-all flex items-center justify-center gap-2"
+                                disabled={isLoading || isAlumniLoading}
                             >
-                                {isLoading || isRegisterLoading ? (
+                                {isLoading || isAlumniLoading ? (
                                     <Loader2 className="h-6 w-6 animate-spin" />
                                 ) : (
                                     <>
-                                        {role === "student" ? "JOIN AS STUDENT" : "JOIN AS TEACHER"}
+                                        JOIN AS NJFP FELLOW/ALUMNI
                                         <ArrowRight className="h-5 w-5" />
                                     </>
                                 )}
@@ -451,7 +367,7 @@ function SignupContent() {
                 <div className="text-center">
                     <p className="text-gray-400">
                         Already have an account?{" "}
-                        <Link to="/auth/login" className="text-[#A78BFA] font-bold hover:underline hover:text-[#c4b5fd]">
+                        <Link to="/auth/login" className="text-[#60A5FA] font-bold hover:underline hover:text-[#93C5FD]">
                             Log in
                         </Link>
                     </p>
@@ -461,10 +377,10 @@ function SignupContent() {
     );
 }
 
-export default function Signup() {
+export default function Alumni() {
     return (
         <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
-            <SignupContent />
+            <AlumniSignupContent />
         </GoogleOAuthProvider>
     );
 }

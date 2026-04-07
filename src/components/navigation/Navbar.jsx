@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { NavLink, useLocation, useNavigate, Link } from 'react-router-dom';
-import { Sparkles, Menu, X, GraduationCap, Users, LayoutDashboard, Moon, Sun } from 'lucide-react';
+import { Sparkles, Menu, X, GraduationCap, Users, Award, LayoutDashboard, Moon, Sun } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { selectIsAuthenticated } from '@/redux/slices/authSlice';
 import { Button } from "@/components/ui/button";
@@ -163,7 +163,7 @@ export default function Navbar() {
                         {darkMode ? (
                             <Sun className="w-4 h-4 text-amber-500" />
                         ) : (
-                            <Moon className="w-4 h-4 text-indigo-600" />
+                            <Moon color="#000" className="w-4 h-4" />
                         )}
                     </button>
                     
@@ -234,6 +234,13 @@ export default function Navbar() {
                             title="I'm a Teacher"
                             description="Create quizzes and see how students do"
                             to="/auth/group"
+                            onClick={() => setIsRegisterModalOpen(false)}
+                        />
+                        <ModalCard
+                            icon={Award}
+                            title="I'm an NJFP Fellow/Alumni"
+                            description="Access NJFP courses and track progress"
+                            to="/auth/alumni"
                             onClick={() => setIsRegisterModalOpen(false)}
                         />
                     </div>

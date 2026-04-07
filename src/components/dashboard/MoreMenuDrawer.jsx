@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import {
     User, Settings, Users, FileText, Wallet,
-    LogOut, X, Zap, ChevronRight, Play, BookOpen, Home, Wrench
+    LogOut, X, Zap, ChevronRight, Play, BookOpen, Home, Wrench, GraduationCap, HelpCircle
 } from 'lucide-react';
 import { selectCurrentUser, logout, updateUser } from '@/redux/slices/authSlice';
 import { useGetStudentProfileQuery } from '@/redux/api/studentApi';
@@ -54,6 +54,8 @@ export default function MoreMenuDrawer({ isOpen, onClose, onLogoutTrigger }) {
         { icon: User, label: "Profile", path: "/dashboard/profile", show: true },
         { icon: Users, label: "All Teacher", path: "/dashboard/teachers", show: isAdmin },
         { icon: Play, label: "Courses", path: isStudent ? "/courses" : "/dashboard/courses", show: true },
+        { icon: HelpCircle, label: "Quiz", path: "/dashboard/quizzes", show: true },
+        { icon: GraduationCap, label: "Nigeria Curriculum", path: "/dashboard/nigeria-curriculum", show: true },
         { icon: Wrench, label: "Toolkit", path: "/dashboard/toolkit", show: true },
         { icon: BookOpen, label: "Docs", path: "/docs", show: true },
         { icon: FileText, label: "Syllabus", path: "/dashboard/syllabus", show: isTeacher },

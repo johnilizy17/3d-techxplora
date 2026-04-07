@@ -190,11 +190,11 @@ export default function AIReview() {
                                 key={i}
                                 onClick={() => setActiveIndex(i)}
                                 className={`w-full p-4 rounded-2xl flex items-center gap-4 transition-all duration-300 border ${i === activeIndex
-                                    ? 'bg-blue-600/10 border-blue-500/50 text-white shadow-lg shadow-blue-500/10'
-                                    : 'bg-white/[0.02] border-white/5 text-white/30 hover:bg-white/[0.04] hover:border-white/10'
+                                    ? 'bg-gray-100 dark:bg-white/[0.02] bg-green-100 dark:bg-green-600/10 border-green-400 text-gray-400 dark:text-white/30 hover:bg-gray-200 dark:hover:bg-white/[0.04] hover:border-gray-300 dark:hover:border-white/10'
+                                    : 'bg-gray-100 dark:bg-white/[0.02] border-gray-200 dark:border-white/5 text-gray-400 dark:text-white/30 hover:bg-gray-200 dark:hover:bg-white/[0.04] hover:border-gray-300 dark:hover:border-white/10'
                                     }`}
                             >
-                                <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-black italic text-xs shrink-0 ${i === activeIndex ? 'bg-blue-500' : 'bg-white/10'
+                                <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-black italic text-xs shrink-0 ${i === activeIndex ? 'bg-blue-600 text-gray-700 dark:text-white' : 'bg-gray-300 dark:bg-white/10 text-gray-700 dark:text-white'
                                     }`}>
                                     {i + 1}
                                 </div>
@@ -306,7 +306,7 @@ export default function AIReview() {
                             <div className="max-w-4xl w-full flex items-center gap-6">
                                 <div className="hidden md:flex items-center gap-4 px-6 border-r border-white/10">
                                     <div>
-                                        <p className="text-[10px] font-black text-white/20 uppercase">Total Nodes</p>
+                                        <p className="text-[10px] font-black text-white/20 uppercase">Total Questions</p>
                                         <p className="text-xl font-black text-white italic">{questions.length}</p>
                                     </div>
                                     <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center">

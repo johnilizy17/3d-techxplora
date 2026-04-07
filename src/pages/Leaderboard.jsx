@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Trophy, Medal, Crown, Timer, Filter, Search, ArrowUp, ArrowDown, User, Sparkles } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { selectCurrentUser } from '@/redux/slices/authSlice';
-import { useGetGlobalLeaderboardQuery, useGetAdminLeaderboardQuery } from '@/redux/api/leaderboardApi';
+import { useGetGlobalLeaderboardQuery, useGetAdminLeaderboardQuery, useGetQuizLeaderboardQuery, useGetGroupLeaderboardQuery } from '@/redux/api/leaderboardApi';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import EmptyState from '@/components/dashboard/EmptyState';
 
@@ -11,17 +11,48 @@ export default function Leaderboard() {
     const user = useSelector(selectCurrentUser);
     const isAdmin = user?.is_admin || user?.role === 'admin' || user?.accountable_type === "App\\Models\\Teacher";
     const [searchQuery, setSearchQuery] = useState('');
+    const [activeTab, setActiveTab] = useState('weekly');
+    const [selectedQuizCode, setSelectedQuizCode] = useState('');
+    const [selectedGroupCode, setSelectedGroupCode] = useState('');
 
-    const { data: globalData, isLoading: isGlobalLoading } = useGetGlobalLeaderboardQuery(undefined, {
-        skip: isAdmin
-    });
+    const { data: globalData, isLoading: isGlobalLoading } = useGetGlobalLeaderboardQuery(
+        activeTab === 'weekly' ? 'weekly' : activeTab === 'monthly' ? 'monthly' : activeTab === 'yearly' ? 'yearly' : 'weekly',
+        {
+            skip: !['weekly', 'monthly', 'yearly'].includes(activeTab)
+        }
+    );
 
     const { data: adminData, isLoading: isAdminLoading } = useGetAdminLeaderboardQuery(user?.admin_code, {
-        skip: !isAdmin || !user?.admin_code
+        skip: !isAdmin || !user?.admin_code || activeTab !== 'admin'
     });
 
-    const isLoading = isAdmin ? isAdminLoading : isGlobalLoading;
-    const rawData = isAdmin ? adminData : globalData;
+    const { data: quizData, isLoading: isQuizLoading } = useGetQuizLeaderboardQuery(selectedQuizCode, {
+        skip: activeTab !== 'quiz' || !selectedQuizCode
+    });
+
+    const { data: groupData, isLoading: isGroupLoading } = useGetGroupLeaderboardQuery(selectedGroupCode, {
+        skip: activeTab !== 'group' || !selectedGroupCode
+    });
+
+    const isLoading = ['weekly', 'monthly', 'yearly'].includes(activeTab)
+        ? isGlobalLoading
+        : activeTab === 'admin'
+        ? isAdminLoading
+        : activeTab === 'quiz'
+        ? isQuizLoading
+        : activeTab === 'group'
+        ? isGroupLoading
+        : false;
+
+    const rawData = ['weekly', 'monthly', 'yearly'].includes(activeTab)
+        ? globalData
+        : activeTab === 'admin'
+        ? adminData
+        : activeTab === 'quiz'
+        ? quizData
+        : activeTab === 'group'
+        ? groupData
+        : [];
 
     // Map API data to our UI structure
     const leaderboardData = (rawData || []).map((item, index) => {
@@ -35,7 +66,8 @@ export default function Leaderboard() {
             avatar: student.photo || student.avatar || null,
             trend: item.trend || 'same',
             level: Math.floor((student.xp || 0) / 1000) + 1, // Simple level calculation if not provided
-            role: student.role || (item.student ? 'student' : 'user')
+            role: student.role || (item.student ? 'student' : 'user'),
+            date: item.date || item.created_at || item.updated_at || null
         };
     });
 
@@ -70,10 +102,16 @@ export default function Leaderboard() {
                                     <span className="text-[10px] font-bold text-indigo-600 dark:text-[#a6b1ff] uppercase tracking-widest">Global Rankings</span>
                                 </div>
                                 <h1 className="text-4xl sm:text-5xl font-black text-gray-900 dark:text-white tracking-tight uppercase italic leading-none">
-                                    Weekly <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-[#a6b1ff] dark:to-white">Leaderboard </span>
+                                    {activeTab === 'weekly' && 'Weekly '}
+                                    {activeTab === 'monthly' && 'Monthly '}
+                                    {activeTab === 'yearly' && 'Yearly '}
+                                    {activeTab === 'quiz' && 'Quiz '}
+                                    {activeTab === 'group' && 'Group '}
+                                    {activeTab === 'admin' && 'My Students '}
+                                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-[#a6b1ff] dark:to-white">Leaderboard </span>
                                 </h1>
                                 <p className="text-sm font-medium text-gray-600 dark:text-white/40 max-w-md">
-                                    See the top players and their amazing quiz scores!
+                                    Check out the top players and their awesome quiz scores! 🏆
                                 </p>
                             </div>
 
@@ -84,7 +122,7 @@ export default function Leaderboard() {
                                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-white/30 group-focus-within:text-[#a6b1ff] transition-colors" size={16} />
                                     <input
                                         type="text"
-                                        placeholder="Find an Xplora..."
+                                        placeholder="Find a friend..."
                                         value={searchQuery}
                                         onChange={(e) => setSearchQuery(e.target.value)}
                                         className="w-full h-11 pl-11 pr-4 bg-gray-100 dark:bg-white/5 border border-gray-300 dark:border-white/10 rounded-2xl text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-white/20 focus:outline-none focus:border-[#a6b1ff]/50 focus:bg-white dark:focus:bg-white/10 transition-all text-sm font-medium"
@@ -92,6 +130,41 @@ export default function Leaderboard() {
                                 </div>
                             </div>
                         </div>
+
+                        {/* Tabs Section */}
+                        <div className="mt-6 flex flex-wrap gap-2">
+                            {['weekly', 'monthly', 'yearly', 'quiz', 'group', ...(isAdmin ? ['admin'] : [])].map((tab) => (
+                                <button
+                                    key={tab}
+                                    onClick={() => setActiveTab(tab)}
+                                    className={`px-6 py-3 rounded-xl font-black text-xs uppercase tracking-wider transition-all ${
+                                        activeTab === tab
+                                            ? 'bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-[#a6b1ff] dark:to-[#a6b1ff] text-white shadow-lg scale-105'
+                                            : 'bg-gray-100 dark:bg-white/5 text-gray-600 dark:text-white/60 hover:bg-gray-200 dark:hover:bg-white/10 border-2 border-gray-200 dark:border-white/10'
+                                    }`}
+                                >
+                                    {tab === 'weekly' && '📅 Weekly'}
+                                    {tab === 'monthly' && '📆 Monthly'}
+                                    {tab === 'yearly' && '🗓️ Yearly'}
+                                    {tab === 'quiz' && '🎯 Quiz'}
+                                    {tab === 'group' && '👥 Group'}
+                                    {tab === 'admin' && '👨‍🏫 My Students'}
+                                </button>
+                            ))}
+                        </div>
+
+                        {/* Quiz/Group Code Input */}
+                        {(activeTab === 'quiz' || activeTab === 'group') && (
+                            <div className="mt-4 flex gap-3">
+                                <input
+                                    type="text"
+                                    placeholder={activeTab === 'quiz' ? 'Enter Quiz Code...' : 'Enter Group Code...'}
+                                    value={activeTab === 'quiz' ? selectedQuizCode : selectedGroupCode}
+                                    onChange={(e) => activeTab === 'quiz' ? setSelectedQuizCode(e.target.value) : setSelectedGroupCode(e.target.value)}
+                                    className="flex-1 h-11 px-4 bg-gray-100 dark:bg-white/5 border border-gray-300 dark:border-white/10 rounded-xl text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-white/20 focus:outline-none focus:border-[#a6b1ff]/50 focus:bg-white dark:focus:bg-white/10 transition-all text-sm font-medium"
+                                />
+                            </div>
+                        )}
                     </header>
 
                     {isLoading ? (
@@ -100,13 +173,97 @@ export default function Leaderboard() {
                                 <div className="absolute inset-0 rounded-full border-4 border-indigo-200 dark:border-[#a6b1ff]/20"></div>
                                 <div className="absolute inset-0 rounded-full border-t-4 border-indigo-600 dark:border-[#a6b1ff] animate-spin"></div>
                             </div>
-                            <p className="text-indigo-600 dark:text-[#a6b1ff] font-black uppercase tracking-widest animate-pulse">Loading Players...</p>
+                            <p className="text-indigo-600 dark:text-[#a6b1ff] font-black uppercase tracking-widest animate-pulse">Loading the Stars... ✨</p>
+                        </div>
+                    ) : (activeTab === 'monthly' || activeTab === 'yearly') && (!globalData || globalData.length === 0) ? (
+                        /* Coming Soon State for Monthly/Yearly */
+                        <div className="py-24 flex flex-col items-center justify-center gap-6">
+                            <div className="w-32 h-32 rounded-full bg-gradient-to-br from-indigo-100 to-purple-100 dark:from-white/5 dark:to-white/10 border-4 border-indigo-300 dark:border-white/10 flex items-center justify-center">
+                                <Timer size={64} className="text-indigo-500 dark:text-[#a6b1ff]" />
+                            </div>
+                            <div className="text-center space-y-3 max-w-md">
+                                <h3 className="text-2xl sm:text-3xl font-black text-gray-800 dark:text-white uppercase italic tracking-tight">
+                                    Coming Soon! 🚀
+                                </h3>
+                                <p className="text-sm font-medium text-gray-600 dark:text-white/50 leading-relaxed">
+                                    {activeTab === 'monthly' ? 'Monthly' : 'Yearly'} leaderboards are on their way! Keep playing quizzes and check back soon to see how you rank over time! 🌟
+                                </p>
+                            </div>
+                        </div>
+                    ) : (activeTab === 'quiz' && !selectedQuizCode) ? (
+                        /* Quiz Code Required State */
+                        <div className="py-24 flex flex-col items-center justify-center gap-6">
+                            <div className="w-32 h-32 rounded-full bg-gradient-to-br from-amber-100 to-yellow-100 dark:from-amber-500/10 dark:to-yellow-500/10 border-4 border-amber-300 dark:border-amber-500/20 flex items-center justify-center">
+                                <Search size={64} className="text-amber-600 dark:text-amber-400" />
+                            </div>
+                            <div className="text-center space-y-3 max-w-md">
+                                <h3 className="text-2xl sm:text-3xl font-black text-gray-800 dark:text-white uppercase italic tracking-tight">
+                                    Enter a Quiz Code! 🎯
+                                </h3>
+                                <p className="text-sm font-medium text-gray-600 dark:text-white/50 leading-relaxed">
+                                    Type in a quiz code above to see who's winning that specific quiz! Ask your teacher for the code! 📝
+                                </p>
+                            </div>
+                        </div>
+                    ) : (activeTab === 'group' && !selectedGroupCode) ? (
+                        /* Group Code Required State */
+                        <div className="py-24 flex flex-col items-center justify-center gap-6">
+                            <div className="w-32 h-32 rounded-full bg-gradient-to-br from-emerald-100 to-green-100 dark:from-emerald-500/10 dark:to-green-500/10 border-4 border-emerald-300 dark:border-emerald-500/20 flex items-center justify-center">
+                                <User size={64} className="text-emerald-600 dark:text-emerald-400" />
+                            </div>
+                            <div className="text-center space-y-3 max-w-md">
+                                <h3 className="text-2xl sm:text-3xl font-black text-gray-800 dark:text-white uppercase italic tracking-tight">
+                                    Enter a Group Code! 👥
+                                </h3>
+                                <p className="text-sm font-medium text-gray-600 dark:text-white/50 leading-relaxed">
+                                    Type in a group code above to see how your group is doing! Ask your teacher for the code! 🎓
+                                </p>
+                            </div>
                         </div>
                     ) : (
                         <>
                             {/* 3D Podium Section */}
                             <div className="relative mb-16 lg:mb-24">
-                                <div className="flex flex-row items-end justify-center gap-2 sm:gap-6 lg:gap-12 pt-12">
+                                {topThree.length === 0 ? (
+                                    /* Empty Podium State */
+                                    <div className="flex flex-col items-center justify-center py-16 px-6">
+                                        <motion.div
+                                            initial={{ opacity: 0, scale: 0.8 }}
+                                            animate={{ opacity: 1, scale: 1 }}
+                                            transition={{ duration: 0.6 }}
+                                            className="relative"
+                                        >
+                                            {/* Empty Trophy Icon */}
+                                            <div className="w-32 h-32 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 dark:from-white/5 dark:to-white/10 border-4 border-gray-300 dark:border-white/10 flex items-center justify-center mb-6 shadow-xl">
+                                                <Trophy size={64} className="text-gray-400 dark:text-white/20" />
+                                            </div>
+                                            
+                                            {/* Empty Podium Illustration */}
+                                            <div className="flex items-end justify-center gap-4 mb-8">
+                                                <div className="w-16 h-20 bg-gradient-to-b from-gray-200/40 to-gray-300/60 dark:from-white/5 dark:to-white/10 border border-gray-300 dark:border-white/10 rounded-t-2xl" />
+                                                <div className="w-20 h-28 bg-gradient-to-b from-gray-200/40 to-gray-300/60 dark:from-white/5 dark:to-white/10 border border-gray-300 dark:border-white/10 rounded-t-2xl" />
+                                                <div className="w-16 h-16 bg-gradient-to-b from-gray-200/40 to-gray-300/60 dark:from-white/5 dark:to-white/10 border border-gray-300 dark:border-white/10 rounded-t-2xl" />
+                                            </div>
+                                        </motion.div>
+
+                                        <div className="text-center space-y-3 max-w-md">
+                                            <h3 className="text-2xl sm:text-3xl font-black text-gray-800 dark:text-white uppercase italic tracking-tight">
+                                                The Stage is Empty! 🎭
+                                            </h3>
+                                            <p className="text-sm font-medium text-gray-600 dark:text-white/50 leading-relaxed">
+                                                Wow! Nobody has played any quizzes this week yet. You could be the FIRST superstar on the leaderboard! How cool is that? 🌟
+                                            </p>
+                                            <div className="pt-4 flex items-center justify-center gap-2">
+                                                <Sparkles size={16} className="text-indigo-500 dark:text-[#a6b1ff]" />
+                                                <span className="text-xs font-bold text-indigo-600 dark:text-[#a6b1ff] uppercase tracking-wider">
+                                                    Play a quiz and become a star!
+                                                </span>
+                                                <Sparkles size={16} className="text-indigo-500 dark:text-[#a6b1ff]" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="flex flex-row items-end justify-center gap-2 sm:gap-6 lg:gap-12 pt-12">
                                     {/* Rank 2 (Silver) */}
                                     {topThree[1] && (
                                         <motion.div
@@ -181,8 +338,11 @@ export default function Leaderboard() {
                                         </motion.div>
                                     )}
                                 </div>
+                                )}
                                 {/* Shadow Floor */}
-                                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-full h-8 bg-black/40 blur-2xl rounded-full -z-10" />
+                                {topThree.length > 0 && (
+                                    <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-full h-8 bg-black/40 blur-2xl rounded-full -z-10" />
+                                )}
                             </div>
 
                             {/* Rankings List Section */}
@@ -190,7 +350,7 @@ export default function Leaderboard() {
                                 <div className="flex items-center justify-between mb-8 px-2">
                                     <div className="flex items-center gap-4">
                                         <div className="w-12 h-1 bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-[#a6b1ff] dark:to-[#a6b1ff] rounded-full" />
-                                        <h3 className="text-sm font-black text-gray-800 dark:text-white/80 uppercase tracking-[0.2em]">All Players</h3>
+                                        <h3 className="text-sm font-black text-gray-800 dark:text-white/80 uppercase tracking-[0.2em]">All Stars</h3>
                                     </div>
                                     {searchQuery && (
                                         <div className="px-4 py-2 bg-indigo-100 dark:bg-indigo-500/10 border-2 border-indigo-300 dark:border-indigo-500/20 rounded-xl">
@@ -203,9 +363,9 @@ export default function Leaderboard() {
 
                                 <div className="flex items-center px-8 py-3 mb-4 bg-gray-100 dark:bg-white/5 rounded-2xl border-2 border-gray-200 dark:border-white/5">
                                     <span className="w-14 text-center text-[10px] font-black text-gray-600 dark:text-white/40 uppercase tracking-wider">Rank</span>
-                                    <span className="flex-1 ml-2 text-left text-[10px] font-black text-gray-600 dark:text-white/40 uppercase tracking-wider">Player</span>
-                                    <span className="hidden sm:block w-32 text-center text-[10px] font-black text-gray-600 dark:text-white/40 uppercase tracking-wider">Progress</span>
-                                    <span className="w-28 text-right text-[10px] font-black text-gray-600 dark:text-white/40 uppercase tracking-wider">Points</span>
+                                    <span className="flex-1 ml-2 text-left text-[10px] font-black text-gray-600 dark:text-white/40 uppercase tracking-wider">Name</span>
+                                    <span className="hidden sm:block w-32 text-center text-[10px] font-black text-gray-600 dark:text-white/40 uppercase tracking-wider">Level</span>
+                                    <span className="w-28 text-right text-[10px] font-black text-gray-600 dark:text-white/40 uppercase tracking-wider">Score</span>
                                 </div>
 
                                 <AnimatePresence mode="popLayout">
@@ -281,16 +441,23 @@ export default function Leaderboard() {
                                         ))
                                     ) : (
                                         <div className="py-12">
-                                            <EmptyState title="Xplora Not Found" description="Try searching for a different name or clear the search." />
+                                            <EmptyState title="Friend Not Found" description="Try searching for a different name or clear the search. 🔍" />
                                         </div>
                                     )}
                                 </AnimatePresence>
                             </div>
 
                             {/* Footer / Disclaimer */}
-                            <p className="mt-12 text-center text-gray-500 dark:text-white/20 text-[10px] font-bold uppercase tracking-[0.3em] pb-10">
-                                Rankings update in real-time based on quiz scores!
-                            </p>
+                            <div className="mt-12 text-center pb-10 space-y-2">
+                                <p className="text-gray-500 dark:text-white/20 text-[10px] font-bold uppercase tracking-[0.3em]">
+                                    Scores update super fast! Keep playing! 🚀
+                                </p>
+                                {leaderboardData.length > 0 && !leaderboardData[0].date && (
+                                    <p className="text-amber-600 dark:text-amber-400 text-[9px] font-bold uppercase tracking-wider">
+                                        Date info not available right now
+                                    </p>
+                                )}
+                            </div>
                         </>
                     )}
                 </div>

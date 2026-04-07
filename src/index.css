@@ -219,11 +219,7 @@
     color: hsl(var(--foreground)) !important;
   }
   
-  /* SVG and icon color overrides */
-  html:not(.dark) svg.text-white,
-  html:not(.dark) [class*="text-white"] svg {
-    color: hsl(var(--foreground)) !important;
-  }
+ 
   
   /* Opacity overrides for light mode */
   html:not(.dark) .opacity-\[0\.15\] {
@@ -445,32 +441,7 @@
     font-weight: 600 !important;
   }
   
-  /* Button text on colored backgrounds should stay white */
-  html:not(.dark) button[class*="bg-gradient"] *,
-  html:not(.dark) button[class*="bg-indigo"] *,
-  html:not(.dark) button[class*="bg-purple"] *,
-  html:not(.dark) button[class*="bg-blue"] *,
-  html:not(.dark) button[class*="bg-emerald"] *,
-  html:not(.dark) button[class*="bg-amber"] *,
-  html:not(.dark) button[class*="bg-rose"] *,
-  html:not(.dark) [class*="bg-gradient"] button *,
-  html:not(.dark) [class*="bg-indigo"] button *,
-  html:not(.dark) [class*="bg-purple"] button *,
-  html:not(.dark) [class*="bg-blue"] button *,
-  html:not(.dark) [class*="bg-emerald"] button *,
-  html:not(.dark) [class*="bg-amber"] button *,
-  html:not(.dark) [class*="bg-rose"] button * {
-    color: white !important;
-  }
   
-  /* Ensure colored card text stays visible */
-  html:not(.dark) [class*="from-blue-"][class*="to-indigo-"] *:not(button):not([class*="bg-gradient"]),
-  html:not(.dark) [class*="from-purple-"][class*="to-pink-"] *:not(button):not([class*="bg-gradient"]),
-  html:not(.dark) [class*="from-emerald-"][class*="to-teal-"] *:not(button):not([class*="bg-gradient"]),
-  html:not(.dark) [class*="from-amber-"][class*="to-orange-"] *:not(button):not([class*="bg-gradient"]),
-  html:not(.dark) [class*="from-rose-"][class*="to-pink-"] *:not(button):not([class*="bg-gradient"]) {
-    color: rgb(17, 24, 39) !important; /* gray-900 */
-  }
 
   @supports (prefers-reduced-motion: reduce) {
 
@@ -684,4 +655,29 @@
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
     background: rgba(166, 177, 255, 0.4);
   }
+}
+
+
+/* Datetime-local input styling */
+input[type="datetime-local"] {
+  color-scheme: dark;
+}
+
+input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 1;
+  filter: invert(1);
+}
+
+html:not(.dark) input[type="datetime-local"] {
+  color-scheme: light;
+}
+
+html:not(.dark) input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+  filter: invert(0);
+  opacity: 0.7;
+}
+
+html:not(.dark) input[type="datetime-local"]:hover::-webkit-calendar-picker-indicator {
+  opacity: 1;
 }

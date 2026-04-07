@@ -62,7 +62,7 @@ export default function KYC() {
     // Update available LGAs when state changes
     useEffect(() => {
         if (selectedState) {
-            const stateData = nigeriaStates.find(s => s.state === selectedState);
+            const stateData = nigeriaStates.find(s => s.name === selectedState);
             if (stateData) {
                 setAvailableLGAs(stateData.lgas);
             } else {
@@ -211,8 +211,8 @@ export default function KYC() {
                                     >
                                         <option value="">Select your state</option>
                                         {nigeriaStates.map((stateData) => (
-                                            <option key={stateData.state} value={stateData.state}>
-                                                {stateData.state}
+                                            <option key={stateData.name} value={stateData.state}>
+                                                {stateData.name}
                                             </option>
                                         ))}
                                     </select>

@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { selectIsAuthenticated } from '@/redux/slices/authSlice';
 import { motion, AnimatePresence } from 'framer-motion';
+import UniversalVideoPlayer from '@/components/video/UniversalVideoPlayer';
 import {
     Play, Pause, CheckCircle, Lock, MonitorPlay,
     FileText, Download, Share2, Bookmark, Star,
@@ -497,92 +498,26 @@ const { user } = useSelector((a => a.auth));
 
                     {/* Video Player */}
                     <div className="relative aspect-video rounded-3xl overflow-hidden bg-gray-900 dark:bg-gray-900 border border-border shadow-2xl shadow-[#a6b1ff]/10 group">
-                        {!isPlaying && (
-                            <>
-                                <img
-                                    src={course?.banner_url || course?.image || "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=2070&auto=format&fit=crop"}
-                                    alt="Course Preview"
-                                    className="absolute inset-0 w-full h-full object-cover z-10 opacity-90"
-                                />
-                                <div className="absolute inset-0 bg-black/20 dark:bg-black/30 group-hover:bg-black/30 dark:group-hover:bg-black/50 transition-all duration-300 z-20" />
-                                
-                                {/* Play Button */}
-                                <div
-                                    className="absolute inset-0 flex items-center justify-center z-30 cursor-pointer"
-                                    onClick={handlePlayVideo}
-                                >
-                                    <div className="relative">
-                                        {/* Pulsing rings */}
-                                        <div className="absolute inset-0 rounded-full bg-[#a6b1ff]/20 animate-ping duration-[3000ms]" />
-                                        <div className="absolute inset-0 rounded-full bg-[#a6b1ff]/10 animate-pulse duration-[2000ms]" />
-                                        
-                                        <div className="relative w-20 h-20 md:w-28 md:h-28 rounded-full bg-white/90 dark:bg-card/90 backdrop-blur-xl flex items-center justify-center border border-border group-hover:scale-110 group-hover:border-[#a6b1ff]/50 transition-all duration-500 shadow-[0_0_50px_rgba(166,177,255,0.3)]">
-                                            <div className="w-0 h-0 border-t-[14px] md:border-t-[18px] border-t-transparent border-l-[24px] md:border-l-[32px] border-l-[#a6b1ff] border-b-[14px] md:border-b-[18px] border-b-transparent ml-2 drop-shadow-[0_0_15px_rgba(166,177,255,0.5)]" />
-                                        </div>
-                                    </div>
-                                </div>
-                            </>
-                        )}
-
-                        <video
-                            ref={videoRef}
-                            className={`w-full h-full object-contain bg-black cursor-pointer ${!isPlaying ? 'invisible' : 'visible'}`}
-                            src={playlist[currentVideoIndex]?.url}
-                            onPause={() => setIsPlaying(false)}
-                            onPlay={() => setIsPlaying(true)}
+                        <UniversalVideoPlayer
+                            videoUrl={playlist[currentVideoIndex]?.url}
+                            isPlaying={isPlaying}
+                            onPlayingChange={setIsPlaying}
                             onTimeUpdate={handleTimeUpdate}
                             onEnded={handleVideoEnded}
-                            onClick={() => {
-                                if (isPlaying) handlePauseVideo();
-                                else handlePlayVideo();
-                            }}
-                            controls={isPlaying}
-                        >
-                            {/* Subtitle track - using instruction_url or a placeholder if available */}
-                            {course?.instruction_url && (
-                                <track
-                                    kind="subtitles"
-                                    src={course.instruction_url.endsWith('.vtt') ? course.instruction_url : undefined}
-                                    srcLang="en"
-                                    label="English"
-                                    default={showSubtitles}
-                                />
-                            )}
-                            Your browser does not support the video tag.
-                        </video>
+                            onPlay={() => setIsPlaying(true)}
+                            onPause={() => setIsPlaying(false)}
+                            poster={course?.banner_url || course?.image || "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=2070&auto=format&fit=crop"}
+                            className="w-full h-full"
+                            showControls={true}
+                        />
 
-                        {/* Custom Interactive Progress Bar */}
-                        {isPlaying && (
-                            <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent group-hover:opacity-100 transition-opacity">
-                                <div
-                                    className="h-1.5 w-full bg-white/20 rounded-full cursor-pointer relative group/progress overflow-hidden"
-                                    onClick={handleProgressClick}
-                                >
-                                    <div
-                                        className="absolute h-full bg-[#a6b1ff] transition-all duration-100"
-                                        style={{ width: `${videoProgress}%` }}
-                                    />
-                                    <div
-                                        className="absolute h-full bg-white/30 opacity-0 group-hover/progress:opacity-100 transition-opacity"
-                                        style={{ width: '100%' }}
-                                    />
-                                </div>
+                        {/* Custom Interactive Progress Bar (for direct videos only) */}
+                        {isPlaying && videoRef.current && (
+                            <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent group-hover:opacity-100 transition-opacity z-30 pointer-events-none">
                                 <div className="flex justify-between mt-2 text-[10px] text-gray-400 font-medium">
                                     <span>{videoRef.current ? formatTime(videoRef.current.currentTime) : '0:00'}</span>
                                     <span>{videoRef.current ? formatTime(videoRef.current.duration) : '0:00'}</span>
                                 </div>
-                            </div>
-                        )}
-
-                        {/* Custom Overlay Controls (Only when paused/not playing) */}
-                        {!isPlaying && (
-                            <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm transition-all duration-300">
-                                <button
-                                    onClick={handlePlayVideo}
-                                    className="w-20 h-20 rounded-full bg-[#a6b1ff]/90 flex items-center justify-center backdrop-blur-md hover:scale-110 transition-transform duration-300 shadow-[0_0_30px_rgba(166,177,255,0.4)]"
-                                >
-                                    <Play className="w-8 h-8 text-[#0a0a0a] fill-current ml-1" />
-                                </button>
                             </div>
                         )}
 

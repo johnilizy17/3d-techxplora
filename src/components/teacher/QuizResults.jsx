@@ -12,7 +12,8 @@ import {
     TrendingUp,
     UserCheck,
     AlertCircle,
-    ArrowRight
+    ArrowRight,
+    TrophyIcon
 } from 'lucide-react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
@@ -66,7 +67,8 @@ export default function QuizResults() {
         start_at: '',
         end_at: '',
         xp: 0,
-        p_xp: 0
+        p_xp: 0,
+        attempt: ''
     });
 
     React.useEffect(() => {
@@ -75,7 +77,8 @@ export default function QuizResults() {
                 start_at: tempStorage.start_at ? format(new Date(tempStorage.start_at), "yyyy-MM-dd'T'HH:mm") : '',
                 end_at: tempStorage.end_at ? format(new Date(tempStorage.end_at), "yyyy-MM-dd'T'HH:mm") : '',
                 xp: tempStorage.xp || 0,
-                p_xp: tempStorage.p_xp || 0
+                p_xp: tempStorage.p_xp || 0,
+                attempt: tempStorage.attempt || ''
             });
         }
     }, [tempStorage]);
@@ -84,7 +87,7 @@ export default function QuizResults() {
         const { name, value } = e.target;
         setFormData(prev => ({
             ...prev,
-            [name]: name === 'xp' || name === 'p_xp' ? Number(value) : value
+            [name]: name === 'xp' || name === 'p_xp' || name === 'attempt' ? Number(value) : value
         }));
     };
 
@@ -120,9 +123,11 @@ export default function QuizResults() {
                 status: tempStorage.status !== undefined ? tempStorage.status : true,
                 // Updated fields from form
                 start_at: formData.start_at,
+                
                 end_at: formData.end_at,
                 xp: formData.xp,
-                p_xp: formData.p_xp
+                p_xp: formData.p_xp,
+                attempt: formData.attempt
             };
 
             const updatedQuiz = await updateQuiz(updatePayload).unwrap();
@@ -139,7 +144,8 @@ export default function QuizResults() {
                 start_at: formData.start_at,
                 end_at: formData.end_at,
                 xp: formData.xp,
-                p_xp: formData.p_xp
+                p_xp: formData.p_xp,
+                attempt: formData.attempt
             }));
             
             setIsDrawerOpen(false);
@@ -246,6 +252,15 @@ export default function QuizResults() {
                                     <p className="text-sm font-bold text-white">{tempStorage?.xp || 0} XP</p>
                                 </div>
                             </div>
+                            <div className="flex items-center gap-2">
+                                <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center">
+                                    <TrophyIcon className="text-white" size={18} />
+                                </div>
+                                <div>
+                                    <p className="text-[10px] font-black text-white/40 uppercase tracking-widest">Total Attempts</p>
+                                    <p className="text-sm font-bold text-white">{tempStorage?.attempt || 0} trys</p>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -294,24 +309,30 @@ export default function QuizResults() {
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                 <div className="space-y-2 text-left">
                                                     <Label htmlFor="start_at" className="text-[10px] font-black uppercase tracking-widest text-white/40 pl-1">Start Activation</Label>
-                                                    <Input
+                                                    <input
                                                         id="start_at"
                                                         name="start_at"
                                                         type="datetime-local"
                                                         value={formData.start_at}
                                                         onChange={handleInputChange}
-                                                        className="bg-white/5 border-white/10 rounded-xl"
+                                                        className="flex h-11 w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-white/40 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/20 disabled:cursor-not-allowed disabled:opacity-50 hover:bg-white/10 cursor-pointer"
+                                                        style={{
+                                                            colorScheme: 'dark'
+                                                        }}
                                                     />
                                                 </div>
                                                 <div className="space-y-2 text-left">
                                                     <Label htmlFor="end_at" className="text-[10px] font-black uppercase tracking-widest text-white/40 pl-1">End Deactivation</Label>
-                                                    <Input
+                                                    <input
                                                         id="end_at"
                                                         name="end_at"
                                                         type="datetime-local"
                                                         value={formData.end_at}
                                                         onChange={handleInputChange}
-                                                        className="bg-white/5 border-white/10 rounded-xl"
+                                                        className="flex h-11 w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-white/40 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/20 disabled:cursor-not-allowed disabled:opacity-50 hover:bg-white/10 cursor-pointer"
+                                                        style={{
+                                                            colorScheme: 'dark'
+                                                        }}
                                                     />
                                                 </div>
                                             </div>
@@ -338,6 +359,18 @@ export default function QuizResults() {
                                                         className="bg-white/5 border-white/10 rounded-xl"
                                                     />
                                                 </div>
+                                            </div>
+                                            <div className="space-y-2 text-left">
+                                                <Label htmlFor="attempt" className="text-[10px] font-black uppercase tracking-widest text-white/40 pl-1">Max Attempts</Label>
+                                                <Input
+                                                    id="attempt"
+                                                    name="attempt"
+                                                    type="number"
+                                                    value={formData.attempt}
+                                                    onChange={handleInputChange}
+                                                    placeholder="Leave empty for unlimited"
+                                                    className="bg-white/5 border-white/10 rounded-xl"
+                                                />
                                             </div>
                                         </div>
                                         <DrawerFooter className="flex-col sm:flex-row gap-4 pt-4">
@@ -386,8 +419,8 @@ export default function QuizResults() {
                         <table className="w-full text-left">
                             <thead className="bg-white/5 border-b border-white/10">
                                 <tr>
-                                    <th className="px-8 py-5 text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">Student Agent</th>
-                                    <th className="px-8 py-5 text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">Execution Grade</th>
+                                    <th className="px-8 py-5 text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">Student Name</th>
+                                    <th className="px-8 py-5 text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">Score</th>
                                     <th className="px-8 py-5 text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">Status</th>
                                 </tr>
                             </thead>

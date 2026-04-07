@@ -68,7 +68,8 @@ export default function EditCourse() {
         learn: [''],
         other: [],
         quiz_id: null,
-        questions: []
+        questions: [],
+        manual_quiz: []
     });
 
     const [errors, setErrors] = useState({});
@@ -92,6 +93,22 @@ export default function EditCourse() {
                 }
             }
 
+            // Parse manual_quiz from JSON if it exists
+            let parsedManualQuiz = [];
+            if (course.manual_quiz) {
+                try {
+                    parsedManualQuiz = typeof course.manual_quiz === 'string' 
+                        ? JSON.parse(course.manual_quiz) 
+                        : course.manual_quiz;
+                    if (!Array.isArray(parsedManualQuiz)) {
+                        parsedManualQuiz = [];
+                    }
+                } catch (e) {
+                    console.error('Failed to parse manual quiz:', e);
+                    parsedManualQuiz = [];
+                }
+            }
+
             setFormData({
                 title: course.title || '',
                 description: course.description || '',
@@ -105,7 +122,8 @@ export default function EditCourse() {
                 learn: Array.isArray(course.learn) ? course.learn : [''],
                 other: Array.isArray(course.other) ? course.other : [],
                 quiz_id: course.quiz_id || null,
-                questions: Array.isArray(course.question) ? course.question : (Array.isArray(course.questions) ? course.questions : [])
+                questions: Array.isArray(course.question) ? course.question : (Array.isArray(course.questions) ? course.questions : []),
+                manual_quiz: parsedManualQuiz
             });
         }
     }, [courseData]);
@@ -224,7 +242,8 @@ export default function EditCourse() {
                 other: formData.other,
                 quiz_id: formData.quiz_id,
                 case_study: JSON.stringify(formData.case_studies),
-                question: formData.questions
+                question: formData.questions,
+                manual_quiz: formData.manual_quiz
             };
             await updateCourse(payload).unwrap();
             toast.success("Course updated successfully!");
@@ -355,7 +374,7 @@ const Step2 = ({ formData, setFormData, handleChange, handleFileUpload, handleLe
 );
 
 const Step3Questions = ({ formData, setFormData, quizzes, addQuestion, removeQuestion, updateQuestion, updateOption, addOption, onNext, onPrev }) => {
-    const [assessmentType, setAssessmentType] = useState('existing');
+    const [activeTab, setActiveTab] = useState('link'); // 'link' or 'manual'
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedQuiz, setSelectedQuiz] = useState(() => {
         // Try to find if a quiz is already linked via code in questions or explicitly
@@ -372,6 +391,8 @@ const Step3Questions = ({ formData, setFormData, quizzes, addQuestion, removeQue
         return null;
     });
 
+    const [manualQuestions, setManualQuestions] = useState(formData.manual_quiz || []);
+
     const filteredQuizzes = quizzes?.filter(q =>
         q.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         q.quiz_code?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -382,88 +403,260 @@ const Step3Questions = ({ formData, setFormData, quizzes, addQuestion, removeQue
         setFormData(prev => ({
             ...prev,
             quiz_id: quiz.id,
-            questions: [`quiz: ${quiz.quiz_code}`] // Immediate payload structure matching
+            questions: [`quiz: ${quiz.quiz_code}`],
+            manual_quiz: [] // Clear manual quiz when selecting a linked quiz
         }));
+        setManualQuestions([]);
         toast.success(`Quiz selected: ${quiz.title}`);
     };
 
+    const addManualQuestion = () => {
+        const newQuestion = {
+            question: '',
+            options: [
+                { option: '', is_correct: false },
+                { option: '', is_correct: false }
+            ]
+        };
+        const updated = [...manualQuestions, newQuestion];
+        setManualQuestions(updated);
+        setFormData(prev => ({
+            ...prev,
+            manual_quiz: updated,
+            quiz_id: null, // Clear linked quiz when adding manual questions
+            questions: []
+        }));
+        setSelectedQuiz(null);
+    };
 
+    const removeManualQuestion = (index) => {
+        const updated = manualQuestions.filter((_, i) => i !== index);
+        setManualQuestions(updated);
+        setFormData(prev => ({ ...prev, manual_quiz: updated }));
+    };
+
+    const updateManualQuestion = (index, field, value) => {
+        const updated = [...manualQuestions];
+        updated[index] = { ...updated[index], [field]: value };
+        setManualQuestions(updated);
+        setFormData(prev => ({ ...prev, manual_quiz: updated }));
+    };
+
+    const addManualOption = (questionIndex) => {
+        const updated = [...manualQuestions];
+        updated[questionIndex].options.push({ option: '', is_correct: false });
+        setManualQuestions(updated);
+        setFormData(prev => ({ ...prev, manual_quiz: updated }));
+    };
+
+    const removeManualOption = (questionIndex, optionIndex) => {
+        const updated = [...manualQuestions];
+        if (updated[questionIndex].options.length > 2) {
+            updated[questionIndex].options = updated[questionIndex].options.filter((_, i) => i !== optionIndex);
+            setManualQuestions(updated);
+            setFormData(prev => ({ ...prev, manual_quiz: updated }));
+        }
+    };
+
+    const updateManualOption = (questionIndex, optionIndex, field, value) => {
+        const updated = [...manualQuestions];
+        updated[questionIndex].options[optionIndex] = {
+            ...updated[questionIndex].options[optionIndex],
+            [field]: value
+        };
+        setManualQuestions(updated);
+        setFormData(prev => ({ ...prev, manual_quiz: updated }));
+    };
 
     return (
         <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="bg-white/5 backdrop-blur-3xl border border-white/10 rounded-[2.5rem] p-8 lg:p-12 shadow-2xl space-y-8">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
                 <div>
                     <h1 className="text-3xl font-black text-white uppercase italic mb-2">
-                        Course <span className="text-[#a6b1ff]">Questions</span>
+                        Add <span className="text-[#a6b1ff]">Assessment</span>
                     </h1>
-                    <p className="text-white/60 font-medium">Link an existing quiz for assessment</p>
+                    <p className="text-white/60 font-medium">Link an existing quiz or create manual questions</p>
                 </div>
             </div>
 
-            <div className="space-y-6">
-                <div className="flex flex-col gap-4">
-                    <label className="text-xs font-black text-white/40 uppercase tracking-widest pl-1">Search & Select Quiz</label>
-                    <div className="relative group">
-                        <div className="absolute left-5 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-[#a6b1ff] transition-colors"><Search size={20} /></div>
-                        <input
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            placeholder="Search by quiz name or unique code..."
-                            className="w-full bg-white/5 border border-white/10 rounded-2xl pl-14 pr-6 py-5 text-white placeholder:text-white/20 focus:border-[#a6b1ff]/50 outline-none font-medium transition-all"
-                        />
-                    </div>
-                </div>
+            {/* Tabs */}
+            <div className="flex gap-2 mb-8 p-2 bg-white/5 rounded-2xl border border-white/10">
+                <button
+                    onClick={() => setActiveTab('link')}
+                    className={`flex-1 py-3 px-6 rounded-xl font-black uppercase text-xs tracking-widest transition-all ${
+                        activeTab === 'link'
+                            ? 'bg-[#a6b1ff] text-black shadow-lg'
+                            : 'text-white/40 hover:text-white/60'
+                    }`}
+                >
+                    Link Quiz
+                </button>
+                <button
+                    onClick={() => setActiveTab('manual')}
+                    className={`flex-1 py-3 px-6 rounded-xl font-black uppercase text-xs tracking-widest transition-all ${
+                        activeTab === 'manual'
+                            ? 'bg-[#a6b1ff] text-black shadow-lg'
+                            : 'text-white/40 hover:text-white/60'
+                    }`}
+                >
+                    Manual Quiz
+                </button>
+            </div>
 
-                {selectedQuiz ? (
-                    <div className="p-8 rounded-[2rem] border-2 border-[#a6b1ff]/20 bg-[#a6b1ff]/5 flex items-center justify-between gap-6 animate-in zoom-in-95 duration-300 relative overflow-hidden group">
-                        <div className="absolute inset-0 bg-gradient-to-r from-[#a6b1ff]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                        <div className="space-y-2 min-w-0 relative">
-                            <p className="text-[10px] font-black text-[#a6b1ff] uppercase tracking-[0.3em]">Currently Selected</p>
-                            <h4 className="text-2xl font-black text-white truncate italic tracking-tight">{selectedQuiz.title}</h4>
-                            <div className="flex items-center gap-2">
-                                <div className="px-2 py-1 rounded bg-white/10 text-[10px] font-mono text-white/60">{selectedQuiz.quiz_code}</div>
-                            </div>
+            {/* Tab Content */}
+            {activeTab === 'link' ? (
+                <div className="space-y-6">
+                    <div className="flex flex-col gap-4">
+                        <label className="text-xs font-black text-white/40 uppercase tracking-widest pl-1">Search & Select Quiz</label>
+                        <div className="relative group">
+                            <div className="absolute left-5 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-[#a6b1ff] transition-colors"><Search size={20} /></div>
+                            <input
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                placeholder="Search by quiz name or unique code..."
+                                className="w-full bg-white/5 border border-white/10 rounded-2xl pl-14 pr-6 py-5 text-white placeholder:text-white/20 focus:border-[#a6b1ff]/50 outline-none font-medium transition-all"
+                            />
                         </div>
+                    </div>
+
+                    {selectedQuiz ? (
+                        <div className="p-8 rounded-[2rem] border-2 border-[#a6b1ff]/20 bg-[#a6b1ff]/5 flex items-center justify-between gap-6 animate-in zoom-in-95 duration-300 relative overflow-hidden group">
+                            <div className="absolute inset-0 bg-gradient-to-r from-[#a6b1ff]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                            <div className="space-y-2 min-w-0 relative">
+                                <p className="text-[10px] font-black text-[#a6b1ff] uppercase tracking-[0.3em]">Currently Selected</p>
+                                <h4 className="text-2xl font-black text-white truncate italic tracking-tight">{selectedQuiz.title}</h4>
+                                <div className="flex items-center gap-2">
+                                    <div className="px-2 py-1 rounded bg-white/10 text-[10px] font-mono text-white/60">{selectedQuiz.quiz_code}</div>
+                                </div>
+                            </div>
+                            <Button
+                                onClick={() => { setSelectedQuiz(null); setFormData(prev => ({ ...prev, quiz_id: null, questions: [] })); }}
+                                className="bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 border border-rose-500/20 rounded-xl px-6 relative"
+                            >
+                                Detach
+                            </Button>
+                        </div>
+                    ) : (
+                        <div className="border border-white/10 rounded-[2rem] overflow-hidden bg-white/5 max-h-[400px] overflow-y-auto custom-scrollbar">
+                            {filteredQuizzes.length > 0 ? (
+                                <div className="divide-y divide-white/5">
+                                    {filteredQuizzes.map((quiz) => (
+                                        <div
+                                            key={quiz.id}
+                                            onClick={() => handleQuizSelect(quiz)}
+                                            className="p-6 flex items-center justify-between hover:bg-white/5 cursor-pointer transition-colors group"
+                                        >
+                                            <div className="min-w-0 space-y-1">
+                                                <p className="font-bold text-lg text-white group-hover:text-[#a6b1ff] transition-colors">{quiz.title}</p>
+                                                <p className="text-[10px] text-white/30 uppercase tracking-widest">Code: {quiz.quiz_code}</p>
+                                            </div>
+                                            <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-[#a6b1ff] group-hover:text-black transition-all transform group-hover:scale-110">
+                                                <ArrowRight size={18} />
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="py-24 flex flex-col items-center justify-center text-center px-6">
+                                    <div className="w-16 h-16 rounded-full bg-dashed border-2 border-white/10 flex items-center justify-center mb-4">
+                                        <Search className="text-white/20" size={24} />
+                                    </div>
+                                    <p className="text-lg font-bold text-white/40">No quizzes match "{searchTerm}"</p>
+                                    <p className="text-xs text-white/20 mt-2 uppercase tracking-widest">Try searching for a different name or code</p>
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </div>
+            ) : (
+                <div className="space-y-6">
+                    <div className="flex justify-between items-center">
+                        <label className="text-xs font-black text-white/40 uppercase tracking-widest pl-1">Manual Questions</label>
                         <Button
-                            onClick={() => { setSelectedQuiz(null); setFormData(prev => ({ ...prev, quiz_id: null, questions: [] })); }}
-                            className="bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 border border-rose-500/20 rounded-xl px-6 relative"
+                            onClick={addManualQuestion}
+                            className="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 rounded-xl px-4 py-2 flex items-center gap-2"
                         >
-                            Detach
+                            <Plus size={16} />
+                            Add Question
                         </Button>
                     </div>
-                ) : (
-                    <div className="border border-white/10 rounded-[2rem] overflow-hidden bg-white/5 max-h-[400px] overflow-y-auto custom-scrollbar">
-                        {filteredQuizzes.length > 0 ? (
-                            <div className="divide-y divide-white/5">
-                                {filteredQuizzes.map((quiz) => (
-                                    <div
-                                        key={quiz.id}
-                                        onClick={() => handleQuizSelect(quiz)}
-                                        className="p-6 flex items-center justify-between hover:bg-white/5 cursor-pointer transition-colors group"
-                                    >
-                                        <div className="min-w-0 space-y-1">
-                                            <p className="font-bold text-lg text-white group-hover:text-[#a6b1ff] transition-colors">{quiz.title}</p>
-                                            <p className="text-[10px] text-white/30 uppercase tracking-widest">Code: {quiz.quiz_code}</p>
+
+                    {manualQuestions.length === 0 ? (
+                        <div className="py-24 flex flex-col items-center justify-center text-center px-6 border-2 border-dashed border-white/10 rounded-[2rem]">
+                            <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mb-4">
+                                <HelpCircle className="text-white/20" size={24} />
+                            </div>
+                            <p className="text-lg font-bold text-white/40">No manual questions yet</p>
+                            <p className="text-xs text-white/20 mt-2 uppercase tracking-widest">Click "Add Question" to create your first question</p>
+                        </div>
+                    ) : (
+                        <div className="space-y-6 max-h-[500px] overflow-y-auto custom-scrollbar pr-2">
+                            {manualQuestions.map((q, qIndex) => (
+                                <div key={qIndex} className="p-6 rounded-2xl bg-white/5 border border-white/10 space-y-4">
+                                    <div className="flex justify-between items-start gap-4">
+                                        <div className="flex-1">
+                                            <label className="text-[10px] font-black text-white/40 uppercase tracking-widest mb-2 block">Question {qIndex + 1}</label>
+                                            <input
+                                                value={q.question}
+                                                onChange={(e) => updateManualQuestion(qIndex, 'question', e.target.value)}
+                                                placeholder="Enter your question..."
+                                                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/20 focus:border-[#a6b1ff]/50 outline-none font-medium"
+                                            />
                                         </div>
-                                        <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-[#a6b1ff] group-hover:text-black transition-all transform group-hover:scale-110">
-                                            <ArrowRight size={18} />
-                                        </div>
+                                        <Button
+                                            onClick={() => removeManualQuestion(qIndex)}
+                                            className="bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 border border-rose-500/20 rounded-xl p-2"
+                                        >
+                                            <Trash2 size={16} />
+                                        </Button>
                                     </div>
-                                ))}
-                            </div>
-                        ) : (
-                            <div className="py-24 flex flex-col items-center justify-center text-center px-6">
-                                <div className="w-16 h-16 rounded-full bg-dashed border-2 border-white/10 flex items-center justify-center mb-4">
-                                    <Search className="text-white/20" size={24} />
+
+                                    <div className="space-y-3">
+                                        <div className="flex justify-between items-center">
+                                            <label className="text-[10px] font-black text-white/40 uppercase tracking-widest">Options</label>
+                                            <Button
+                                                onClick={() => addManualOption(qIndex)}
+                                                className="bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border border-blue-500/20 rounded-lg px-3 py-1 text-xs"
+                                            >
+                                                <Plus size={14} />
+                                            </Button>
+                                        </div>
+                                        {q.options.map((opt, optIndex) => (
+                                            <div key={optIndex} className="flex items-center gap-3">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={opt.is_correct}
+                                                    onChange={(e) => updateManualOption(qIndex, optIndex, 'is_correct', e.target.checked)}
+                                                    className="w-5 h-5 rounded border-white/20 text-emerald-500 focus:ring-emerald-500"
+                                                />
+                                                <input
+                                                    value={opt.option}
+                                                    onChange={(e) => updateManualOption(qIndex, optIndex, 'option', e.target.value)}
+                                                    placeholder={`Option ${optIndex + 1}`}
+                                                    className="flex-1 bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-sm text-white placeholder:text-white/20 focus:border-[#a6b1ff]/50 outline-none"
+                                                />
+                                                {q.options.length > 2 && (
+                                                    <Button
+                                                        onClick={() => removeManualOption(qIndex, optIndex)}
+                                                        className="bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 border border-rose-500/20 rounded-lg p-2"
+                                                    >
+                                                        <Trash2 size={14} />
+                                                    </Button>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
                                 </div>
-                                <p className="text-lg font-bold text-white/40">No quizzes match "{searchTerm}"</p>
-                                <p className="text-xs text-white/20 mt-2 uppercase tracking-widest">Try searching for a different name or code</p>
-                            </div>
-                        )}
-                    </div>
-                )}
+                            ))}
+                        </div>
+                    )}
+                </div>
+            )}
+
+            <div className="flex justify-between pt-6">
+                <button onClick={onPrev} className="text-white/40 font-black uppercase">Back</button>
+                <Button onClick={onNext} className="px-10 py-5 bg-[#a6b1ff] text-black font-black uppercase tracking-widest rounded-2xl">Summary</Button>
             </div>
-            <div className="flex justify-between pt-6"><button onClick={onPrev} className="text-white/40 font-black uppercase">Back</button><Button onClick={onNext} className="px-10 py-5 bg-[#a6b1ff] text-black font-black uppercase tracking-widest rounded-2xl">Summary</Button></div>
         </motion.div>
     );
 };

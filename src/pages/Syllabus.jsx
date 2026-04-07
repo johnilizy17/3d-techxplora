@@ -576,7 +576,7 @@ export default function Syllabus() {
                                     >
                                         <FileSpreadsheet size={20} className="text-blue-500" />
                                         <span className="text-foreground font-bold uppercase tracking-tight text-sm">
-                                            Download Sample Excel Template
+                                            Download Nigeria Curriculum
                                         </span>
                                         <Download size={18} className="text-muted-foreground group-hover:text-foreground transition-colors" />
                                     </button>

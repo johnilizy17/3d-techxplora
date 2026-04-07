@@ -42,6 +42,16 @@ export const authApi = baseApi.injectEndpoints({
             invalidatesTags: ['Auth'],
         }),
 
+        // Register Alumni
+        registerAlumni: builder.mutation({
+            query: (userData) => ({
+                url: '/register-alumni',
+                method: 'POST',
+                body: userData,
+            }),
+            invalidatesTags: ['Auth'],
+        }),
+
         // Get current user profile
         getProfile: builder.query({
             query: () => '/auth/profile',
@@ -219,6 +229,7 @@ export const {
     useGoogleLoginMutation,
     useRegisterStudentMutation,
     useRegisterTeacherMutation,
+    useRegisterAlumniMutation,
     useGetProfileQuery,
     useUpdateProfileMutation,
     useLogoutMutation,

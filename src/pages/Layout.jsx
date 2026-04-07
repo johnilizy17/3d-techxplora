@@ -1,5 +1,6 @@
 import { useLocation } from "react-router-dom";
 import Navbar from "@/components/navigation/Navbar";
+import Footer from "@/components/navigation/Footer";
 import React, { useState, useEffect } from "react";
 import CustomCursor from "@/components/collectors/CustomCursor";
 import ScrollProgress from "@/components/collectors/ScrollProgress";
@@ -31,6 +32,7 @@ export default function Layout({ children }) {
             <main>
                 {children}
             </main>
+            {!isDashboard && !isSupport && <Footer />}
             {!isSupport && <ChatBot />}
         </div>
     )

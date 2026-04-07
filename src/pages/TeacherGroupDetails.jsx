@@ -173,7 +173,7 @@ export default function TeacherGroupDetails() {
                                     </div>
                                     <div className="px-4 py-2 bg-white/5 rounded-2xl border border-white/5 flex items-center gap-2">
                                         <Search size={14} className="text-white/20" />
-                                        <span className="text-[10px] font-black text-white/40 uppercase tracking-widest italic leading-none">Filter Nodes</span>
+                                        <span className="text-[10px] font-black text-white/40 uppercase tracking-widest italic leading-none">Filter Quizzes</span>
                                     </div>
                                 </div>
 
@@ -253,7 +253,7 @@ export default function TeacherGroupDetails() {
                                         </div>
                                     ) : quizzes.length === 0 ? (
                                         <div className="col-span-full py-12 text-center bg-white/5 border border-dashed border-white/10 rounded-3xl">
-                                            <p className="text-white/20 font-black italic uppercase tracking-widest text-xs">No active nodes in this sector</p>
+                                            <p className="text-white/20 font-black italic uppercase tracking-widest text-xs">No quizzes in this group</p>
                                         </div>
                                     ) : (
                                         quizzes.map((quiz, i) => (
@@ -293,7 +293,7 @@ export default function TeacherGroupDetails() {
                                                     <div className="flex items-center gap-4 pt-4 border-t border-white/5 mt-4">
                                                         <div className="flex items-center gap-1.5 text-white/40">
                                                             <Target size={12} />
-                                                            <span className="text-[10px] font-bold uppercase">{quiz.QuizQuestions || 0} Nodes</span>
+                                                            <span className="text-[10px] font-bold uppercase">{quiz.QuizQuestions || 0} Questions</span>
                                                         </div>
                                                         <div className="flex items-center gap-1.5 text-white/40">
                                                             <Trophy size={12} />
@@ -387,7 +387,7 @@ export default function TeacherGroupDetails() {
                                     </div>
                                 </div>
                                 <p className="text-[9px] font-bold text-rose-500/40 uppercase tracking-widest leading-loose">
-                                    Closing this sector will terminate all active mission nodes and disconnect squad members immediately. Proceed with extreme caution.
+                                    Closing this group will remove all quizzes and disconnect all members immediately. Proceed with extreme caution.
                                 </p>
                             </motion.div>
                         </div>

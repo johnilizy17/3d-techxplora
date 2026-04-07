@@ -36,7 +36,7 @@ export default function QuestionSelection() {
             id: 'ai',
             title: "Xplora",
             subtitle: "Intelligence",
-            desc: "Leverage advanced neural generation to create curriculum-aligned questions in seconds.",
+            desc: "Use AI to create curriculum-aligned questions in seconds.",
             icon: Cpu,
             color: "from-purple-500 to-fuchsia-600",
             action: () => setIsAIDrawerOpen(true),

@@ -4,7 +4,8 @@ import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 export const baseApi = createApi({
     reducerPath: 'api',
     baseQuery: fetchBaseQuery({
-        baseUrl: 'https://api.techxplora.co/api/v1', // TODO: Update with your actual API URL
+        // baseUrl: 'http://localhost:8000/api/v1', // Local API for testing
+        baseUrl: 'https://api.techxplora.co/api/v1', // Production API
         prepareHeaders: (headers, { getState }) => {
             // Get token from auth state
             const token = getState().auth.token;

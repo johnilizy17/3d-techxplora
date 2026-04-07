@@ -115,12 +115,6 @@ html:not(.dark) h6:not([class*="gradient"]) {
   color: hsl(var(--foreground)) !important;
 }
 
-/* Override SVG colors */
-html:not(.dark) svg.text-white,
-html:not(.dark) .text-white svg {
-  color: hsl(var(--foreground)) !important;
-}
-
 /* Override specific utility classes */
 html:not(.dark) .from-\[#0a0a0a\] {
   --tw-gradient-from: hsl(var(--background)) !important;
@@ -210,11 +204,6 @@ html:not(.dark) button.bg-transparent:not([class*="gradient"]) {
   border-color: hsl(var(--border)) !important;
 }
 
-/* Override icon colors */
-html:not(.dark) svg[class*="text-white"],
-html:not(.dark) [class*="text-white"] > svg {
-  color: hsl(var(--foreground)) !important;
-}
 
 /* Override specific gray shades */
 html:not(.dark) .text-gray-600 {

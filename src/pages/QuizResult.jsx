@@ -160,21 +160,21 @@ export default function QuizResult() {
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                             <HighlightCard
                                 icon={BarChart3}
-                                label="Execution Efficiency"
+                                label="Your Score"
                                 value={`${percentage}%`}
                                 sub="Total Mastery"
                                 color="blue"
                             />
                             <HighlightCard
                                 icon={Target}
-                                label="Nodes Synchronized"
+                                label="Questions Correct"
                                 value={`${score}/${questions.length}`}
                                 sub="Success Ratio"
                                 color="purple"
                             />
                             <HighlightCard
                                 icon={Zap}
-                                label="Synaptic Multiplier"
+                                label="Bonus Points"
                                 value="1.2x"
                                 sub="Active Bonus"
                                 color="emerald"

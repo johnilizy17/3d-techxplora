@@ -1,5 +1,7 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
+import useAnalytics from "@/hooks/useAnalytics";
+import ScrollToTop from "@/components/ScrollToTop";
 
 import Layout from "./Layout.jsx";
 import Home from "./Home.jsx";
@@ -32,6 +34,7 @@ import JoinQuiz from './JoinQuiz.jsx';
 import JoinGroup from './JoinGroup.jsx';
 import Start from "./auth/Start.jsx";
 import Signup from "./auth/Signup.jsx";
+import Alumni from "./auth/Alumni.jsx";
 import PhoneVerify from "./auth/PhoneVerify.jsx";
 import OTPVerify from "./auth/OTPVerify.jsx";
 import PinCreate from "./auth/PinCreate.jsx";
@@ -46,6 +49,7 @@ import Option from "./auth/Option.jsx";
 import CreateGroupTeacher from "./CreateGroup.jsx";
 import ManageCourses from "./ManageCourses.jsx";
 import CreateCourse from "./CreateCourse.jsx";
+import NigeriaCurriculum from "./NigeriaCurriculum.jsx";
 import ViewManagedCourse from "./ViewManagedCourse.jsx";
 import CaseStudyResults from "./CaseStudyResults.jsx";
 import EditCourse from './EditCourse';
@@ -56,6 +60,10 @@ import AddManual from "./AddManual.jsx";
 import KYC from "./auth/KYC.jsx";
 import Support from "./Support.jsx";
 import Toolkit from "./Toolkit.jsx";
+import Stats from "./Stats.jsx";
+import PrivacyPolicy from "./PrivacyPolicy.jsx";
+import TermsOfService from "./TermsOfService.jsx";
+import Pricing from "./Pricing.jsx";
 
 // Mapping of page names for Layout highlighting (optional)
 const PAGES = {
@@ -81,11 +89,16 @@ function PagesContent() {
   const location = useLocation();
   const currentPage = _getCurrentPage(location.pathname);
 
+  // Track page views with analytics
+  useAnalytics();
+
   return (
     <Layout currentPageName={currentPage}>
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/how-to-use" element={<HowToUse />} />
+        <Route path="/nigeria-curriculum" element={<NigeriaCurriculum />} />
+        <Route path="/dashboard/nigeria-curriculum" element={<NigeriaCurriculum />} />
         <Route path="/about" element={<About />} />
         <Route path="/chess" element={<Chess />} />
         <Route path="/chess/game" element={<ChessGame />} />
@@ -119,6 +132,10 @@ function PagesContent() {
         <Route path="/dashboard/profile/edit" element={<UserProfile />} />
         <Route path="/support" element={<Support />} />
         <Route path="/dashboard/toolkit" element={<Toolkit />} />
+        <Route path="/stats" element={<Stats />} />
+        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+        <Route path="/terms-of-service" element={<TermsOfService />} />
+        <Route path="/price" element={<Pricing />} />
 
         {/* Course Directed Routes */}
         <Route path="/dashboard/courses" element={<ManageCourses />} />
@@ -129,6 +146,7 @@ function PagesContent() {
         <Route path="/auth/login" element={<Auth />} />
         <Route path="/auth/start" element={<Start />} />
         <Route path="/auth/signup" element={<Signup />} />
+        <Route path="/auth/alumni" element={<Alumni />} />
         <Route path="/auth/kyc" element={<KYC />} />
         <Route path="/auth/phone" element={<PhoneVerify />} />
         <Route path="/auth/otp" element={<OTPVerify />} />
@@ -153,6 +171,7 @@ function PagesContent() {
 export default function Pages() {
   return (
     <Router>
+      <ScrollToTop />
       <PagesContent />
     </Router>
   );
