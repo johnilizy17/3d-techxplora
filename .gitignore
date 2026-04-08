@@ -41,7 +41,8 @@ next-env.d.ts
 *.swp
 *.swo
 *~
-
+/public
+.public
 # OS
 .DS_Store
 Thumbs.db
