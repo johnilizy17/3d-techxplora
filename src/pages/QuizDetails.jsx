@@ -19,7 +19,7 @@ import {
     ChevronRight
 } from 'lucide-react';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
-import { selectCurrentUser, setTemporaryStorage, selectTempStorage } from '@/redux/slices/authSlice';
+import { setTemporaryStorage, selectTempStorage } from '@/redux/slices/authSlice';
 import { useGetQuizLeaderboardQuery } from '@/redux/api/leaderboardApi';
 import { useVerifyQuizCodeQuery } from '@/redux/api/studentApi';
 import { hasDatePassed, startCountdown, formatDate } from '@/utils/date';
@@ -29,7 +29,6 @@ export default function QuizDetails() {
     const navigate = useNavigate();
     const location = useLocation();
     const dispatch = useDispatch();
-    const user = useSelector(selectCurrentUser);
     const tempStorage = useSelector(selectTempStorage);
 
     const queryParams = new URLSearchParams(location.search);
@@ -155,12 +154,14 @@ export default function QuizDetails() {
                         Back to Quizzes
                     </motion.button>
 
+
+
                     <div className="grid grid-cols-1 xl:grid-cols-3 gap-12">
                         {/* Left: Main Info */}
                         <div className="xl:col-span-2 space-y-12">
                             {/* Quiz Title and Description */}
                             <div className="space-y-6">
-                                <div className="flex items-center gap-4">
+                                <div className="flex items-center gap-4 flex-wrap">
                                     <div className={`px-4 py-1.5 rounded-full bg-gradient-to-r ${isEnded ? 'from-rose-500 to-red-600' : isStarted ? 'from-emerald-400 to-cyan-500' : 'from-amber-400 to-orange-500'} border-2 border-white dark:border-white/20 shadow-lg`}>
                                         <span className="text-white font-black text-[10px] uppercase tracking-widest italic leading-none">
                                             {isEnded ? 'Closed' : isStarted ? 'Live' : 'Coming Soon'}
