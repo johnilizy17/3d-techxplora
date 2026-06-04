@@ -20,7 +20,7 @@ export default function DashboardBottomNav({ currentTab = 'Home', onLogout, onMo
     const navigate = useNavigate();
 
     return (
-        <div className="fixed bottom-0 left-0 right-0 z-50 flex justify-center">
+        <div className="fixed bottom-0 left-0 right-0 z-50 flex justify-center lg:hidden">
             <div className="w-full max-w-md bg-white/95 dark:bg-background/95 backdrop-blur-xl border-t-2 border-indigo-200 dark:border-border px-6 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))] rounded-t-[2.5rem] shadow-[0_-10px_40px_-15px_rgba(99,102,241,0.3)] dark:shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.5)] flex items-end justify-between relative transition-colors duration-300">
 
                 <NavItem icon={Home} label="Home" isActive={currentTab === 'Home'} onClick={() => navigate('/dashboard')} />

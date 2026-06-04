@@ -67,7 +67,7 @@ export default function RecentQuizzes() {
                     <EmptyState title="No Quizzes Found" description="Launch your first challenge or join one to see it here." />
                 </div>
             ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 px-6 lg:px-0 pb-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 px-6 lg:px-0 pb-20 lg:pb-6">
                     {displayQuizzes.map((quiz, index) => (
                         <QuizCard 
                             key={quiz.id || index} 

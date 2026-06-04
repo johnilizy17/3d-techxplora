@@ -19,7 +19,7 @@ export const baseApi = createApi({
             return headers;
         },
     }),
-    tagTypes: ['Auth', 'Question', 'Teacher', 'Student', 'Course', 'Quiz'],
+    tagTypes: ['Auth', 'Question', 'Teacher', 'Student', 'Course', 'Quiz', 'UserStream', 'StreamSummary'],
     endpoints: () => ({}),
 });
 

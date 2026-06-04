@@ -90,10 +90,10 @@ export default function Quizzes() {
 
     return (
         <DashboardLayout>
-            <div className="min-h-screen pb-24 lg:pb-10 bg-white dark:bg-black">
+            <div className="bg-white dark:bg-black overflow-x-hidden">
                 {/* Visual Background Elements */}
-                <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-200/20 dark:bg-indigo-600/5 rounded-full blur-[120px] -mr-64 -mt-64" />
-                <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-purple-200/20 dark:bg-purple-600/5 rounded-full blur-[100px] -ml-40 -mb-40" />
+                <div className="absolute top-0 right-0 w-[50px] h-[50px] lg:w-[500px] lg:h-[500px] bg-indigo-200/20 dark:bg-indigo-600/5 rounded-full blur-[80px] lg:blur-[120px] pointer-events-none" style={{ marginRight: '-8rem', marginTop: '-8rem' }} />
+                <div className="absolute bottom-0 left-0 w-[40px] h-[40px] lg:w-[400px] lg:h-[400px] bg-purple-200/20 dark:bg-purple-600/5 rounded-full blur-[60px] lg:blur-[100px] pointer-events-none" style={{ marginLeft: '-6rem', marginBottom: '-6rem' }} />
                 
                 <div className="w-full relative z-10">
                     {/* Promotional Banner */}
@@ -142,7 +142,7 @@ export default function Quizzes() {
                             <motion.div
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                className="bg-gray-100 dark:bg-white/5 border-2 border-gray-200 dark:border-white/10 rounded-[2rem] p-12 text-center shadow-sm"
+                                className="bg-gray-100 dark:bg-white/5 border-2 border-gray-200 dark:border-white/10 rounded-[2rem] p-12 text-center shadow-sm mb-20 lg:mb-0"
                             >
                                 <EmptyState
                                     title={activeFilter === 'All' ? "No Quizzes Found" : `No ${activeFilter} Quizzes`}
@@ -162,7 +162,7 @@ export default function Quizzes() {
                             </motion.div>
                         ) : (
                             <>
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pb-20 lg:pb-6">
                                     {pagedQuizzes.map((quiz, index) => (
                                         <QuizCard
                                             key={quiz.id || index}
@@ -175,7 +175,7 @@ export default function Quizzes() {
                                 </div>
 
                                 {totalPages > 1 && (
-                                    <div className="mt-12">
+                                    <div className="mt-12 pb-8 lg:pb-0">
                                         <Pagination>
                                             <PaginationContent>
                                                 <PaginationItem>

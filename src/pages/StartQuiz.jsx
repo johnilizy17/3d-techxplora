@@ -1,27 +1,28 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import {
     ArrowLeft,
     ShieldCheck,
     Zap,
-    Target,
     Clock,
     Trophy,
     AlertCircle,
     Play,
     Info,
-    ChevronRight,
     Users,
     Activity,
     Lock
 } from 'lucide-react';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
+import AcademicIntegrityModal from '@/components/AcademicIntegrityModal';
+import { useMediaRecording } from '@/hooks/useMediaRecording';
 import { selectCurrentUser, selectTempStorage, setTemporaryStorage } from '@/redux/slices/authSlice';
 import { useGetQuestionsByQuizIdQuery, useGetStudentQuizResultQuery } from '@/redux/api/questionApi';
 import { useVerifyQuizCodeQuery } from '@/redux/api/studentApi';
 import { toast } from 'sonner';
+import { useActivityLogger } from '@/hooks/useActivityLogger';
 
 export default function StartQuiz() {
     const navigate = useNavigate();
@@ -52,6 +53,20 @@ export default function StartQuiz() {
     });
 
     const [isReady, setIsReady] = useState(false);
+    const [showIntegrityModal, setShowIntegrityModal] = useState(false);
+
+    // Media recording hook
+    const {
+        requestPermissions,
+        startRecording,
+        hasPermissions,
+        isRequesting,
+        error: recordingError,
+        browserSupport
+    } = useMediaRecording();
+
+    // Activity logging hook
+    const { logQuizStart } = useActivityLogger(quizCode);
 
     // Redirect to results if quiz already completed
     useEffect(() => {
@@ -104,8 +119,53 @@ export default function StartQuiz() {
             toast.error("Systems are not fully synchronized yet. Please wait.");
             return;
         }
+        // Show academic integrity modal before starting
+        setShowIntegrityModal(true);
+    };
+
+    const handleAcceptIntegrity = async () => {
+        setShowIntegrityModal(false);
+
+        // Store quiz data for next page
         dispatch(setTemporaryStorage(quiz));
-        navigate(`/dashboard/quizzes/completion?code=${quiz.id}`);
+
+        // Check browser support - but allow quiz even if not supported
+        if (!browserSupport.isSupported) {
+            console.warn("Browser doesn't support recording features");
+            toast.info("Recording not available on this device. Proceeding to camera setup...");
+            navigate(`/dashboard/quizzes/camera-setup?code=${quiz.id}`);
+            return;
+        }
+
+        // Show loading toast
+        const loadingToast = toast.loading("Requesting camera and microphone permissions...");
+
+        try {
+            // Request camera and microphone permissions only (no activation yet)
+            const result = await requestPermissions();
+
+            toast.dismiss(loadingToast);
+
+            if (result.success) {
+                toast.success("Permissions granted! Proceeding to camera setup...");
+                // Navigate to camera setup screen where camera will be activated
+                navigate(`/dashboard/quizzes/camera-setup?code=${quiz.id}`);
+            } else {
+                // Show specific error message but allow quiz to proceed
+                if (result.error.includes('Camera')) {
+                    toast.warning("Camera/Microphone access denied. Proceeding without recording...");
+                } else {
+                    toast.warning(result.error + " Proceeding without recording...");
+                }
+                // Still proceed to camera setup to give user another chance
+                navigate(`/dashboard/quizzes/camera-setup?code=${quiz.id}`);
+            }
+        } catch (error) {
+            toast.dismiss(loadingToast);
+            console.error('Permission error:', error);
+            toast.warning("Permission request failed. Proceeding to camera setup...");
+            navigate(`/dashboard/quizzes/camera-setup?code=${quiz.id}`);
+        }
     };
 
     const getSecondsPerQuestion = () => {
@@ -132,7 +192,14 @@ export default function StartQuiz() {
     ];
 
     return (
-        <DashboardLayout>
+        <DashboardLayout hideBottomNav={showIntegrityModal}>
+            {/* Academic Integrity Modal */}
+            <AcademicIntegrityModal
+                isOpen={showIntegrityModal}
+                onClose={() => setShowIntegrityModal(false)}
+                onAccept={handleAcceptIntegrity}
+            />
+
             <div className="min-h-screen pb-24 relative overflow-hidden bg-white dark:bg-black">
                 {/* Visual Background Elements */}
                 <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-200/30 dark:bg-indigo-600/5 rounded-full blur-[120px] -mr-64 -mt-64" />
@@ -145,7 +212,7 @@ export default function StartQuiz() {
                             <motion.button
                                 initial={{ opacity: 0, x: -10 }}
                                 animate={{ opacity: 1, x: 0 }}
-                                onClick={() => navigate(`/dashboard/quizzes/details?code=${quiz.quiz_code}`)}
+                                onClick={() => navigate(`/dashboard/quizzes/details?code=${quiz.id}`)}
                                 className="flex items-center gap-2 text-[10px] font-black text-gray-400 dark:text-white/20 uppercase tracking-[0.2em] hover:text-indigo-600 dark:hover:text-[#a6b1ff] transition-colors group"
                             >
                                 <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" />
@@ -159,15 +226,32 @@ export default function StartQuiz() {
                             </p>
                         </div>
 
-                        <div className="flex items-center gap-4 bg-gradient-to-br from-amber-100 to-yellow-100 dark:from-white/5 dark:to-white/5 backdrop-blur-xl border-2 border-amber-300 dark:border-white/10 rounded-[2rem] p-6 pr-10 shadow-lg">
-                            <div className="w-16 h-16 rounded-2xl bg-amber-400 dark:bg-[#a6b1ff] flex items-center justify-center text-white dark:text-black shadow-xl shrink-0">
-                                <Trophy size={32} />
+                        {/* Recording Error Alert */}
+                        {recordingError && (
+                            <motion.div
+                                initial={{ opacity: 0, y: -10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="bg-red-100 dark:bg-red-500/10 border-2 border-red-300 dark:border-red-500/20 rounded-2xl p-4 flex items-start gap-3 max-w-md"
+                            >
+                                <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-500 shrink-0 mt-0.5" />
+                                <div>
+                                    <p className="text-sm font-bold text-red-700 dark:text-red-400 mb-1">Recording Error</p>
+                                    <p className="text-xs text-red-600 dark:text-red-500">{recordingError}</p>
+                                </div>
+                            </motion.div>
+                        )}
+
+                        {!recordingError && (
+                            <div className="flex items-center gap-4 bg-gradient-to-br from-amber-100 to-yellow-100 dark:from-white/5 dark:to-white/5 backdrop-blur-xl border-2 border-amber-300 dark:border-white/10 rounded-[2rem] p-6 pr-10 shadow-lg">
+                                <div className="w-16 h-16 rounded-2xl bg-amber-400 dark:bg-[#a6b1ff] flex items-center justify-center text-white dark:text-black shadow-xl shrink-0">
+                                    <Trophy size={32} />
+                                </div>
+                                <div className="space-y-1">
+                                    <p className="text-[10px] font-black text-amber-700 dark:text-white/20 uppercase tracking-[0.2em]">Max Prize</p>
+                                    <p className="text-3xl font-black text-amber-900 dark:text-white leading-none italic">{(quiz.QuizQuestions || 0) * (quiz.p_xp || 0)} Points</p>
+                                </div>
                             </div>
-                            <div className="space-y-1">
-                                <p className="text-[10px] font-black text-amber-700 dark:text-white/20 uppercase tracking-[0.2em]">Prize</p>
-                                <p className="text-3xl font-black text-amber-900 dark:text-white leading-none italic">{quiz.xp || 0} Points</p>
-                            </div>
-                        </div>
+                        )}
                     </div>
 
                     <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
@@ -299,8 +383,8 @@ export default function StartQuiz() {
                                             <Zap size={18} />
                                         </div>
                                         <div>
-                                            <p className="text-[10px] font-black text-dark-600 dark:text-white/5 uppercase tracking-widest">Quiz Per Question</p>
-                                            <p className="text-xs font-black text-dark-900 dark:text-white italic">{quiz.p_xp}</p>
+                                            <p className="text-[10px] font-black text-dark-600 dark:text-white/5 uppercase tracking-widest">XP Per Question</p>
+                                            <p className="text-xs font-black text-dark-900 dark:text-white italic">{quiz?.p_xp || 0} XP</p>
                                         </div>
                                     </div>
                                 </div>

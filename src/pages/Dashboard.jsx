@@ -14,10 +14,10 @@ export default function Dashboard() {
 
     return (
         <DashboardLayout>
-            <div className="min-h-screen pb-24 lg:pb-10 bg-white dark:bg-black">
+            <div className="min-h-screen bg-white dark:bg-black relative">
                 {/* Visual Background Elements */}
-                <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-200/20 dark:bg-indigo-600/5 rounded-full blur-[120px] -mr-64 -mt-64" />
-                <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-purple-200/20 dark:bg-purple-600/5 rounded-full blur-[100px] -ml-40 -mb-40" />
+                <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-200/20 dark:bg-indigo-600/5 rounded-full blur-[120px] pointer-events-none" style={{ marginRight: '-16rem', marginTop: '-16rem' }} />
+                <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-purple-200/20 dark:bg-purple-600/5 rounded-full blur-[100px] pointer-events-none" style={{ marginLeft: '-10rem', marginBottom: '-10rem' }} />
                 
                 {/* Main Content Grid */}
                 <div className="w-full relative z-10">

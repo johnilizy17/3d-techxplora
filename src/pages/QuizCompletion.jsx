@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useSelector } from 'react-redux';
@@ -12,20 +12,28 @@ import {
     ChevronLeft,
     ArrowLeft,
     CheckCircle2,
-    XCircle,
     RotateCcw,
     Home,
     Brain,
     Sparkles,
     Shield,
-    Loader2
+    Loader2,
+    Eye,
+    Radio
 } from 'lucide-react';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import { selectCurrentUser, selectTempStorage } from '@/redux/slices/authSlice';
 import { useGetQuestionsByQuizIdQuery, useSubmitQuizMutation, useVerifyQuizQuery } from '@/redux/api/questionApi';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
-import { saveQuizProgress, loadQuizProgress, clearQuizProgress, hasQuizProgress, clearExpiredProgress } from '@/utils/quizStorage';
+import { saveQuizProgress, loadQuizProgress, clearQuizProgress, clearExpiredProgress } from '@/utils/quizStorage';
+import { useAntiCheating } from '@/hooks/useAntiCheating';
+import { useMediaRecording } from '@/hooks/useMediaRecording';
+import { useLiveStreaming } from '@/hooks/useLiveStreaming';
+import { useActivityLogger } from '@/hooks/useActivityLogger';
+import { useWebRTCStream } from '@/hooks/useWebRTCStream';
+import { useExamProctoring } from '@/hooks/useExamProctoring';
+import ProctoringStatus from '@/components/proctoring/ProctoringStatus';
 
 export default function QuizCompletion() {
     const navigate = useNavigate();
@@ -49,39 +57,374 @@ export default function QuizCompletion() {
     const questions = questionsData?.data || questionsData || [];
     const quiz = quizDataVerify?.data || tempStorage || { title: "Mission Engagement", xp: 0 };
 
+    // Get actual quiz code for WebRTC room
+    const actualQuizCode = quiz?.quiz_code || quizCode;
+
     const [currentIndex, setCurrentIndex] = useState(0);
     const [selectedAnswers, setSelectedAnswers] = useState({});
     const [timeLeft, setTimeLeft] = useState(30);
     const [showResults, setShowResults] = useState(false);
     const [score, setScore] = useState(0);
-    const [resultData, setResultData] = useState(null);
     const [progressRestored, setProgressRestored] = useState(false);
+    const [questionStartTime, setQuestionStartTime] = useState(Date.now());
+    const [localCameraStream, setLocalCameraStream] = useState(null);
 
     const currentQuestion = questions[currentIndex];
+
+    // Activity logging hook
+    const {
+        logQuestionViewed,
+        logQuestionAnswered,
+        logQuestionSkipped,
+        logQuizCompleted,
+        logQuizAbandoned,
+    } = useActivityLogger(quizCode);
+
+    // Exam Proctoring System
+    const proctoringSystem = useExamProctoring({
+        videoStream: localCameraStream,
+        enabled: !showResults && questions.length > 0,
+        onViolation: (violation) => {
+            console.log('🚨 Proctoring Violation:', violation);
+
+            // Show toast notification
+            toast.error(
+                <div className="space-y-1">
+                    <p className="font-bold">⚠️ {violation.severity === 'cheating' ? 'Violation' : 'Warning'}</p>
+                    <p className="text-sm">{violation.details}</p>
+                    <p className="text-xs text-gray-600 dark:text-gray-400">
+                        Risk Score: +{violation.riskPoints}
+                    </p>
+                </div>,
+                { duration: 5000 }
+            );
+        },
+        onStatusChange: (status, violation) => {
+            if (status === 'cheating') {
+                console.error('🚨 EXAM TERMINATED - Cheating detected');
+
+                // Terminate exam
+                const event = new CustomEvent('examTerminated', {
+                    detail: {
+                        reason: 'proctoring_violation',
+                        violation: violation,
+                        timestamp: new Date().toISOString()
+                    }
+                });
+                window.dispatchEvent(event);
+            }
+        },
+        thresholds: {
+            noFaceTimeout: 800,          // 0.8 seconds (very strict)
+            multipleFacesTimeout: 500,   // 0.5 seconds (very strict)
+            gazeAwayTimeout: 1500,       // 1.5 seconds (strict)
+            gazeAwayRepeats: 2,          // 2 times (strict)
+            talkingTimeout: 1500,        // 1.5 seconds (strict)
+            audioThreshold: 0.05,        // 5% volume (sensitive)
+            riskScoreLimit: 60           // Lower limit (very strict)
+        }
+    });
+
+    // WebRTC streaming hook - continue streaming from camera setup
+    const { isStreaming: isWebRTCStreaming, startStreaming: startWebRTCStream, stopStreaming: stopWebRTCStream } = useWebRTCStream(
+        user?.id,
+        actualQuizCode,
+        'student'
+    );
+
+    // Check and reactivate camera if needed (only camera, no screen sharing)
+    useEffect(() => {
+        const checkAndActivateCamera = async () => {
+            if (showResults) return; // Don't activate if quiz is finished
+
+            try {
+                // Check if camera is already active
+                const devices = await navigator.mediaDevices.enumerateDevices();
+                const videoDevices = devices.filter(device => device.kind === 'videoinput');
+
+                if (videoDevices.length === 0) {
+                    console.log('QuizCompletion: No camera found');
+                    return;
+                }
+
+                // Try to get existing camera stream
+                const existingTracks = await navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+                    .then(stream => {
+                        const isActive = stream.getVideoTracks().some(track => track.readyState === 'live');
+
+                        if (isActive && !localCameraStream) {
+                            console.log('QuizCompletion: Camera already active, using existing stream');
+                            setLocalCameraStream(stream);
+
+                            // Start WebRTC streaming with the camera stream
+                            startWebRTCStream(stream);
+                            return true;
+                        }
+
+                        // Stop the test stream
+                        stream.getTracks().forEach(track => track.stop());
+                        return false;
+                    })
+                    .catch(() => false);
+
+                if (!existingTracks && !localCameraStream) {
+                    console.log('QuizCompletion: Camera not active, requesting access');
+
+                    // Request camera access (no screen sharing)
+                    const camera = await navigator.mediaDevices.getUserMedia({
+                        video: {
+                            width: { ideal: 1280 },
+                            height: { ideal: 720 },
+                            facingMode: 'user'
+                        },
+                        audio: true
+                    });
+
+                    console.log('QuizCompletion: Camera stream obtained', camera.id);
+                    setLocalCameraStream(camera);
+
+                    // Start WebRTC streaming with the camera stream
+                    await startWebRTCStream(camera);
+
+                    toast.success('Camera activated', {
+                        description: 'Video monitoring active during quiz',
+                        duration: 3000
+                    });
+                }
+            } catch (error) {
+                console.error('QuizCompletion: Camera check/activation failed', error);
+
+                // Only show error if it's not a "camera already in use" error
+                if (error.name !== 'NotReadableError') {
+                    toast.error('Camera activation failed', {
+                        description: 'Continuing without video monitoring',
+                        duration: 3000
+                    });
+                }
+            }
+        };
+
+        if (questions.length > 0 && !showResults) {
+            checkAndActivateCamera();
+        }
+    }, [questions.length, showResults, localCameraStream, startWebRTCStream]);
+
+    // Anti-cheating monitoring
+    const { isRecording, stopRecording, cameraStream, screenStream } = useMediaRecording();
+
+    // Live streaming
+    const {
+        isStreaming,
+        startStreaming,
+        stopStreaming: stopLiveStream,
+        sendViolation: sendViolationToStream
+    } = useLiveStreaming();
+
+    const handleViolation = useCallback((violation, violationCount) => {
+        // Show warning toast
+        toast.error(
+            <div className="space-y-1">
+                <p className="font-bold">⚠️ Violation Detected!</p>
+                <p className="text-sm">{violation.details.action}</p>
+                <p className="text-xs text-gray-600 dark:text-gray-400">
+                    Warning {violationCount}/3 - Your exam will be terminated after 3 violations.
+                </p>
+            </div>,
+            { duration: 5000 }
+        );
+
+        // Send violation to live stream
+        if (isStreaming) {
+            sendViolationToStream(violation);
+        }
+    }, [isStreaming, sendViolationToStream]);
+
+    const {
+        startMonitoring,
+        stopMonitoring,
+        violations,
+        violationCount
+    } = useAntiCheating({
+        onViolation: handleViolation,
+        enabled: true,
+        maxViolations: 3
+    });
+
+    // Start monitoring and streaming when quiz starts
+    useEffect(() => {
+        if (questions.length > 0 && !showResults && localCameraStream) {
+            startMonitoring();
+            console.log('🔒 Anti-cheating monitoring activated');
+
+            // Start live streaming if we have camera stream
+            if (!isStreaming) {
+                // For live streaming, we still need screen stream, but for WebRTC we only use camera
+                if (cameraStream && screenStream) {
+                    startStreaming(cameraStream, screenStream, user, quiz)
+                        .then(result => {
+                            if (result.success) {
+                                console.log('📡 Live streaming started');
+                                toast.success('Live monitoring active', {
+                                    description: 'Your quiz session is being monitored',
+                                    duration: 3000
+                                });
+                            } else {
+                                console.error('Failed to start streaming:', result.error);
+                            }
+                        });
+                }
+            }
+        }
+
+        return () => {
+            stopMonitoring();
+        };
+    }, [questions.length, showResults, localCameraStream, cameraStream, screenStream, isStreaming, startMonitoring, stopMonitoring, startStreaming, user, quiz]);
+
+    // Listen for exam termination event
+    useEffect(() => {
+        const handleExamTerminated = async (event) => {
+            console.error('🚨 EXAM TERMINATED:', event.detail);
+
+            // Stop monitoring
+            stopMonitoring();
+
+            // Stop WebRTC streaming
+            if (isWebRTCStreaming) {
+                console.log('Stopping WebRTC stream due to exam termination');
+                stopWebRTCStream();
+            }
+
+            // Stop streaming
+            if (isStreaming) {
+                await stopLiveStream();
+            }
+
+            // Stop recording if active
+            if (isRecording) {
+                await stopRecording();
+            }
+
+            // Clear quiz progress
+            if (quizCode) {
+                clearQuizProgress(quizCode);
+            }
+
+            // Show termination message
+            toast.error('Exam terminated due to multiple violations!', {
+                duration: 10000
+            });
+
+            // Navigate to violation page
+            navigate('/dashboard/quiz-violation', {
+                state: {
+                    quizTitle: quiz.title,
+                    violations: violations.map(v => v.type),
+                    timestamp: new Date().toISOString(),
+                    studentName: `${user?.first_name} ${user?.last_name}`
+                },
+                replace: true
+            });
+        };
+
+        window.addEventListener('examTerminated', handleExamTerminated);
+
+        return () => {
+            window.removeEventListener('examTerminated', handleExamTerminated);
+        };
+    }, [stopMonitoring, isWebRTCStreaming, stopWebRTCStream, isStreaming, stopLiveStream, isRecording, stopRecording, quizCode, navigate, quiz.title, violations, user]);
+
+    // Listen for screen share stopped event
+    useEffect(() => {
+        const handleScreenShareStopped = async (event) => {
+            console.error('🚨 SCREEN SHARE STOPPED:', event.detail);
+
+            // Stop monitoring
+            stopMonitoring();
+
+            // Stop WebRTC streaming
+            if (isWebRTCStreaming) {
+                console.log('Stopping WebRTC stream due to screen share stopped');
+                stopWebRTCStream();
+            }
+
+            // Stop streaming
+            if (isStreaming) {
+                await stopLiveStream();
+            }
+
+            // Stop recording
+            if (isRecording) {
+                await stopRecording();
+            }
+
+            // Clear quiz progress
+            if (quizCode) {
+                clearQuizProgress(quizCode);
+            }
+
+            // Show error message
+            toast.error('Screen sharing stopped! Exam terminated.', {
+                duration: 10000
+            });
+
+            // Navigate to violation page
+            navigate('/dashboard/quiz-violation', {
+                state: {
+                    quizTitle: quiz.title,
+                    violations: ['screen-share-stopped'],
+                    timestamp: new Date().toISOString(),
+                    studentName: `${user?.first_name} ${user?.last_name}`
+                },
+                replace: true
+            });
+        };
+
+        window.addEventListener('screenShareStopped', handleScreenShareStopped);
+
+        return () => {
+            window.removeEventListener('screenShareStopped', handleScreenShareStopped);
+        };
+    }, [stopMonitoring, isWebRTCStreaming, stopWebRTCStream, isStreaming, stopLiveStream, isRecording, stopRecording, quizCode, navigate, quiz.title, user]);
 
     // Load saved progress on mount
     useEffect(() => {
         // Clear any expired progress first
         clearExpiredProgress();
-        
+
         if (quizCode && !progressRestored && questions.length > 0) {
             const savedProgress = loadQuizProgress(quizCode);
-            
+
             if (savedProgress) {
                 // Restore progress
                 setCurrentIndex(savedProgress.currentIndex || 0);
                 setSelectedAnswers(savedProgress.selectedAnswers || {});
                 setTimeLeft(savedProgress.timeLeft || 30);
-                
+
                 toast.success('Progress Restored!', {
                     description: `Continuing from question ${(savedProgress.currentIndex || 0) + 1} of ${questions.length}`,
                     duration: 4000
                 });
             }
-            
+
             setProgressRestored(true);
         }
     }, [quizCode, progressRestored, questions.length]);
+
+    // Log question viewed when currentIndex changes
+    useEffect(() => {
+        if (currentQuestion && !showResults && progressRestored) {
+            setQuestionStartTime(Date.now());
+            logQuestionViewed(
+                currentIndex + 1,
+                currentQuestion.id,
+                {
+                    question_text: currentQuestion.question,
+                    time_remaining: timeLeft,
+                }
+            );
+        }
+    }, [currentIndex, currentQuestion, showResults, progressRestored, logQuestionViewed, timeLeft]);
 
     // Save progress whenever state changes
     useEffect(() => {
@@ -94,7 +437,7 @@ export default function QuizCompletion() {
                 quizTitle: quiz.title,
                 totalQuestions: questions.length
             };
-            
+
             saveQuizProgress(quizCode, progressData);
         }
     }, [currentIndex, selectedAnswers, timeLeft, quizCode, progressRestored, showResults, questions.length, quiz.title]);
@@ -106,11 +449,60 @@ export default function QuizCompletion() {
         }
     }, [showResults, quizCode]);
 
+    // Track quiz abandonment when user navigates away
+    useEffect(() => {
+        const handleBeforeUnload = () => {
+            if (!showResults && questions.length > 0) {
+                const questionsAnswered = Object.keys(selectedAnswers).length;
+                logQuizAbandoned(
+                    currentIndex + 1,
+                    questionsAnswered,
+                    {
+                        quiz_title: quiz.title,
+                        total_questions: questions.length,
+                        reason: 'page_unload',
+                    }
+                );
+            }
+        };
+
+        window.addEventListener('beforeunload', handleBeforeUnload);
+
+        return () => {
+            window.removeEventListener('beforeunload', handleBeforeUnload);
+
+            // Also log abandonment on component unmount if quiz not completed
+            if (!showResults && questions.length > 0) {
+                const questionsAnswered = Object.keys(selectedAnswers).length;
+                logQuizAbandoned(
+                    currentIndex + 1,
+                    questionsAnswered,
+                    {
+                        quiz_title: quiz.title,
+                        total_questions: questions.length,
+                        reason: 'component_unmount',
+                    }
+                );
+            }
+        };
+    }, [showResults, quizCode, currentIndex, selectedAnswers, questions.length, quiz.title, logQuizAbandoned]);
+
+    // Helper to get duration for current question
+    const getQuestionDuration = useCallback(() => {
+        if (quiz?.duration && questions.length > 0) {
+            const totalSeconds = parseInt(quiz.duration) * 60;
+            return Math.floor(totalSeconds / questions.length);
+        }
+        return 30; // Global fallback
+    }, [questions, quiz.duration]);
+
     const finalizeQuiz = useCallback(async () => {
         // Calculate score locally for immediate feedback, 
         // but normally we'd wait for backend confirmation
         let correctCount = 0;
         const formattedAnswers = [];
+        const quizStartTime = Date.now() - (currentIndex + 1) * getQuestionDuration() * 1000;
+        const totalTimeSpent = Math.floor((Date.now() - quizStartTime) / 1000);
 
         questions.forEach((q, idx) => {
             const selectedMatch = selectedAnswers[idx];
@@ -133,8 +525,56 @@ export default function QuizCompletion() {
             }
         });
 
-        const xpEarned = Math.round((correctCount) * (quiz.p_xp || 0));
+        const scorePercentage = Math.round((correctCount / questions.length) * 100);
+        const xpEarned = Math.round((correctCount) * ((quiz.p_xp / questionsData.data.length) || 0));
         setScore(correctCount);
+
+        // Log quiz completion
+        await logQuizCompleted(
+            correctCount,
+            questions.length,
+            totalTimeSpent,
+            {
+                xp_earned: xpEarned,
+                percentage: scorePercentage,
+                quiz_title: quiz.title,
+            }
+        );
+
+        // Stop all monitoring and streaming
+        console.log('Quiz completed - stopping all monitoring and streaming');
+
+        // Stop WebRTC streaming
+        if (isWebRTCStreaming) {
+            console.log('Stopping WebRTC stream - quiz completed');
+            stopWebRTCStream();
+        }
+
+        // Stop live streaming
+        if (isStreaming) {
+            console.log('Stopping live stream - quiz completed');
+            await stopLiveStream();
+        }
+
+        // Stop recording and camera
+        if (isRecording) {
+            console.log('Stopping recording - quiz completed');
+            await stopRecording();
+        }
+
+        // Stop camera stream
+        if (localCameraStream) {
+            console.log('Stopping camera stream - quiz completed');
+            localCameraStream.getTracks().forEach(track => {
+                track.stop();
+                console.log('Camera track stopped:', track.kind);
+            });
+        }
+
+        // Stop anti-cheating monitoring
+        stopMonitoring();
+        console.log('Anti-cheating monitoring stopped');
+
         try {
             const submissionPayload = {
                 student_id: user.id,
@@ -143,16 +583,17 @@ export default function QuizCompletion() {
                 group_code: quiz.group_code,
                 xp: xpEarned,
                 answers: formattedAnswers,
-                score: correctCount
+                score: scorePercentage
             };
 
             const result = await submitQuiz(submissionPayload).unwrap();
-            setResultData(result);
 
-            navigate(`/dashboard/quizzes/result?code=${quiz.quiz_code}`, {
+            navigate(`/dashboard/quizzes/result?code=${quiz.id}`, {
                 state: {
                     result: {
-                        score: correctCount,
+                        score: scorePercentage,
+                        correctCount: correctCount,
+                        totalQuestions: questions.length,
                         answers: formattedAnswers,
                         ...result
                     }
@@ -164,15 +605,47 @@ export default function QuizCompletion() {
             // Even if submission fails, we show local results for UX
             setShowResults(true);
         }
-    }, [questions, selectedAnswers, quiz, user, submitQuiz, navigate]);
+    }, [questions, selectedAnswers, quiz, user, submitQuiz, navigate, currentIndex, getQuestionDuration, logQuizCompleted, isWebRTCStreaming, stopWebRTCStream, isStreaming, stopLiveStream, isRecording, stopRecording, localCameraStream, stopMonitoring]);
 
     const handleNext = useCallback(() => {
+        // Log question answered or skipped
+        const timeSpent = Math.floor((Date.now() - questionStartTime) / 1000);
+        const wasAnswered = selectedAnswers[currentIndex] !== undefined;
+
+        if (wasAnswered) {
+            const selectedAnswer = selectedAnswers[currentIndex];
+            const correctOption = currentQuestion?.options?.find(opt => opt.is_correct === 1 || opt.is_correct === true);
+            const correctIdentifier = correctOption?.id || correctOption?.option;
+            const isCorrect = selectedAnswer === correctIdentifier;
+
+            logQuestionAnswered(
+                currentIndex + 1,
+                currentQuestion?.id,
+                selectedAnswer,
+                timeSpent,
+                isCorrect,
+                {
+                    question_text: currentQuestion?.question,
+                    time_remaining: timeLeft,
+                }
+            );
+        } else {
+            logQuestionSkipped(
+                currentIndex + 1,
+                currentQuestion?.id,
+                {
+                    question_text: currentQuestion?.question,
+                    time_spent_seconds: timeSpent,
+                }
+            );
+        }
+
         if (currentIndex < questions.length - 1) {
             setCurrentIndex(prev => prev + 1);
         } else {
             finalizeQuiz();
         }
-    }, [currentIndex, questions.length, finalizeQuiz]);
+    }, [currentIndex, questions.length, finalizeQuiz, selectedAnswers, currentQuestion, questionStartTime, timeLeft, logQuestionAnswered, logQuestionSkipped]);
 
     const handleAnswer = (optionId) => {
         setSelectedAnswers(prev => ({
@@ -180,15 +653,6 @@ export default function QuizCompletion() {
             [currentIndex]: optionId
         }));
     };
-
-    // Helper to get duration for current question
-    const getQuestionDuration = useCallback(() => {
-        if (quiz?.duration && questions.length > 0) {
-            const totalSeconds = parseInt(quiz.duration) * 60;
-            return Math.floor(totalSeconds / questions.length);
-        }
-        return 30; // Global fallback
-    }, [questions, quiz.duration]);
 
     // Timer Logic
     useEffect(() => {
@@ -251,7 +715,7 @@ export default function QuizCompletion() {
 
     if (showResults) {
         const percentage = Math.round((score / questions.length) * 100);
-        const xpEarned = Math.round((score / questions.length) * (quiz.xp || 0));
+        const xpEarned = score * ((quiz.p_xp / questionsData.data.length) || 0); // Correct answers * XP per question
 
         return (
             <DashboardLayout>
@@ -318,7 +782,7 @@ export default function QuizCompletion() {
 
     return (
         <DashboardLayout>
-            <div className="min-h-screen pb-24 relative overflow-hidden bg-white dark:bg-black">
+            <div className="min-h-screen pb-24 relative overflow-hidden bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:bg-black">
                 {/* Decorative BG */}
                 <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-200/30 dark:bg-indigo-600/5 rounded-full blur-[120px] -mr-64 -mt-64" />
 
@@ -496,6 +960,19 @@ export default function QuizCompletion() {
 
                         {/* Sidebar */}
                         <div className="lg:col-span-4 space-y-8">
+                            {/* Proctoring Status */}
+                            <ProctoringStatus
+                                status={proctoringSystem.status}
+                                riskScore={proctoringSystem.riskScore}
+                                facePresent={proctoringSystem.facePresent}
+                                faceCount={proctoringSystem.faceCount}
+                                headPose={proctoringSystem.headPose}
+                                isTalking={proctoringSystem.isTalking}
+                                audioDetected={proctoringSystem.audioDetected}
+                                currentFlags={proctoringSystem.currentFlags}
+                                violations={proctoringSystem.violations}
+                            />
+
                             <div className="bg-gradient-to-br from-green-50 to-teal-50 dark:from-white/5 dark:to-white/5 border-2 border-green-200 dark:border-white/10 rounded-[3rem] p-8 space-y-8 shadow-lg">
                                 <div className="flex items-center justify-between">
                                     <h3 className="text-lg font-black text-gray-900 dark:text-white uppercase italic tracking-tighter">Live Status</h3>
@@ -521,6 +998,63 @@ export default function QuizCompletion() {
                                 </div>
 
                                 <div className="pt-8 border-t-2 border-gray-200 dark:border-white/5">
+                                    {/* WebRTC Streaming Status */}
+                                    {isWebRTCStreaming && (
+                                        <div className="mb-6 p-5 bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-500/5 dark:to-pink-500/5 rounded-[2rem] border-2 border-purple-300 dark:border-purple-500/10 shadow-sm">
+                                            <div className="flex items-center gap-3 mb-3">
+                                                <div className="w-10 h-10 rounded-xl bg-purple-500 flex items-center justify-center">
+                                                    <Radio className="w-5 h-5 text-white" />
+                                                </div>
+                                                <div>
+                                                    <p className="text-xs font-black text-purple-700 dark:text-purple-400 uppercase tracking-wide">
+                                                        Live Video Stream
+                                                    </p>
+                                                    <div className="flex items-center gap-2 mt-1">
+                                                        <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                                                        <span className="text-[9px] font-bold text-purple-600 dark:text-purple-500 uppercase tracking-wider">
+                                                            Broadcasting
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <p className="text-[9px] text-purple-600 dark:text-purple-500/60 font-medium">
+                                                Your camera feed is being streamed live to proctors
+                                            </p>
+                                        </div>
+                                    )}
+
+                                    {/* Anti-Cheating Status */}
+                                    <div className="mb-6 p-5 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-500/5 dark:to-indigo-500/5 rounded-[2rem] border-2 border-blue-300 dark:border-blue-500/10 shadow-sm">
+                                        <div className="flex items-center gap-3 mb-3">
+                                            <div className="w-10 h-10 rounded-xl bg-blue-500 flex items-center justify-center">
+                                                <Eye className="w-5 h-5 text-white" />
+                                            </div>
+                                            <div>
+                                                <p className="text-xs font-black text-blue-700 dark:text-blue-400 uppercase tracking-wide">
+                                                    Proctoring Active
+                                                </p>
+                                                <div className="flex items-center gap-2 mt-1">
+                                                    <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                                                    <span className="text-[9px] font-bold text-blue-600 dark:text-blue-500 uppercase tracking-wider">
+                                                        Monitoring
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {violationCount > 0 && (
+                                            <div className="mt-3 pt-3 border-t border-blue-200 dark:border-blue-500/20">
+                                                <div className="flex items-center justify-between">
+                                                    <span className="text-[9px] font-bold text-orange-600 dark:text-orange-500 uppercase tracking-wider">
+                                                        Violations
+                                                    </span>
+                                                    <span className="text-sm font-black text-orange-600 dark:text-orange-500">
+                                                        {violationCount}/3
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+
                                     <div className="flex items-start gap-4 p-5 bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-500/5 dark:to-orange-500/5 rounded-[2rem] border-2 border-orange-300 dark:border-orange-500/10 shadow-sm">
                                         <AlertCircle size={20} className="text-orange-600 dark:text-orange-500 shrink-0 mt-0.5" />
                                         <p className="text-[9px] font-bold text-orange-700 dark:text-orange-500/60 uppercase tracking-widest leading-loose">

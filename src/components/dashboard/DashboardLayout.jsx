@@ -11,7 +11,7 @@ import { useGetXpHistoryMutation } from '@/redux/api/authApi';
 import { useGetStudentProfileQuery } from '@/redux/api/studentApi';
 import { useGetTeacherProfileQuery } from '@/redux/api/teacherApi';
 
-export default function DashboardLayout({ children }) {
+export default function DashboardLayout({ children, hideBottomNav = false }) {
     const location = useLocation();
     const navigate = useNavigate();
     const dispatch = useDispatch();
@@ -45,7 +45,7 @@ export default function DashboardLayout({ children }) {
     useEffect(() => {
         console.log(currentProfile, user, "currentProfile")
         if (fetchedXp !== undefined && fetchedXp !== user?.xp) {
-            dispatch(updateUser({...fetchedXp }));
+            dispatch(updateUser({ ...fetchedXp }));
         }
     }, [fetchedXp, user?.xp, dispatch]);
 
@@ -69,7 +69,7 @@ export default function DashboardLayout({ children }) {
     else if (location.pathname.includes('/profile')) currentTab = 'Profile';
 
     return (
-        <div className="min-h-screen bg-background flex transition-colors duration-300">
+        <div className="min-h-screen bg-background flex transition-colors duration-300 overflow-x-hidden">
             {/* Desktop Sidebar */}
             <Sidebar
                 onLogout={() => setIsLogoutModalOpen(true)}
@@ -77,21 +77,18 @@ export default function DashboardLayout({ children }) {
             />
 
             {/* Main Content Area */}
-            <main className="flex-1 lg:ml-72 min-h-screen overflow-x-hidden pb-28 lg:pb-0">
-                <div className="lg:max-w-7xl lg:mx-auto">
-                    {children}
-                </div>
-            </main>
-
+                <main className="flex-1 lg:ml-72 pb-44 lg:pb-0">
+                    <div className="lg:max-w-7xl lg:mx-auto">
+                        {children}
+                    </div>
+                </main>
             {/* Mobile Bottom Navigation */}
-            {!location.pathname.includes('teacher/ai-review') && (
-                <div className="lg:hidden">
-                    <DashboardBottomNav
-                        currentTab={currentTab}
-                        onLogout={() => setIsLogoutModalOpen(true)}
-                        onMoreToggle={() => setIsMoreOpen(true)}
-                    />
-                </div>
+            {!hideBottomNav && !location.pathname.includes('teacher/ai-review') && (
+                <DashboardBottomNav
+                    currentTab={currentTab}
+                    onLogout={() => setIsLogoutModalOpen(true)}
+                    onMoreToggle={() => setIsMoreOpen(true)}
+                />
             )}
 
             {/* AI Chat Widget - Global Fixed Position

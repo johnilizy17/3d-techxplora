@@ -23,6 +23,7 @@ export default function Layout({ children }) {
     const location = useLocation();
     const isDashboard = location.pathname.startsWith('/dashboard');
     const isSupport = location.pathname === '/support';
+    const isCameraSetup = location.pathname === '/dashboard/quizzes/camera-setup';
 
     return (
         <div className="min-h-screen bg-background text-foreground selection:bg-[#a6b1ff]/30 transition-colors duration-300">
@@ -33,7 +34,7 @@ export default function Layout({ children }) {
                 {children}
             </main>
             {!isDashboard && !isSupport && <Footer />}
-            {!isSupport && <ChatBot />}
+            {!isSupport && !isCameraSetup && <ChatBot />}
         </div>
     )
 }

@@ -47,9 +47,10 @@ export default function CreateCourse() {
     const navigate = useNavigate();
     const user = useSelector(selectCurrentUser);
     const [currentStep, setCurrentStep] = useState(1);
-    const [isUploading, setIsUploading] = useState({ banner: false, video: false, other: false });
+    const [isUploading, setIsUploading] = useState({ banner: false, video: false, other: false, attachment: false });
     const [createCourse, { isLoading: isSubmitting }] = useCreateCourseMutation();
     const [draftRestored, setDraftRestored] = useState(false);
+    const [fileInputKey, setFileInputKey] = useState(Date.now());
 
     const [formData, setFormData] = useState({
         title: '',
@@ -156,6 +157,9 @@ export default function CreateCourse() {
                 setFormData(prev => ({ ...prev, [`${field}_url`]: url }));
                 toast.success(`${field.charAt(0).toUpperCase() + field.slice(1)} uploaded`);
             }
+
+            // Reset the file input
+            e.target.value = '';
         } catch (error) {
             toast.error("Upload failed");
             console.error(error);
@@ -169,6 +173,8 @@ export default function CreateCourse() {
             ...prev,
             attachments: prev.attachments.filter((_, i) => i !== index)
         }));
+        setFileInputKey(Date.now()); // Reset file input
+        toast.success("Document removed");
     };
 
     const removeOtherVideo = (index) => {
@@ -250,8 +256,8 @@ export default function CreateCourse() {
                 amount: Number(formData.amount),
                 banner: formData.banner_url,
                 video: formData.video_url,
-                other: formData.other, // Additional video resources
-                attachment: formData.attachments.length > 0 ? formData.attachments[0].url : null,
+                other: formData.other, // Additional video resourcformData.attachments.map(a => a.url)es
+                attachment: formData.attachments.length > 0 ? JSON.stringify(formData.attachments.map(a => a.url)) : null,
                 attachments: formData.attachments.map(a => a.url),
                 learn: formData.learn,
                 difficulty_level: formData.difficulty_level,
@@ -284,38 +290,103 @@ export default function CreateCourse() {
         else navigate('/dashboard/courses');
     };
 
+    // Check if a step is accessible (completed or current)
+    const isStepAccessible = (stepIndex) => {
+        const stepNumber = stepIndex + 1;
+
+        // Step 1 is always accessible
+        if (stepNumber === 1) return true;
+
+        // Step 2 is accessible if step 1 is valid
+        if (stepNumber === 2) {
+            return formData.title.trim() && formData.description.trim() && formData.category.trim();
+        }
+
+        // Step 3 is accessible if step 1 and 2 are valid
+        if (stepNumber === 3) {
+            const step1Valid = formData.title.trim() && formData.description.trim() && formData.category.trim();
+            const step2Valid = formData.banner_url && formData.instruction.trim() && !formData.learn.some(p => !p.trim());
+            return step1Valid && step2Valid;
+        }
+
+        // Step 4 is accessible if step 1, 2, and 3 are valid
+        if (stepNumber === 4) {
+            const step1Valid = formData.title.trim() && formData.description.trim() && formData.category.trim();
+            const step2Valid = formData.banner_url && formData.instruction.trim() && !formData.learn.some(p => !p.trim());
+            return step1Valid && step2Valid;
+        }
+
+        // Step 5 (success) is only accessible after submission
+        return false;
+    };
+
+    const handleStepClick = (stepIndex) => {
+        console.log(stepIndex);
+        const stepNumber = stepIndex + 1;
+
+        // Don't allow clicking on success step or current step
+        if (stepNumber === 5 || stepNumber === currentStep) return;
+
+        // Only allow navigation to accessible steps
+        if (isStepAccessible(stepIndex)) {
+            setCurrentStep(stepNumber);
+        } else {
+            toast.error('Please complete the current step first');
+        }
+    };
+
     return (
         <DashboardLayout>
             <div className="min-h-screen pb-24 lg:pb-12">
                 <div className="max-w-6xl mx-auto px-6 lg:px-10 mt-6 space-y-8">
                     {/* Stepper Header */}
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-gray-50 dark:bg-[#0a0a0a]/40 backdrop-blur-xl border border-gray-200 dark:border-white/10 rounded-[2.5rem] p-8 lg:px-12">
-                        <div>
-                            <h2 className="text-sm font-black text-indigo-600 dark:text-[#a6b1ff] uppercase tracking-[0.3em] mb-1 italic">Academy</h2>
-                            <h1 className="text-2xl lg:text-3xl font-black text-gray-900 dark:text-white uppercase italic tracking-tighter">
+                    <div className="flex flex-col gap-4 bg-gray-50 dark:bg-[#0a0a0a]/40 backdrop-blur-xl border border-gray-200 dark:border-white/10 rounded-2xl sm:rounded-[2.5rem] p-4 sm:p-6 lg:p-8 lg:px-12">
+                        <div className="text-center sm:text-left">
+                            <h2 className="text-[10px] sm:text-sm font-black text-indigo-600 dark:text-[#a6b1ff] uppercase tracking-[0.2em] sm:tracking-[0.3em] mb-1 italic">Academy</h2>
+                            <h1 className="text-xl sm:text-2xl lg:text-3xl font-black text-gray-900 dark:text-white uppercase italic tracking-tighter">
                                 {currentStep === 5 ? 'Launch Success' : 'Course Creator'}
                             </h1>
                         </div>
 
-                        <div className="flex items-center gap-1 sm:gap-0 overflow-x-auto pb-2 sm:pb-0 no-scrollbar">
-                            {STEPS.map((step, idx) => (
-                                <React.Fragment key={idx}>
-                                    <div className="flex flex-col items-center gap-2 min-w-[70px] sm:min-w-[80px]">
-                                        <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center transition-all duration-500 shrink-0 ${currentStep > idx + 1 ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/20' :
-                                            currentStep === idx + 1 ? 'bg-[#a6b1ff] text-[#0a0a0a] scale-110 shadow-lg shadow-indigo-500/20' :
-                                                'bg-gray-200 dark:bg-white/5 text-gray-400 dark:text-white/30 border border-gray-300 dark:border-white/10'
-                                            } `}>
-                                            {currentStep > idx + 1 ? <Check size={18} /> : <step.icon size={18} />}
-                                        </div>
-                                        <span className={`text-[8px] sm:text-[9px] font-black uppercase tracking-widest ${currentStep === idx + 1 ? 'text-[#a6b1ff]' : 'text-gray-400 dark:text-white/20'}`}>
-                                            {step.title}
-                                        </span>
-                                    </div>
-                                    {idx < STEPS.length - 1 && (
-                                        <div className={`w-4 sm:w-8 h-[2px] mb-6 rounded-full shrink-0 ${currentStep > idx + 1 ? 'bg-emerald-500/50' : 'bg-gray-300 dark:bg-white/10'} `} />
-                                    )}
-                                </React.Fragment>
-                            ))}
+                        <div className="relative">
+                            <div className="flex items-center justify-center sm:justify-start gap-0.5 sm:gap-1 overflow-x-auto overflow-y-hidden pb-3 sm:pb-2 -mb-1 sm:-mb-0 px-1 max-w-[290px] lg:max-w-[680px]" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgb(209 213 219) transparent' }}>
+                                <div className="flex flex-col items-center gap-1.5 sm:gap-2 min-w-[60px] sm:min-w-[70px] lg:min-w-[80px] lg:display-none" >
+
+                                </div>
+                                {STEPS.map((step, idx) => {
+                                    const stepNumber = idx + 1;
+                                    const isAccessible = isStepAccessible(idx);
+                                    const isCurrent = currentStep === stepNumber;
+                                    const isCompleted = currentStep > stepNumber;
+
+                                    return (
+                                        <React.Fragment key={idx}>
+                                            <div className="flex flex-col items-center gap-1.5 sm:gap-2 min-w-[60px] sm:min-w-[70px] lg:min-w-[80px]">
+                                                <button
+                                                    onClick={() => handleStepClick(idx)}
+                                                    disabled={!isAccessible || isCurrent || stepNumber === 5}
+                                                    className={`w-8 h-8 sm:w-9 sm:h-9 lg:w-10 lg:h-10 rounded-lg sm:rounded-xl flex items-center justify-center transition-all duration-500 shrink-0 ${isCompleted
+                                                            ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/20 hover:bg-emerald-600 cursor-pointer'
+                                                            : isCurrent
+                                                                ? 'bg-[#a6b1ff] text-[#0a0a0a] scale-105 sm:scale-110 shadow-lg shadow-indigo-500/20 cursor-default'
+                                                                : isAccessible && stepNumber !== 5
+                                                                    ? 'bg-gray-200 dark:bg-white/5 text-gray-400 dark:text-white/30 border border-gray-300 dark:border-white/10 hover:bg-gray-300 dark:hover:bg-white/10 cursor-pointer'
+                                                                    : 'bg-gray-200 dark:bg-white/5 text-gray-400 dark:text-white/30 border border-gray-300 dark:border-white/10 cursor-not-allowed opacity-50'
+                                                        }`}
+                                                >
+                                                    {isCompleted ? <Check size={14} className="sm:w-[18px] sm:h-[18px]" /> : <step.icon size={14} className="sm:w-[18px] sm:h-[18px]" />}
+                                                </button>
+                                                <span className={`text-[7px] sm:text-[8px] lg:text-[9px] font-black uppercase tracking-wider sm:tracking-widest text-center leading-tight ${isCurrent ? 'text-[#a6b1ff]' : 'text-gray-400 dark:text-white/20'}`}>
+                                                    {step.title}
+                                                </span>
+                                            </div>
+                                            {idx < STEPS.length - 1 && (
+                                                <div className={`w-3 sm:w-4 lg:w-8 h-[2px] mb-6 sm:mb-7 rounded-full shrink-0 ${isCompleted ? 'bg-emerald-500/50' : 'bg-gray-300 dark:bg-white/10'}`} />
+                                            )}
+                                        </React.Fragment>
+                                    );
+                                })}
+                            </div>
                         </div>
                     </div>
 
@@ -382,10 +453,12 @@ export default function CreateCourse() {
                                 addLearnPoint={addLearnPoint}
                                 removeLearnPoint={removeLearnPoint}
                                 removeOtherVideo={removeOtherVideo}
+                                removeAttachment={removeAttachment}
                                 isUploading={isUploading}
                                 errors={errors}
                                 onNext={nextStep}
                                 onPrev={prevStep}
+                                fileInputKey={fileInputKey}
                             />
                         )}
                         {currentStep === 3 && (
@@ -471,17 +544,17 @@ const Step1 = ({ formData, handleChange, errors, onNext }) => (
                 <motion.button
                     whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
                     onClick={onNext}
-                    className="px-10 py-4 rounded-2xl bg-[#a6b1ff] text-[#0a0a0a] font-black uppercase tracking-wider shadow-xl flex items-center gap-3 group"
+                    className="w-full sm:w-auto px-6 sm:px-10 py-3 sm:py-4 rounded-xl sm:rounded-2xl bg-[#a6b1ff] text-[#0a0a0a] font-black uppercase text-xs sm:text-sm tracking-wider shadow-xl flex items-center justify-center gap-3 group"
                 >
                     Next Step
-                    <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
+                    <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
                 </motion.button>
             </div>
         </div>
     </motion.div>
 );
 
-const Step2 = ({ formData, setFormData, handleChange, handleFileUpload, handleLearnChange, addLearnPoint, removeLearnPoint, removeOtherVideo, isUploading, errors, onNext, onPrev }) => (
+const Step2 = ({ formData, setFormData, handleChange, handleFileUpload, handleLearnChange, addLearnPoint, removeLearnPoint, removeOtherVideo, removeAttachment, isUploading, errors, onNext, onPrev, fileInputKey }) => (
     <motion.div
         initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
         className="bg-white dark:bg-white/5 backdrop-blur-3xl border border-gray-200 dark:border-white/10 rounded-[2.5rem] p-8 lg:p-12 shadow-2xl space-y-10 relative overflow-hidden"
@@ -549,7 +622,7 @@ const Step2 = ({ formData, setFormData, handleChange, handleFileUpload, handleLe
                             <label className={`w-full h-12 rounded-xl border-2 border-dashed border-gray-300 dark:border-white/10 flex items-center justify-center gap-2 cursor-pointer hover:border-[#a6b1ff]/30 hover:bg-gray-100 dark:hover:bg-white/5 transition-all text-sm font-bold text-gray-600 dark:text-white/40 ${isUploading.attachment ? 'opacity-50 pointer-events-none' : ''}`}>
                                 {isUploading.attachment ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} />}
                                 {isUploading.attachment ? 'Uploading...' : 'Add Document (PDF/Doc/Zip)'}
-                                <input type="file" className="hidden" accept=".pdf,.doc,.docx,.txt,.zip,.rar" onChange={(e) => handleFileUpload(e, 'attachment')} />
+                                <input key={fileInputKey} type="file" className="hidden" accept=".pdf,.doc,.docx,.txt,.zip,.rar" onChange={(e) => handleFileUpload(e, 'attachment')} />
                             </label>
                             <p className="text-[10px] text-gray-500 dark:text-white/30 text-center uppercase tracking-widest">Course reading materials</p>
                         </div>
@@ -582,53 +655,60 @@ const Step2 = ({ formData, setFormData, handleChange, handleFileUpload, handleLe
                             <button onClick={addLearnPoint} className="flex items-center gap-2 text-indigo-600 dark:text-[#a6b1ff] text-xs font-black uppercase tracking-widest hover:text-indigo-700 dark:hover:text-[#b8c2ff] transition-colors">
                                 <Plus size={16} /> Add Objective
                             </button>
-                        {errors.learn && <p className="text-rose-400 text-[10px] font-bold uppercase tracking-wider">{errors.learn}</p>}
-                    </div>
-                </div>
-
-                <div className="space-y-2">
-                    <label className="text-xs font-black text-gray-600 dark:text-white/40 uppercase tracking-widest pl-1">Final Instruction</label>
-                    <textarea
-                        name="instruction"
-                        value={formData.instruction}
-                        onChange={handleChange}
-                        rows={3}
-                        placeholder="Final steps for the students..."
-                        className={`w-full bg-gray-50 dark:bg-white/5 border ${errors.instruction ? 'border-rose-500/50' : 'border-gray-300 dark:border-white/10'} rounded-2xl px-5 py-4 text-gray-900 dark:text-white focus:border-[#a6b1ff]/50 transition-all resize-none font-medium`}
-                    />
-                    {errors.instruction && <p className="text-rose-400 text-[10px] font-bold mt-1 uppercase tracking-wider">{errors.instruction}</p>}
-                </div>
-
-                <div className="p-6 rounded-3xl bg-gradient-to-br from-purple-100 to-transparent dark:from-purple-500/10 dark:to-transparent border border-purple-300 dark:border-purple-500/20 space-y-4">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-purple-200 dark:bg-purple-500/10 flex items-center justify-center">
-                            <BookOpen size={20} className="text-purple-600 dark:text-purple-400" />
+                            {errors.learn && <p className="text-rose-400 text-[10px] font-bold uppercase tracking-wider">{errors.learn}</p>}
                         </div>
-                        <h4 className="text-sm font-black text-gray-900 dark:text-white uppercase tracking-wider">Case Study Assessment</h4>
                     </div>
-                    <p className="text-xs text-gray-600 dark:text-white/40 leading-relaxed font-medium">
-                        Create interactive scenario-based assessments in Step 4. Students will make decisions and receive immediate feedback based on their choices.
-                    </p>
-                    <div className="flex items-center gap-2 text-[10px] text-purple-600 dark:text-purple-400/60 uppercase tracking-widest font-black">
-                        <ArrowRight size={12} />
-                        Configure in Assessment Step
+
+                    <div className="space-y-2">
+                        <label className="text-xs font-black text-gray-600 dark:text-white/40 uppercase tracking-widest pl-1">Final Instruction</label>
+                        <textarea
+                            name="instruction"
+                            value={formData.instruction}
+                            onChange={handleChange}
+                            rows={3}
+                            placeholder="Final steps for the students..."
+                            className={`w-full bg-gray-50 dark:bg-white/5 border ${errors.instruction ? 'border-rose-500/50' : 'border-gray-300 dark:border-white/10'} rounded-2xl px-5 py-4 text-gray-900 dark:text-white focus:border-[#a6b1ff]/50 transition-all resize-none font-medium`}
+                        />
+                        {errors.instruction && <p className="text-rose-400 text-[10px] font-bold mt-1 uppercase tracking-wider">{errors.instruction}</p>}
+                    </div>
+
+                    <div className="p-6 rounded-3xl bg-gradient-to-br from-purple-100 to-transparent dark:from-purple-500/10 dark:to-transparent border border-purple-300 dark:border-purple-500/20 space-y-4">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-purple-200 dark:bg-purple-500/10 flex items-center justify-center">
+                                <BookOpen size={20} className="text-purple-600 dark:text-purple-400" />
+                            </div>
+                            <h4 className="text-sm font-black text-gray-900 dark:text-white uppercase tracking-wider">Case Study Assessment</h4>
+                        </div>
+                        <p className="text-xs text-gray-600 dark:text-white/40 leading-relaxed font-medium">
+                            Create interactive scenario-based assessments in Step 4. Students will make decisions and receive immediate feedback based on their choices.
+                        </p>
+                        <div className="flex items-center gap-2 text-[10px] text-purple-600 dark:text-purple-400/60 uppercase tracking-widest font-black">
+                            <ArrowRight size={12} />
+                            Configure in Assessment Step
+                        </div>
                     </div>
                 </div>
+            </div >
+
+            <div className="mt-12 flex justify-between items-center">
+                <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={onPrev}
+                    className="px-4 sm:px-8 py-2 sm:py-3 rounded-lg sm:rounded-xl bg-gradient-to-r from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-800 text-gray-900 dark:text-white font-black uppercase text-[10px] sm:text-xs tracking-widest hover:from-gray-300 hover:to-gray-400 dark:hover:from-gray-600 dark:hover:to-gray-700 transition-all shadow-md"
+                >
+                    Back
+                </motion.button>
+                <motion.button
+                    whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+                    onClick={onNext}
+                    className="w-full sm:w-auto px-6 sm:px-10 py-3 sm:py-4 rounded-xl sm:rounded-2xl bg-[#a6b1ff] text-[#0a0a0a] font-black uppercase text-xs sm:text-sm tracking-wider shadow-xl flex items-center justify-center gap-3 group"
+                >
+                    Questions
+                    <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
+                </motion.button>
             </div>
         </div >
-
-        <div className="mt-12 flex justify-between items-center">
-            <button onClick={onPrev} className="text-gray-600 dark:text-white/40 hover:text-gray-900 dark:hover:text-white font-black uppercase text-xs tracking-widest">Back</button>
-            <motion.button
-                whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
-                onClick={onNext}
-                className="px-10 py-4 rounded-2xl bg-[#a6b1ff] text-[#0a0a0a] font-black uppercase tracking-wider shadow-xl flex items-center gap-3 group"
-            >
-                Questions
-                <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
-            </motion.button>
-        </div>
-    </div >
     </motion.div >
 );
 
@@ -912,11 +992,18 @@ const Step3Questions = ({ formData, setFormData, quizzes, onNext, onPrev }) => {
                 )}
 
                 <div className="mt-12 flex justify-between items-center">
-                    <button onClick={onPrev} className="text-gray-600 dark:text-white/40 hover:text-gray-900 dark:hover:text-white font-black uppercase text-xs tracking-widest">Back</button>
+                    <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={onPrev}
+                        className="px-4 sm:px-8 py-2 sm:py-3 rounded-lg sm:rounded-xl bg-gradient-to-r from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-800 text-gray-900 dark:text-white font-black uppercase text-[10px] sm:text-xs tracking-widest hover:from-gray-300 hover:to-gray-400 dark:hover:from-gray-600 dark:hover:to-gray-700 transition-all shadow-md"
+                    >
+                        Back
+                    </motion.button>
                     <motion.button
                         whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
                         onClick={onNext}
-                        className="px-10 py-4 rounded-2xl bg-[#a6b1ff] text-[#0a0a0a] font-black uppercase tracking-wider shadow-xl flex items-center gap-3 group"
+                        className="w-full sm:w-auto px-6 sm:px-10 py-3 sm:py-4 rounded-xl sm:rounded-2xl bg-[#a6b1ff] text-[#0a0a0a] font-black uppercase text-xs sm:text-sm tracking-wider shadow-xl flex items-center justify-center gap-3 group"
                     >
                         Review
                         <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
@@ -996,15 +1083,22 @@ const Step4Assessment = ({ formData, setFormData, quizzes, onLaunch, isSubmittin
             </div>
 
             <div className="mt-12 flex flex-col sm:flex-row items-center justify-between gap-6 pt-10 border-t border-gray-200 dark:border-white/5">
-                <div className="flex items-center gap-8">
-                    <button onClick={onPrev} className="text-gray-600 dark:text-white/40 hover:text-gray-900 dark:hover:text-white font-black uppercase text-xs tracking-widest transition-colors">Back</button>
+                <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-8 w-full sm:w-auto">
+                    <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={onPrev}
+                        className="w-full sm:w-auto px-4 sm:px-8 py-2 sm:py-3 rounded-lg sm:rounded-xl bg-gradient-to-r from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-800 text-gray-900 dark:text-white font-black uppercase text-[10px] sm:text-xs tracking-widest hover:from-gray-300 hover:to-gray-400 dark:hover:from-gray-600 dark:hover:to-gray-700 transition-all shadow-md"
+                    >
+                        Back
+                    </motion.button>
                     <button onClick={() => navigate('/dashboard/courses')} className="text-rose-400/50 hover:text-rose-400 font-black uppercase text-xs tracking-widest transition-colors">Discard</button>
                 </div>
                 <motion.button
                     whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
                     onClick={onLaunch}
                     disabled={isSubmitting}
-                    className="w-full sm:w-auto px-12 py-5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-black uppercase tracking-widest shadow-2xl flex items-center justify-center gap-4 transition-all"
+                    className="w-full px-8 sm:px-12 py-4 sm:py-5 rounded-xl sm:rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-black uppercase text-xs sm:text-sm tracking-widest shadow-2xl flex items-center justify-center gap-3 sm:gap-4 transition-all"
                 >
                     {isSubmitting ? <Loader2 className="animate-spin" size={24} /> : 'Launch Academy'}
                     {!isSubmitting && <Sparkles size={24} className="group-hover:rotate-12 transition-transform" />}

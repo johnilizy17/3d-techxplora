@@ -16,6 +16,7 @@ import Profile from "./Profile.jsx";
 import UserProfile from "./UserProfile.jsx";
 import Courses from "./Courses.jsx";
 import CoursePreview from "./CoursePreview.jsx";
+import CourseQuiz from "./CourseQuiz.jsx";
 import Groups from "./Groups.jsx";
 import Quizzes from "./Quizzes.jsx";
 import Leaderboard from "./Leaderboard.jsx";
@@ -28,7 +29,11 @@ import Drafts from "./Drafts.jsx";
 import QuizDetails from "./QuizDetails.jsx";
 import StartQuiz from "./StartQuiz.jsx";
 import QuizCompletion from "./QuizCompletion.jsx";
+import QuizViolation from "./QuizViolation.jsx";
 import QuizResult from "./QuizResult.jsx";
+import QuizMonitoring from "./QuizMonitoring.jsx";
+import QuizCameraSetup from "./QuizCameraSetup.jsx";
+import CourseAccessDenied from "./CourseAccessDenied.jsx";
 import TeacherGroupDetails from "./TeacherGroupDetails.jsx";
 import JoinQuiz from './JoinQuiz.jsx';
 import JoinGroup from './JoinGroup.jsx';
@@ -64,6 +69,7 @@ import Stats from "./Stats.jsx";
 import PrivacyPolicy from "./PrivacyPolicy.jsx";
 import TermsOfService from "./TermsOfService.jsx";
 import Pricing from "./Pricing.jsx";
+import LiveInspection from "./admin/LiveInspection.jsx";
 
 // Mapping of page names for Layout highlighting (optional)
 const PAGES = {
@@ -104,6 +110,7 @@ function PagesContent() {
         <Route path="/chess/game" element={<ChessGame />} />
         <Route path="/courses" element={<Courses />} />
         <Route path="/courses/:courseId" element={<CoursePreview />} />
+        <Route path="/courses/:courseId/quiz" element={<CourseQuiz />} />
         <Route path="/docs" element={<Docs />} />
 
         {/* Auth Routes */}
@@ -114,8 +121,12 @@ function PagesContent() {
         <Route path="/dashboard/quizzes" element={<Quizzes />} />
         <Route path="/dashboard/quizzes/details" element={<QuizDetails />} />
         <Route path="/dashboard/quizzes/start" element={<StartQuiz />} />
+        <Route path="/dashboard/quizzes/camera-setup" element={<QuizCameraSetup />} />
         <Route path="/dashboard/quizzes/completion" element={<QuizCompletion />} />
+        <Route path="/dashboard/quizzes/completion" element={<QuizCompletion />} />
+        <Route path="/dashboard/quiz-violation" element={<QuizViolation />} />
         <Route path="/dashboard/quizzes/result" element={<QuizResult />} />
+        <Route path="/dashboard/quizzes/monitoring" element={<QuizMonitoring />} />
         <Route path="/dashboard/teacher/groups" element={<TeacherGroupDetails />} />
         <Route path="/dashboard/quizzes/join" element={<JoinQuiz />} />
         <Route path="/dashboard/teacher/quizzes" element={<CreateQuiz />} />
@@ -124,6 +135,7 @@ function PagesContent() {
         <Route path="/dashboard/teacher/question" element={<Questions />} />
         <Route path="/dashboard/teacher/draft" element={<Drafts />} />
         <Route path="/dashboard/teacher/ai-review" element={<AIReview />} />
+        <Route path="/dashboard/admin/inspection" element={<LiveInspection />} />
         <Route path="/dashboard/leaderboard" element={<Leaderboard />} />
         <Route path="/dashboard/syllabus" element={<Syllabus />} />
         <Route path="/dashboard/teachers" element={<Teachers />} />
@@ -143,6 +155,7 @@ function PagesContent() {
         <Route path="/dashboard/courses/view/:courseId" element={<ViewManagedCourse />} />
         <Route path="/dashboard/courses/:courseId/case-study-results" element={<CaseStudyResults />} />
         <Route path="/dashboard/courses/edit/:courseId" element={<EditCourse />} />
+        <Route path="/dashboard/course/failed" element={<CourseAccessDenied />} />
         <Route path="/auth/login" element={<Auth />} />
         <Route path="/auth/start" element={<Start />} />
         <Route path="/auth/signup" element={<Signup />} />

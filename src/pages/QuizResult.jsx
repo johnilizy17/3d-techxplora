@@ -54,15 +54,15 @@ export default function QuizResult() {
     });
 
     const questions = questionsData?.data || questionsData || [];
-    
+
     // Use API result if available, otherwise fall back to location state
     const apiResult = studentResultData?.data || studentResultData;
     const stateResult = location.state?.result;
     const result = apiResult || stateResult || { score: 0, answers: [] };
-    
+
     const score = result.score || 0;
     const percentage = Math.round((score / (questions.length || 1)) * 100);
-    const xpEarned = score * (quiz?.p_xp || 0); // Correct answers * XP per question
+    const xpEarned = score * ((quiz?.p_xp / (questions.length || 1)) || 0); // Correct answers * XP per question
 
     const handleShare = () => {
         if (navigator.share) {

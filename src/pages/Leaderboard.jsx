@@ -54,22 +54,27 @@ export default function Leaderboard() {
         ? groupData
         : [];
 
-    // Map API data to our UI structure
-    const leaderboardData = (rawData || []).map((item, index) => {
-        // The API might return the student object nested or fields directly
-        const student = item.student || item;
-        return {
-            id: item.id || student.id || index + 1,
-            name: `${student.first_name || ''} ${student.last_name || ''}`.trim() || student.name || "Unknown Xplora",
-            xp: student.xp || 0,
-            rank: index + 1,
-            avatar: student.photo || student.avatar || null,
-            trend: item.trend || 'same',
-            level: Math.floor((student.xp || 0) / 1000) + 1, // Simple level calculation if not provided
-            role: student.role || (item.student ? 'student' : 'user'),
-            date: item.date || item.created_at || item.updated_at || null
-        };
-    });
+    // Map API data to our UI structure and sort by XP (highest first)
+    const leaderboardData = (rawData || [])
+        .map((item, index) => {
+            // The API might return the student object nested or fields directly
+            const student = item.student || item;
+            return {
+                id: item.id || student.id || index + 1,
+                name: `${student.first_name || ''} ${student.last_name || ''}`.trim() || student.name || "Unknown Xplora",
+                xp: student.xp || 0,
+                avatar: student.photo || student.avatar || null,
+                trend: item.trend || 'same',
+                level: Math.floor((student.xp || 0) / 1000) + 1, // Simple level calculation if not provided
+                role: student.role || (item.student ? 'student' : 'user'),
+                date: item.date || item.created_at || item.updated_at || null
+            };
+        })
+        .sort((a, b) => b.xp - a.xp) // Sort by XP descending (highest first)
+        .map((item, index) => ({
+            ...item,
+            rank: index + 1 // Assign rank based on sorted position
+        }));
 
     const filteredData = leaderboardData.filter(item =>
         item.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -80,10 +85,8 @@ export default function Leaderboard() {
 
     return (
         <DashboardLayout>
-            <div className="min-h-screen pb-24 lg:pb-10 bg-white dark:bg-black">
+            <div className="min-h-screen bg-white dark:bg-black">
                 {/* Visual Background Elements */}
-                <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-200/20 dark:bg-indigo-600/5 rounded-full blur-[120px] -mr-64 -mt-64" />
-                <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-purple-200/20 dark:bg-purple-600/5 rounded-full blur-[100px] -ml-40 -mb-40" />
                 
                 <div className="w-full relative z-10 px-6 lg:px-10">
 
@@ -132,12 +135,12 @@ export default function Leaderboard() {
                         </div>
 
                         {/* Tabs Section */}
-                        <div className="mt-6 flex flex-wrap gap-2">
+                        <div className="mt-6 grid grid-cols-2 lg:flex lg:flex-wrap gap-2">
                             {['weekly', 'monthly', 'yearly', 'quiz', 'group', ...(isAdmin ? ['admin'] : [])].map((tab) => (
                                 <button
                                     key={tab}
                                     onClick={() => setActiveTab(tab)}
-                                    className={`px-6 py-3 rounded-xl font-black text-xs uppercase tracking-wider transition-all ${
+                                    className={`px-4 lg:px-6 py-3 rounded-xl font-black text-xs uppercase tracking-wider transition-all ${
                                         activeTab === tab
                                             ? 'bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-[#a6b1ff] dark:to-[#a6b1ff] text-white shadow-lg scale-105'
                                             : 'bg-gray-100 dark:bg-white/5 text-gray-600 dark:text-white/60 hover:bg-gray-200 dark:hover:bg-white/10 border-2 border-gray-200 dark:border-white/10'
@@ -378,27 +381,27 @@ export default function Leaderboard() {
                                                 animate={{ opacity: 1, x: 0 }}
                                                 exit={{ opacity: 0, scale: 0.95 }}
                                                 transition={{ delay: index * 0.05 }}
-                                                className={`group flex items-center px-6 sm:px-8 py-5 bg-white dark:bg-white/5 backdrop-blur-md rounded-2xl border-2 ${user?.id === item.id ? 'border-indigo-400 dark:border-[#a6b1ff]/50 bg-indigo-50 dark:bg-[#a6b1ff]/5 shadow-lg shadow-indigo-200/50 dark:shadow-none' : 'border-gray-200 dark:border-white/5 hover:border-indigo-300 dark:hover:border-[#a6b1ff]/30'} hover:bg-gray-50 dark:hover:bg-white/10 hover:shadow-md transition-all cursor-pointer relative overflow-hidden`}
+                                                className={`group lg:flex lg:items-center px-4 sm:px-6 lg:px-8 py-5 bg-white dark:bg-white/5 backdrop-blur-md rounded-2xl border-2 ${user?.id === item.id ? 'border-indigo-400 dark:border-[#a6b1ff]/50 bg-indigo-50 dark:bg-[#a6b1ff]/5 shadow-lg shadow-indigo-200/50 dark:shadow-none' : 'border-gray-200 dark:border-white/5 hover:border-indigo-300 dark:hover:border-[#a6b1ff]/30'} hover:bg-gray-50 dark:hover:bg-white/10 hover:shadow-md transition-all cursor-pointer relative overflow-hidden`}
                                             >
                                                 {user?.id === item.id && (
                                                     <div className="absolute inset-y-0 left-0 w-1 bg-gradient-to-b from-indigo-500 to-purple-600 dark:from-[#a6b1ff] dark:to-[#a6b1ff] shadow-[0_0_15px_rgba(99,102,241,0.5)] dark:shadow-[0_0_15px_rgba(166,177,255,0.5)]" />
                                                 )}
 
                                                 {/* Rank */}
-                                                <div className="w-14 flex justify-center">
+                                                <div className="w-10 sm:w-14 flex justify-center shrink-0">
                                                     <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-black text-base ${item.rank <= 3 ? 'bg-gradient-to-br from-indigo-500 to-purple-600 dark:from-[#a6b1ff] dark:to-[#a6b1ff] text-white shadow-lg' : 'bg-gray-200 dark:bg-white/10 text-gray-600 dark:text-white/60 group-hover:bg-gray-300 dark:group-hover:bg-white/20'}`}>
                                                         {item.rank}
                                                     </div>
                                                 </div>
 
                                                 {/* Profile */}
-                                                <div className="flex-1 ml-2 flex items-center gap-4 min-w-0">
-                                                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-100 to-purple-100 dark:from-white/10 dark:to-white/20 border-2 border-indigo-200 dark:border-white/10 flex items-center justify-center relative overflow-hidden shrink-0 shadow-sm">
-                                                        <User size={24} className="text-indigo-400 dark:text-white/40" />
+                                                <div className="flex-1 ml-2 flex items-center gap-2 sm:gap-4 min-w-0">
+                                                    <div className="w-10 sm:w-12 h-10 sm:h-12 rounded-xl bg-gradient-to-br from-indigo-100 to-purple-100 dark:from-white/10 dark:to-white/20 border-2 border-indigo-200 dark:border-white/10 flex items-center justify-center relative overflow-hidden shrink-0 shadow-sm">
+                                                        <User size={20} className="text-indigo-400 dark:text-white/40 sm:w-6 sm:h-6" />
                                                         {item.avatar && <img src={item.avatar} alt={item.name} className="absolute inset-0 w-full h-full object-cover" />}
                                                     </div>
                                                     <div className="truncate">
-                                                        <h4 className="text-base font-black text-gray-900 dark:text-white uppercase italic tracking-tight group-hover:text-indigo-600 dark:group-hover:text-[#a6b1ff] transition-colors truncate">
+                                                        <h4 className="text-sm sm:text-base font-black text-gray-900 dark:text-white uppercase italic tracking-tight group-hover:text-indigo-600 dark:group-hover:text-[#a6b1ff] transition-colors truncate">
                                                             {item.name} {user?.id === item.id && <span className="text-indigo-600 dark:text-[#a6b1ff]">(YOU)</span>}
                                                         </h4>
                                                         <p className="text-[10px] font-bold text-gray-500 dark:text-white/30 uppercase tracking-widest leading-none mt-1">
@@ -421,9 +424,9 @@ export default function Leaderboard() {
                                                 </div>
 
                                                 {/* Points */}
-                                                <div className="w-28 text-right flex flex-col items-end gap-1">
-                                                    <div className="px-3 py-1.5 bg-gradient-to-r from-amber-100 to-yellow-100 dark:from-amber-500/10 dark:to-yellow-500/10 border-2 border-amber-300 dark:border-amber-500/20 rounded-xl shadow-sm">
-                                                        <span className="text-base font-black text-amber-700 dark:text-amber-400 italic tracking-tight">
+                                                <div className="w-20 sm:w-28 text-right flex flex-col items-end gap-1 shrink-0">
+                                                    <div className="px-2 sm:px-3 py-1 sm:py-1.5 bg-gradient-to-r from-amber-100 to-yellow-100 dark:from-amber-500/10 dark:to-yellow-500/10 border-2 border-amber-300 dark:border-amber-500/20 rounded-xl shadow-sm">
+                                                        <span className="text-sm sm:text-base font-black text-amber-700 dark:text-amber-400 italic tracking-tight">
                                                             {item.xp.toLocaleString()}
                                                         </span>
                                                     </div>
@@ -448,7 +451,7 @@ export default function Leaderboard() {
                             </div>
 
                             {/* Footer / Disclaimer */}
-                            <div className="mt-12 text-center pb-10 space-y-2">
+                            <div className="mt-12 text-center space-y-2">
                                 <p className="text-gray-500 dark:text-white/20 text-[10px] font-bold uppercase tracking-[0.3em]">
                                     Scores update super fast! Keep playing! 🚀
                                 </p>

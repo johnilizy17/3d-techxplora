@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -8,7 +8,7 @@ import QuizResults from '@/components/teacher/QuizResults';
 import ManualQuestion from './ManualQuestion';
 import { selectTempStorage } from '@/redux/slices/authSlice';
 import { useGetQuestionsByQuizIdQuery } from '@/redux/api/questionApi';
-import { Loader2, Sparkles, AlertCircle } from 'lucide-react';
+import { Loader2, Sparkles } from 'lucide-react';
 
 export default function Questions() {
     const location = useLocation();

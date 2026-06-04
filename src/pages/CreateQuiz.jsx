@@ -177,6 +177,17 @@ export default function CreateQuiz() {
 
     const handleConfirmSubmit = async () => {
         try {
+            // Determine difficulty based on p_xp
+            let difficulty = null;
+            const pxp = Number(formData.p_xp);
+            if (pxp === 50) {
+                difficulty = 'beginner';
+            } else if (pxp === 100) {
+                difficulty = 'intermediate';
+            } else if (pxp === 150) {
+                difficulty = 'advanced';
+            }
+
             const payload = {
                 ...formData,
                 is_ai: false,
@@ -185,7 +196,8 @@ export default function CreateQuiz() {
                 teacher_id: user.id,
                 admin_code: user.admin_code,
                 xp: Number(formData.xp),
-                p_xp: Number(formData.p_xp)
+                p_xp: Number(formData.p_xp),
+                difficulty: difficulty
             };
 
             await createQuiz(payload).unwrap();
@@ -531,28 +543,33 @@ const Step2 = ({ formData, handleChange, errors, handleSubmit, isSubmitting, use
                         <div className="p-6 rounded-3xl bg-white/5 border border-white/10 space-y-6">
                             <h3 className="text-sm font-black text-white/80 uppercase tracking-widest flex items-center gap-2">
                                 <Trophy size={18} className="text-amber-400" />
-                                Points & Age Limits
+                                Points & Difficulty
                             </h3>
-                            <div className="grid grid-cols-2 gap-4">
-                                <InputField
-                                    label="Total Points"
-                                    name="xp"
-                                    type="number"
-                                    value={formData.xp}
-                                    onChange={handleChange}
-                                    error={errors.xp}
-                                    placeholder="Total Points"
-                                />
-                                <InputField
-                                    label="Points Per Question"
-                                    name="p_xp"
-                                    type="number"
-                                    value={formData.p_xp}
-                                    onChange={handleChange}
-                                    error={errors.p_xp}
-                                    placeholder="Per Question"
-                                />
-                            </div>
+                            <InputField
+                                label="Total Points"
+                                name="xp"
+                                type="number"
+                                value={formData.xp}
+                                onChange={handleChange}
+                                error={errors.xp}
+                                placeholder="Total Points"
+                            />
+                            
+                            {/* Difficulty-based XP Dropdown */}
+                            <SelectField
+                                label="Quiz Difficulty"
+                                name="p_xp"
+                                value={formData.p_xp}
+                                onChange={handleChange}
+                                error={errors.p_xp}
+                                options={[
+                                    { value: '50', label: 'Beginner - 50 XP' },
+                                    { value: '100', label: 'Intermediate - 100 XP' },
+                                    { value: '150', label: 'Advanced - 150 XP' }
+                                ]}
+                                icon={Target}
+                            />
+                            
                             <div className="grid grid-cols-2 gap-4 pt-2">
                                 <InputField
                                     label="Min Age"

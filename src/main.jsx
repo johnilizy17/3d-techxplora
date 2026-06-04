@@ -5,14 +5,29 @@ import App from '@/App.jsx'
 import '@/index.css'
 import store from '@/redux/store'
 
-// Service worker disabled temporarily - uncomment when ready
-// if (import.meta.env.PROD && 'serviceWorker' in navigator) {
-//   import('@/utils/serviceWorker').then(({ register }) => {
-//     register();
-//   }).catch(err => {
-//     console.warn('Service worker registration failed:', err);
-//   });
-// }
+// Register service worker for offline support
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker
+      .register('/sw.js')
+      .then((registration) => {
+        console.log('✅ Service Worker registered:', registration.scope);
+        
+        // Check for updates
+        registration.addEventListener('updatefound', () => {
+          const newWorker = registration.installing;
+          newWorker.addEventListener('statechange', () => {
+            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+              console.log('🔄 New version available! Refresh to update.');
+            }
+          });
+        });
+      })
+      .catch((error) => {
+        console.warn('⚠️ Service Worker registration failed:', error);
+      });
+  });
+}
 
 ReactDOM.createRoot(document.getElementById('root')).render(
     <Provider store={store}>

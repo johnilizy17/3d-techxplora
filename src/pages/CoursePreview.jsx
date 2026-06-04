@@ -94,8 +94,8 @@ export default function CoursePreview() {
     const [showFeedback, setShowFeedback] = useState(false);
     const [currentFeedback, setCurrentFeedback] = useState('');
     const [isAnswerCorrect, setIsAnswerCorrect] = useState(false);
-const { user } = useSelector((a => a.auth));
-    
+    const { user } = useSelector((a => a.auth));
+
     // Parse case studies from JSON
     useEffect(() => {
         if (course?.case_study) {
@@ -228,6 +228,8 @@ const { user } = useSelector((a => a.auth));
                 setCaseStudyCompleted(false);
             } else if (course?.quiz_id) {
                 navigate(`/dashboard/quizzes/details?code=${course.quiz.quiz_code}`);
+            } else if (course?.manual_quiz && course.manual_quiz.length > 0) {
+                navigate(`/courses/${courseId}/quiz`);
             } else {
                 setIsQuizDrawerOpen(true);
             }
@@ -253,6 +255,8 @@ const { user } = useSelector((a => a.auth));
         } else {
             if (course?.quiz_id) {
                 navigate(`/dashboard/quizzes/details?code=${course.quiz.quiz_code}`);
+            } else if (course?.manual_quiz && course.manual_quiz.length > 0) {
+                navigate(`/courses/${courseId}/quiz`);
             } else {
                 setIsQuizDrawerOpen(true);
             }
@@ -288,7 +292,7 @@ const { user } = useSelector((a => a.auth));
                 ...prev,
                 [currentSegment.id]: answer
             }));
-            
+
             // Show feedback for single choice immediately
             const selectedOption = currentSegment.options.find(o => o.text === answer);
             if (selectedOption) {
@@ -308,20 +312,20 @@ const { user } = useSelector((a => a.auth));
     const handleCheckAnswer = () => {
         const currentCaseStudy = caseStudies[currentCaseStudyIndex];
         const currentSegment = currentCaseStudy.segments[currentSegmentIndex];
-        
+
         if (currentSegment.questionType === QUESTION_TYPES.MULTIPLE_CHOICE) {
             const correctOptions = currentSegment.options.filter(o => o.isCorrect).map(o => o.text);
             const userSelectedOptions = userAnswers[currentSegment.id] || [];
             const isCorrect = correctOptions.length === userSelectedOptions.length &&
                 correctOptions.every(o => userSelectedOptions.includes(o));
-            
+
             setIsAnswerCorrect(isCorrect);
             setCurrentFeedback(isCorrect ? currentSegment.correctFeedback : currentSegment.incorrectFeedback || '');
             setShowFeedback(true);
         } else if (currentSegment.questionType === QUESTION_TYPES.SHORT_ANSWER) {
             const answer = userAnswers[currentSegment.id];
             const isCorrect = answer?.toLowerCase().trim() === currentSegment.correctAnswer?.toLowerCase().trim();
-            
+
             setIsAnswerCorrect(isCorrect);
             setCurrentFeedback(isCorrect ? currentSegment.correctFeedback : currentSegment.incorrectFeedback || '');
             setShowFeedback(true);
@@ -331,28 +335,28 @@ const { user } = useSelector((a => a.auth));
     const handleNextSegment = async () => {
         const currentCaseStudy = caseStudies[currentCaseStudyIndex];
         const currentSegment = currentCaseStudy.segments[currentSegmentIndex];
-        
+
         // If feedback hasn't been shown yet, show it first
         if (!showFeedback && (currentSegment.questionType === QUESTION_TYPES.MULTIPLE_CHOICE || currentSegment.questionType === QUESTION_TYPES.SHORT_ANSWER)) {
             handleCheckAnswer();
             return;
         }
-        
+
         // Reset feedback when moving to next segment
         setShowFeedback(false);
         setCurrentFeedback('');
-        
+
         if (currentSegmentIndex < currentCaseStudy.segments.length - 1) {
             setCurrentSegmentIndex(prev => prev + 1);
         } else {
             // Case study finished - calculate score and prepare submission data
             let score = 0;
             const answersArray = [];
-            
+
             currentCaseStudy.segments.forEach(segment => {
                 const answer = userAnswers[segment.id];
                 let isCorrect = false;
-                
+
                 if (segment.questionType === QUESTION_TYPES.SHORT_ANSWER) {
                     isCorrect = answer?.toLowerCase().trim() === segment.correctAnswer?.toLowerCase().trim();
                 } else if (segment.questionType === QUESTION_TYPES.MULTIPLE_CHOICE) {
@@ -364,9 +368,9 @@ const { user } = useSelector((a => a.auth));
                     const selectedOption = segment.options.find(o => o.text === answer);
                     isCorrect = selectedOption?.isCorrect || false;
                 }
-                
+
                 if (isCorrect) score++;
-                
+
                 // Build answer object for API
                 answersArray.push({
                     segment_id: segment.id,
@@ -379,14 +383,14 @@ const { user } = useSelector((a => a.auth));
             const finalScore = Math.round((score / currentCaseStudy.segments.length) * 100);
             setCaseStudyScore(finalScore);
             setCaseStudyCompleted(true);
-            
+
             // Submit to API if user is authenticated
             if (isAuthenticated) {
                 try {
                     await submitCaseStudyAnswers({
                         courseId: courseId,
                         caseStudyData: {
-                            student_id:user.id,
+                            student_id: user.id,
                             case_study_id: currentCaseStudy.id,
                             case_study_title: currentCaseStudy.title,
                             answers: answersArray,
@@ -395,7 +399,7 @@ const { user } = useSelector((a => a.auth));
                             correct_answers: score
                         }
                     }).unwrap();
-                    
+
                     toast({
                         title: "Case Study Submitted! 🎉",
                         description: `Your score of ${finalScore}% has been saved.`,
@@ -420,9 +424,11 @@ const { user } = useSelector((a => a.auth));
             setCaseStudyCompleted(false);
         } else {
             setIsCaseStudyDrawerOpen(false);
-            // If there's a quiz, maybe go to it?
+            // If there's a quiz, navigate to it
             if (course?.quiz_id) {
                 navigate(`/dashboard/quizzes/details?code=${course.quiz.quiz_code}`);
+            } else if (course?.manual_quiz && course.manual_quiz.length > 0) {
+                navigate(`/courses/${courseId}/quiz`);
             }
         }
     };
@@ -647,29 +653,47 @@ const { user } = useSelector((a => a.auth));
                             <p>
                                 {course.description || "No description available for this course."}
                             </p>
+
+
                         </TabsContent>
 
                         <TabsContent value="attachments" className="mt-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {course.attachment_url ? (
+                                {course.attachment_url && course.attachment_url.includes("[") ? JSON.parse(course.attachment_url).map((a, b) => (
                                     <div
-                                        onClick={() => window.open(course.attachment_url, '_blank')}
+                                        onClick={() => window.open(a, '_blank')}
                                         className="flex items-center gap-4 p-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors cursor-pointer group"
                                     >
                                         <div className="w-10 h-10 rounded-lg bg-[#a6b1ff]/20 flex items-center justify-center text-[#a6b1ff] group-hover:bg-[#a6b1ff] group-hover:text-[#0a0a0a] transition-colors">
                                             <FileText className="w-5 h-5" />
                                         </div>
                                         <div className="flex-1">
-                                            <h4 className="font-bold text-white">Course Materials</h4>
+                                            <h4 className="font-bold text-white">Course Materials {1 + b}</h4>
                                             <p className="text-xs text-gray-500">Download PDF</p>
                                         </div>
                                         <Download className="w-5 h-5 text-gray-500 group-hover:text-white" />
                                     </div>
-                                ) : (
-                                    <div className="col-span-2 text-center text-gray-500 py-8">
-                                        No attachments available for this course.
-                                    </div>
-                                )}
+                                ))
+                                    : course.attachment_url ? (
+                                        <div
+                                            onClick={() => window.open(course.attachment_url, '_blank')}
+                                            className="flex items-center gap-4 p-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors cursor-pointer group"
+                                        >
+                                            <div className="w-10 h-10 rounded-lg bg-[#a6b1ff]/20 flex items-center justify-center text-[#a6b1ff] group-hover:bg-[#a6b1ff] group-hover:text-[#0a0a0a] transition-colors">
+                                                <FileText className="w-5 h-5" />
+                                            </div>
+                                            <div className="flex-1">
+                                                <h4 className="font-bold text-white">Course Materials</h4>
+                                                <p className="text-xs text-gray-500">Download PDF</p>
+                                            </div>
+                                            <Download className="w-5 h-5 text-gray-500 group-hover:text-white" />
+                                        </div>
+                                    )
+                                        : (
+                                            <div className="col-span-2 text-center text-gray-500 py-8">
+                                                No attachments available for this course.
+                                            </div>
+                                        )}
                             </div>
                         </TabsContent>
 
@@ -703,8 +727,8 @@ const { user } = useSelector((a => a.auth));
                                                         {currentSegmentIndex + 1} / {caseStudies[currentCaseStudyIndex]?.segments?.length || 0}
                                                     </span>
                                                 </div>
-                                                <Progress 
-                                                    value={((currentSegmentIndex + 1) / (caseStudies[currentCaseStudyIndex]?.segments?.length || 1)) * 100} 
+                                                <Progress
+                                                    value={((currentSegmentIndex + 1) / (caseStudies[currentCaseStudyIndex]?.segments?.length || 1)) * 100}
                                                     className="h-2"
                                                 />
                                             </div>
@@ -771,7 +795,7 @@ const { user } = useSelector((a => a.auth));
                                                                             className={`w-full p-5 rounded-2xl border-2 text-left transition-all duration-300 flex items-center gap-4 group ${isSelected
                                                                                 ? 'border-indigo-400 bg-indigo-400/10'
                                                                                 : 'border-white/10 hover:border-white/30 bg-white/5'
-                                                                            }`}
+                                                                                }`}
                                                                         >
                                                                             <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-all ${isSelected ? 'bg-indigo-400 text-black' : 'bg-white/5 text-white/40 group-hover:bg-white/10'}`}>
                                                                                 {caseStudies[currentCaseStudyIndex].segments[currentSegmentIndex].questionType === QUESTION_TYPES.MULTIPLE_CHOICE ? (
@@ -795,16 +819,14 @@ const { user } = useSelector((a => a.auth));
                                                         <motion.div
                                                             initial={{ opacity: 0, y: -10 }}
                                                             animate={{ opacity: 1, y: 0 }}
-                                                            className={`p-4 rounded-xl border-2 ${
-                                                                isAnswerCorrect 
-                                                                    ? 'bg-green-500/10 border-green-500/30 text-green-300' 
-                                                                    : 'bg-red-500/10 border-red-500/30 text-red-300'
-                                                            }`}
+                                                            className={`p-4 rounded-xl border-2 ${isAnswerCorrect
+                                                                ? 'bg-green-500/10 border-green-500/30 text-green-300'
+                                                                : 'bg-red-500/10 border-red-500/30 text-red-300'
+                                                                }`}
                                                         >
                                                             <div className="flex items-start gap-3">
-                                                                <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 ${
-                                                                    isAnswerCorrect ? 'bg-green-500' : 'bg-red-500'
-                                                                }`}>
+                                                                <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 ${isAnswerCorrect ? 'bg-green-500' : 'bg-red-500'
+                                                                    }`}>
                                                                     {isAnswerCorrect ? (
                                                                         <CheckCircle size={16} className="text-white" />
                                                                     ) : (
@@ -838,7 +860,7 @@ const { user } = useSelector((a => a.auth));
                                                         ) : showFeedback ? (
                                                             currentSegmentIndex < (caseStudies[currentCaseStudyIndex]?.segments?.length || 0) - 1 ? 'Next Segment' : 'Finish Case Study'
                                                         ) : (
-                                                            caseStudies[currentCaseStudyIndex]?.segments[currentSegmentIndex]?.questionType === QUESTION_TYPES.SINGLE_CHOICE 
+                                                            caseStudies[currentCaseStudyIndex]?.segments[currentSegmentIndex]?.questionType === QUESTION_TYPES.SINGLE_CHOICE
                                                                 ? (currentSegmentIndex < (caseStudies[currentCaseStudyIndex]?.segments?.length || 0) - 1 ? 'Next Segment' : 'Finish Case Study')
                                                                 : 'Check Answer'
                                                         )}
@@ -865,19 +887,17 @@ const { user } = useSelector((a => a.auth));
 
                                             {/* Outcome - Show success or failure based on score */}
                                             {caseStudies[currentCaseStudyIndex]?.outcomes && (
-                                                <div className={`p-6 border rounded-2xl text-left ${
-                                                    caseStudyScore >= 70 
-                                                        ? 'bg-green-500/10 border-green-500/30' 
-                                                        : 'bg-red-500/10 border-red-500/30'
-                                                }`}>
-                                                    <h4 className={`text-lg font-bold mb-3 ${
-                                                        caseStudyScore >= 70 ? 'text-green-300' : 'text-red-300'
+                                                <div className={`p-6 border rounded-2xl text-left ${caseStudyScore >= 70
+                                                    ? 'bg-green-500/10 border-green-500/30'
+                                                    : 'bg-red-500/10 border-red-500/30'
                                                     }`}>
+                                                    <h4 className={`text-lg font-bold mb-3 ${caseStudyScore >= 70 ? 'text-green-300' : 'text-red-300'
+                                                        }`}>
                                                         {caseStudyScore >= 70 ? 'Success!' : 'Keep Learning'}
                                                     </h4>
                                                     <p className="text-gray-300 leading-relaxed">
-                                                        {caseStudyScore >= 70 
-                                                            ? caseStudies[currentCaseStudyIndex].outcomes.success 
+                                                        {caseStudyScore >= 70
+                                                            ? caseStudies[currentCaseStudyIndex].outcomes.success
                                                             : caseStudies[currentCaseStudyIndex].outcomes.failure}
                                                     </p>
                                                 </div>
@@ -1012,7 +1032,23 @@ const { user } = useSelector((a => a.auth));
                     </div>
                 </div>
             </div>
+            <div className="pt-4">
+                <Button
+                    onClick={() => {
+                        if (!isAuthenticated) {
+                            setShowRegModal(true);
+                        } else if (course?.quiz_id) {
+                            navigate(`/dashboard/quizzes/details?code=${course.quiz.quiz_code}`);
+                        } else if (course?.manual_quiz && course.manual_quiz.length > 0) {
+                            navigate(`/courses/${courseId}/quiz`);
+                        }
+                    }}
 
+                    className="w-full sm:w-auto bg-gradient-to-r from-[#a6b1ff] via-[#c7aff8] to-[#ffb585] hover:from-[#8b95cc] hover:via-[#b399e6] hover:to-[#ff9d6b] text-[#0a0a0a] font-bold py-6 px-8 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center gap-2"
+                >
+                    Take Quizs <Play className="w-5 h-5 fill-current" />
+                </Button>
+            </div>
             {/* Sticky Bottom Action Bar */}
             <div className="fixed bottom-0 left-0 right-0 p-4 z-50 pointer-events-none">
                 <div className="max-w-7xl mx-auto flex justify-end pointer-events-auto">

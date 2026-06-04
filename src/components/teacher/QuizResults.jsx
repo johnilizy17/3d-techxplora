@@ -13,7 +13,9 @@ import {
     UserCheck,
     AlertCircle,
     ArrowRight,
-    TrophyIcon
+    TrophyIcon,
+    Eye,
+    Radio
 } from 'lucide-react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
@@ -46,7 +48,7 @@ export default function QuizResults() {
     const quizId = tempStorage?.id;
     const quizCode = tempStorage?.quiz_code;
     const type = user?.accountable_type === "App\\Models\\Student" ? "student" : "teacher";
-   
+
     const { data: resultsResults, isLoading } = useGetQuizResultsQuery(quizId, {
         skip: !quizId
     });
@@ -104,6 +106,17 @@ export default function QuizResults() {
         }
 
         try {
+            // Determine difficulty based on p_xp
+            let difficulty = null;
+            const pxp = Number(formData.p_xp);
+            if (pxp === 50) {
+                difficulty = 'beginner';
+            } else if (pxp === 100) {
+                difficulty = 'intermediate';
+            } else if (pxp === 150) {
+                difficulty = 'advanced';
+            }
+
             // Include all required fields from tempStorage
             const updatePayload = {
                 ...tempStorage,
@@ -123,18 +136,18 @@ export default function QuizResults() {
                 status: tempStorage.status !== undefined ? tempStorage.status : true,
                 // Updated fields from form
                 start_at: formData.start_at,
-                
                 end_at: formData.end_at,
                 xp: formData.xp,
                 p_xp: formData.p_xp,
-                attempt: formData.attempt
+                attempt: formData.attempt,
+                difficulty: difficulty
             };
 
             const updatedQuiz = await updateQuiz(updatePayload).unwrap();
 
             // Refetch the quiz data to get the latest information
             await refetchQuiz();
-            
+
             // Refetch the quizzes list
             await refetchQuizzesList();
 
@@ -147,7 +160,7 @@ export default function QuizResults() {
                 p_xp: formData.p_xp,
                 attempt: formData.attempt
             }));
-            
+
             setIsDrawerOpen(false);
 
             toast({
@@ -156,7 +169,7 @@ export default function QuizResults() {
             });
 
             // Navigate to dashboard after successful update with a small delay
-         
+
 
         } catch (error) {
             console.error('Update failed:', error);
@@ -278,6 +291,14 @@ export default function QuizResults() {
                                 Copy Code
                             </button>
 
+                            <button
+                                onClick={() => navigate(`/dashboard/quizzes/monitoring?code=${tempStorage?.quiz_code}`)}
+                                className="w-full mt-3 py-3 rounded-xl bg-gradient-to-r from-purple-500/20 to-pink-500/20 hover:from-purple-500 hover:to-pink-500 border border-purple-500/30 hover:border-purple-500 text-white font-black uppercase tracking-widest text-[10px] flex items-center justify-center gap-2 transition-all group"
+                            >
+                                <Radio size={14} className="group-hover:animate-pulse" />
+                                Live Monitor
+                            </button>
+
                             <Drawer open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
                                 <DrawerTrigger asChild>
                                     <button
@@ -349,15 +370,26 @@ export default function QuizResults() {
                                                     />
                                                 </div>
                                                 <div className="space-y-2 text-left">
-                                                    <Label htmlFor="p_xp" className="text-[10px] font-black uppercase tracking-widest text-white/40 pl-1">XP Per Question</Label>
-                                                    <Input
+                                                    <Label htmlFor="p_xp" className="text-[10px] font-black uppercase tracking-widest text-white/40 pl-1">Quiz Difficulty</Label>
+                                                    <select
                                                         id="p_xp"
                                                         name="p_xp"
-                                                        type="number"
                                                         value={formData.p_xp}
                                                         onChange={handleInputChange}
-                                                        className="bg-white/5 border-white/10 rounded-xl"
-                                                    />
+                                                        className="flex h-11 w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white shadow-sm transition-colors appearance-none focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/20 disabled:cursor-not-allowed disabled:opacity-50 hover:bg-white/10 cursor-pointer"
+                                                        style={{
+                                                            backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23ffffff' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
+                                                            backgroundPosition: 'right 0.5rem center',
+                                                            backgroundRepeat: 'no-repeat',
+                                                            backgroundSize: '1.5em 1.5em',
+                                                            paddingRight: '2.5rem'
+                                                        }}
+                                                    >
+                                                        <option value="" className="bg-[#0d0d0d] text-white/40">Select difficulty</option>
+                                                        <option value="50" className="bg-[#0d0d0d] text-white">Beginner - 50 XP</option>
+                                                        <option value="100" className="bg-[#0d0d0d] text-white">Intermediate - 100 XP</option>
+                                                        <option value="150" className="bg-[#0d0d0d] text-white">Advanced - 150 XP</option>
+                                                    </select>
                                                 </div>
                                             </div>
                                             <div className="space-y-2 text-left">
@@ -398,7 +430,7 @@ export default function QuizResults() {
 
             {/* Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <StatCard icon={Users} label="Student Capacity" value={stats.totalStudents} sub={`${results.length} Attempted`} color="blue" />
+                <StatCard icon={Users} label="Total Attempts" value={stats.totalStudents} sub={`Unique Students`} color="blue" />
                 <StatCard icon={TrendingUp} label="Average Score" value={`${stats.averageScore}%`} sub="Mastery Level" color="purple" />
                 <StatCard icon={UserCheck} label="Success Rate" value={`${stats.passPercentage}%`} sub="Passing Students" color="emerald" />
                 <StatCard icon={AlertCircle} label="Risk Factor" value={`${stats.failPercentage}%`} sub="Below 50% Score" color="rose" />
@@ -484,6 +516,27 @@ export default function QuizResults() {
 
                 {/* Quick Actions Side Panel */}
                 <div className="space-y-6">
+                    {/* Live Monitoring Card */}
+                    <motion.div variants={itemVariants} className="p-8 rounded-[2.5rem] bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/20">
+                        <h3 className="text-lg font-black text-white italic uppercase tracking-tight mb-6 flex items-center gap-2">
+                            <Eye className="text-purple-400" size={20} />
+                            Live Monitoring
+                        </h3>
+                        <div className="space-y-4">
+                            <QuickActionButton
+                                icon={Radio}
+                                label="View Live Students"
+                                color="purple"
+                                onClick={() => navigate(`/dashboard/admin/inspection?quiz=${tempStorage?.quiz_code}`)}
+                            />
+                        </div>
+                        <div className="mt-4 p-4 rounded-xl bg-purple-500/5 border border-purple-500/10">
+                            <p className="text-[9px] font-bold text-purple-400/60 uppercase tracking-wider leading-relaxed">
+                                Monitor students in real-time during quiz sessions. View camera feeds, screen recordings, and track violations.
+                            </p>
+                        </div>
+                    </motion.div>
+
                     <motion.div variants={itemVariants} className="p-8 rounded-[2.5rem] bg-gradient-to-br from-emerald-500/10 to-teal-500/10 border border-emerald-500/20">
                         <h3 className="text-lg font-black text-white italic uppercase tracking-tight mb-6 flex items-center gap-2">
                             <Edit3 className="text-emerald-400" size={20} />
@@ -558,6 +611,7 @@ const QuickActionButton = ({ icon: Icon, label, color, onClick }) => {
     const colors = {
         emerald: "bg-emerald-500 hover:bg-emerald-400 text-black shadow-emerald-500/20",
         teal: "bg-teal-500 hover:bg-teal-400 text-black shadow-teal-500/20",
+        purple: "bg-purple-500 hover:bg-purple-400 text-white shadow-purple-500/20",
     }
     return (
         <button
