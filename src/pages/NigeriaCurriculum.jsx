@@ -1,166 +1,293 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     BookOpen,
     GraduationCap,
-    Award,
     ChevronDown,
     ChevronRight,
     School,
     Users,
     Target,
-    Sparkles
+    Sparkles,
+    Calendar,
+    AlertTriangle,
+    CheckCircle2,
+    X,
+    Loader2,
+    Info
 } from 'lucide-react';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
-
-const curriculumData = {
-    primary: {
-        title: "Primary Education",
-        subtitle: "Primary 1 - 6 (Ages 6-11)",
-        color: "from-blue-500 to-cyan-500",
-        icon: School,
-        classes: [
-            {
-                level: "Primary 1-3 (Lower Primary)",
-                subjects: [
-                    { name: "English Language", topics: ["Phonics", "Reading", "Writing", "Speaking", "Listening"] },
-                    { name: "Mathematics", topics: ["Numbers 1-100", "Addition", "Subtraction", "Shapes", "Measurement"] },
-                    { name: "Basic Science & Technology", topics: ["Living Things", "Non-Living Things", "Our Environment", "Simple Machines"] },
-                    { name: "Social Studies", topics: ["Family", "Community", "Culture", "National Symbols"] },
-                    { name: "Cultural & Creative Arts", topics: ["Drawing", "Singing", "Dancing", "Drama"] },
-                    { name: "Physical & Health Education", topics: ["Basic Movements", "Games", "Personal Hygiene", "Safety"] },
-                    { name: "Religious Studies", topics: ["Moral Values", "Religious Stories", "Good Behavior"] },
-                    { name: "Home Economics", topics: ["Personal Care", "Food", "Clothing", "Shelter"] },
-                    { name: "Computer Studies", topics: ["Parts of Computer", "Basic Operations", "Drawing Programs"] }
-                ]
-            },
-            {
-                level: "Primary 4-6 (Upper Primary)",
-                subjects: [
-                    { name: "English Language", topics: ["Grammar", "Comprehension", "Composition", "Literature", "Speech Work"] },
-                    { name: "Mathematics", topics: ["Fractions", "Decimals", "Geometry", "Word Problems", "Data Handling"] },
-                    { name: "Basic Science & Technology", topics: ["Energy", "Matter", "Forces", "Technology", "Health Education"] },
-                    { name: "Social Studies", topics: ["Nigerian History", "Geography", "Government", "Economics", "Citizenship"] },
-                    { name: "Cultural & Creative Arts", topics: ["Nigerian Art", "Music", "Drama", "Crafts"] },
-                    { name: "Physical & Health Education", topics: ["Athletics", "Team Sports", "First Aid", "Drug Education"] },
-                    { name: "Religious Studies", topics: ["Religious Texts", "Moral Teachings", "Religious Practices"] },
-                    { name: "Home Economics", topics: ["Nutrition", "Home Management", "Sewing", "Cooking"] },
-                    { name: "Computer Studies", topics: ["MS Office", "Internet Basics", "Typing", "Programming Intro"] },
-                    { name: "Agricultural Science", topics: ["Crop Farming", "Animal Husbandry", "Farm Tools", "Soil"] }
-                ]
-            }
-        ]
-    },
-    juniorSecondary: {
-        title: "Junior Secondary School",
-        subtitle: "JSS 1 - 3 (Ages 12-14)",
-        color: "from-purple-500 to-pink-500",
-        icon: Users,
-        classes: [
-            {
-                level: "JSS 1-3 (Basic Education)",
-                subjects: [
-                    { name: "English Language", topics: ["Advanced Grammar", "Literature", "Essay Writing", "Oral English", "Comprehension"] },
-                    { name: "Mathematics", topics: ["Algebra", "Geometry", "Statistics", "Trigonometry Basics", "Sets"] },
-                    { name: "Basic Science", topics: ["Physics Concepts", "Chemistry Basics", "Biology Fundamentals", "Scientific Method"] },
-                    { name: "Basic Technology", topics: ["Technical Drawing", "Woodwork", "Metalwork", "Electronics", "Auto Mechanics"] },
-                    { name: "Social Studies", topics: ["Nigerian History", "Civics", "Geography", "Economics", "Social Issues"] },
-                    { name: "Civic Education", topics: ["Democracy", "Human Rights", "Rule of Law", "Citizenship", "National Values"] },
-                    { name: "Computer Studies/ICT", topics: ["Programming", "Web Design", "Database", "Networking", "Digital Literacy"] },
-                    { name: "Cultural & Creative Arts", topics: ["Fine Arts", "Music", "Drama", "Nigerian Culture", "Crafts"] },
-                    { name: "Physical & Health Education", topics: ["Sports", "Fitness", "Health Science", "First Aid", "Drug Education"] },
-                    { name: "Home Economics", topics: ["Food & Nutrition", "Clothing & Textiles", "Home Management", "Child Development"] },
-                    { name: "Agricultural Science", topics: ["Crop Production", "Animal Production", "Farm Management", "Agricultural Economics"] },
-                    { name: "Business Studies", topics: ["Commerce", "Accounting Basics", "Office Practice", "Entrepreneurship"] },
-                    { name: "French Language", topics: ["Basic French", "Grammar", "Conversation", "Reading", "Writing"] },
-                    { name: "Arabic Language", topics: ["Arabic Alphabet", "Basic Grammar", "Reading", "Islamic Studies"] },
-                    { name: "Religious Studies", topics: ["Christian Religious Studies", "Islamic Studies", "Moral Education"] }
-                ]
-            }
-        ]
-    },
-    seniorSecondary: {
-        title: "Senior Secondary School",
-        subtitle: "SSS 1 - 3 (Ages 15-17)",
-        color: "from-orange-500 to-red-500",
-        icon: GraduationCap,
-        classes: [
-            {
-                level: "SSS 1-3 (Arts & Humanities)",
-                subjects: [
-                    { name: "English Language", topics: ["Advanced Literature", "Critical Analysis", "Creative Writing", "Language Studies"] },
-                    { name: "Literature in English", topics: ["Poetry", "Drama", "Prose", "African Literature", "Literary Criticism"] },
-                    { name: "Government", topics: ["Political Systems", "Nigerian Government", "International Relations", "Public Administration"] },
-                    { name: "Economics", topics: ["Microeconomics", "Macroeconomics", "Development Economics", "International Trade"] },
-                    { name: "Geography", topics: ["Physical Geography", "Human Geography", "Map Reading", "Environmental Studies"] },
-                    { name: "History", topics: ["Nigerian History", "African History", "World History", "Historiography"] },
-                    { name: "Christian Religious Studies", topics: ["Bible Studies", "Church History", "Christian Ethics", "Theology"] },
-                    { name: "Islamic Studies", topics: ["Quran", "Hadith", "Islamic History", "Islamic Jurisprudence"] },
-                    { name: "French", topics: ["Advanced Grammar", "Literature", "Composition", "Oral French"] },
-                    { name: "Arabic", topics: ["Advanced Grammar", "Literature", "Composition", "Islamic Texts"] },
-                    { name: "Fine Arts", topics: ["Drawing", "Painting", "Sculpture", "Art History", "Graphic Design"] },
-                    { name: "Music", topics: ["Music Theory", "Composition", "Performance", "Music History"] }
-                ]
-            },
-            {
-                level: "SSS 1-3 (Sciences)",
-                subjects: [
-                    { name: "English Language", topics: ["Technical Writing", "Scientific Reports", "Research Papers", "Communication"] },
-                    { name: "Mathematics", topics: ["Calculus", "Further Mathematics", "Statistics", "Mechanics", "Probability"] },
-                    { name: "Physics", topics: ["Mechanics", "Electricity", "Waves", "Modern Physics", "Thermodynamics"] },
-                    { name: "Chemistry", topics: ["Organic Chemistry", "Inorganic Chemistry", "Physical Chemistry", "Analytical Chemistry"] },
-                    { name: "Biology", topics: ["Cell Biology", "Genetics", "Ecology", "Human Physiology", "Evolution"] },
-                    { name: "Agricultural Science", topics: ["Crop Science", "Animal Science", "Soil Science", "Farm Management", "Agribusiness"] },
-                    { name: "Further Mathematics", topics: ["Advanced Algebra", "Calculus", "Vectors", "Complex Numbers", "Mechanics"] },
-                    { name: "Computer Science", topics: ["Programming", "Data Structures", "Algorithms", "Database Systems", "Software Engineering"] },
-                    { name: "Technical Drawing", topics: ["Geometric Construction", "Orthographic Projection", "Isometric Drawing", "Building Plans"] },
-                    { name: "Health Science", topics: ["Anatomy", "Physiology", "Public Health", "Nutrition", "Disease Prevention"] }
-                ]
-            },
-            {
-                level: "SSS 1-3 (Commercial/Business)",
-                subjects: [
-                    { name: "English Language", topics: ["Business Communication", "Report Writing", "Correspondence", "Presentations"] },
-                    { name: "Mathematics", topics: ["Business Mathematics", "Statistics", "Financial Mathematics", "Quantitative Methods"] },
-                    { name: "Commerce", topics: ["Trade", "Banking", "Insurance", "Transportation", "Warehousing"] },
-                    { name: "Accounting", topics: ["Financial Accounting", "Cost Accounting", "Management Accounting", "Auditing"] },
-                    { name: "Economics", topics: ["Business Economics", "Market Analysis", "Economic Policy", "Development Economics"] },
-                    { name: "Business Studies", topics: ["Entrepreneurship", "Business Management", "Marketing", "Human Resource Management"] },
-                    { name: "Office Practice", topics: ["Office Management", "Secretarial Duties", "Office Technology", "Business Ethics"] },
-                    { name: "Data Processing", topics: ["Database Management", "Spreadsheets", "Business Software", "Data Analysis"] },
-                    { name: "Insurance", topics: ["Principles of Insurance", "Types of Insurance", "Risk Management", "Claims Processing"] },
-                    { name: "Marketing", topics: ["Marketing Principles", "Consumer Behavior", "Advertising", "Sales Management"] }
-                ]
-            },
-            {
-                level: "SSS 1-3 (Technical/Vocational)",
-                subjects: [
-                    { name: "English Language", topics: ["Technical Communication", "Documentation", "Safety Manuals", "Reports"] },
-                    { name: "Mathematics", topics: ["Applied Mathematics", "Engineering Mathematics", "Technical Calculations"] },
-                    { name: "Technical Drawing", topics: ["Engineering Drawing", "CAD", "Blueprint Reading", "Design"] },
-                    { name: "Auto Mechanics", topics: ["Engine Systems", "Electrical Systems", "Maintenance", "Diagnostics"] },
-                    { name: "Woodwork", topics: ["Carpentry", "Joinery", "Furniture Making", "Wood Finishing"] },
-                    { name: "Metalwork", topics: ["Welding", "Fabrication", "Sheet Metal Work", "Machining"] },
-                    { name: "Electrical Installation", topics: ["Wiring", "Circuit Design", "Safety", "Maintenance"] },
-                    { name: "Electronics", topics: ["Circuit Analysis", "Digital Electronics", "Microcontrollers", "Repair"] },
-                    { name: "Building Construction", topics: ["Masonry", "Concrete Work", "Plumbing", "Construction Management"] },
-                    { name: "Printing", topics: ["Typography", "Graphic Design", "Print Production", "Digital Printing"] }
-                ]
-            }
-        ]
-    }
-};
+import { curriculumMetadata } from '@/data/nigeriaCurriculum';
+import { useGenerateCurriculumWithAIMutation } from '@/redux/api/curriculumApi';
 
 export default function NigeriaCurriculum() {
     const [selectedLevel, setSelectedLevel] = useState('primary');
     const [expandedSubject, setExpandedSubject] = useState(null);
+    const [selectedYear, setSelectedYear] = useState(null);
+    const [showYearSelector, setShowYearSelector] = useState(false);
+    const [versionInfo, setVersionInfo] = useState(null);
+    const [showUpdateNotification, setShowUpdateNotification] = useState(false);
+    const [curriculum, setCurriculum] = useState(null);
+    
+    const [generateCurriculum, { isLoading, error }] = useGenerateCurriculumWithAIMutation();
 
-    const currentData = curriculumData[selectedLevel];
-    const Icon = currentData.icon;
+    // Initialize - Check if first time user
+    useEffect(() => {
+        const hasSelectedYear = localStorage.getItem('nigeria_curriculum_year');
+        const hasSeenSelector = localStorage.getItem('nigeria_curriculum_selector_shown');
+        
+        if (!hasSelectedYear && !hasSeenSelector) {
+            setShowYearSelector(true);
+            localStorage.setItem('nigeria_curriculum_selector_shown', 'true');
+        } else if (hasSelectedYear) {
+            setSelectedYear(parseInt(hasSelectedYear));
+            checkCurriculumVersion(parseInt(hasSelectedYear));
+        } else {
+            const currentYear = new Date().getFullYear();
+            setSelectedYear(currentYear);
+            localStorage.setItem('nigeria_curriculum_year', currentYear.toString());
+        }
+    }, []);
+
+    // Load curriculum when year is selected
+    useEffect(() => {
+        if (!selectedYear) return;
+        
+        const loadCurriculum = async () => {
+            // Check cache first
+            const cacheKey = `nigeria_curriculum_${selectedYear}`;
+            const cachedCurriculum = localStorage.getItem(cacheKey);
+            const cacheTimestamp = localStorage.getItem(`${cacheKey}_timestamp`);
+            const cacheExpiry = 30 * 24 * 60 * 60 * 1000; // 30 days
+            
+            if (cachedCurriculum && cacheTimestamp) {
+                const age = Date.now() - parseInt(cacheTimestamp);
+                if (age < cacheExpiry) {
+                    const parsed = JSON.parse(cachedCurriculum);
+                    const enrichedData = enrichCurriculumWithMetadata(parsed);
+                    setCurriculum(enrichedData);
+                    return;
+                }
+            }
+            
+            // Generate with AI
+            try {
+                const result = await generateCurriculum({ year: selectedYear }).unwrap();
+                if (result) {
+                    const enrichedData = enrichCurriculumWithMetadata(result);
+                    setCurriculum(enrichedData);
+                    
+                    // Cache the result
+                    localStorage.setItem(cacheKey, JSON.stringify(result));
+                    localStorage.setItem(`${cacheKey}_timestamp`, Date.now().toString());
+                }
+            } catch (err) {
+                console.error('Failed to generate curriculum:', err);
+            }
+        };
+        
+        loadCurriculum();
+    }, [selectedYear, generateCurriculum]);
+
+    // Enrich AI data with UI metadata
+    const enrichCurriculumWithMetadata = (data) => {
+        return {
+            primary: { ...data.primary, ...curriculumMetadata.primary },
+            juniorSecondary: { ...data.juniorSecondary, ...curriculumMetadata.juniorSecondary },
+            seniorSecondary: { ...data.seniorSecondary, ...curriculumMetadata.seniorSecondary }
+        };
+    };
+
+    // Check if curriculum is outdated
+    const checkCurriculumVersion = (year) => {
+        const currentYear = new Date().getFullYear();
+        const isCurrent = year >= 2020;
+        
+        const versionData = {
+            year,
+            isCurrent,
+            latestYear: currentYear,
+            message: isCurrent 
+                ? `The ${year} curriculum is based on recent NERDC standards.`
+                : `The ${year} curriculum predates major NERDC reforms in 2020-2021. Consider updating to ${currentYear} for current standards.`,
+            changes: isCurrent ? [] : [
+                "Updated digital literacy and ICT curriculum",
+                "Enhanced STEM focus across all levels",
+                "New entrepreneurship education components"
+            ],
+            source: 'local'
+        };
+        
+        setVersionInfo(versionData);
+        
+        if (!isCurrent) {
+            setShowUpdateNotification(true);
+        }
+    };
+
+    // Handle year selection
+    const handleYearSelect = (year) => {
+        setSelectedYear(year);
+        localStorage.setItem('nigeria_curriculum_year', year.toString());
+        setShowYearSelector(false);
+        checkCurriculumVersion(year);
+    };
+
+    // Handle update to latest curriculum
+    const handleUpdateCurriculum = () => {
+        if (!versionInfo?.latestYear) return;
+        
+        const latestYear = parseInt(versionInfo.latestYear);
+        
+        // Clear old cache
+        const oldCacheKey = `nigeria_curriculum_${selectedYear}`;
+        localStorage.removeItem(oldCacheKey);
+        localStorage.removeItem(`${oldCacheKey}_timestamp`);
+        
+        setSelectedYear(latestYear);
+        localStorage.setItem('nigeria_curriculum_year', latestYear.toString());
+        setShowUpdateNotification(false);
+        setCurriculum(null);
+    };
+
+    // Handle refresh
+    const handleRefresh = () => {
+        const cacheKey = `nigeria_curriculum_${selectedYear}`;
+        localStorage.removeItem(cacheKey);
+        localStorage.removeItem(`${cacheKey}_timestamp`);
+        setCurriculum(null);
+    };
+
+    // Generate year options
+    const currentYear = new Date().getFullYear();
+    const yearOptions = Array.from({ length: currentYear - 2009 + 1 }, (_, i) => currentYear - i);
+
+    // Get current level data
+    const currentData = curriculum?.[selectedLevel];
+    const Icon = currentData?.icon || School;
 
     return (
         <DashboardLayout>
             <div className="min-h-screen bg-gradient-to-b from-blue-50 via-white to-green-50 dark:from-black dark:via-gray-900 dark:to-gray-900 py-12 lg:py-20 pb-24 lg:pb-12">
+                {/* Year Selection Modal */}
+                {showYearSelector && (
+                    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            className="bg-white dark:bg-gray-900 rounded-3xl border-2 border-gray-300 dark:border-gray-700 p-8 max-w-2xl w-full shadow-2xl"
+                        >
+                            <div className="flex items-center gap-4 mb-6">
+                                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center shadow-lg">
+                                    <Calendar size={32} className="text-white" />
+                                </div>
+                                <div>
+                                    <h2 className="text-2xl font-black text-gray-900 dark:text-white uppercase">
+                                        Select Curriculum Year
+                                    </h2>
+                                    <p className="text-sm text-gray-600 dark:text-gray-400 font-medium">
+                                        Choose the academic year for Nigerian curriculum
+                                    </p>
+                                </div>
+                            </div>
+                            
+                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 max-h-96 overflow-y-auto mb-6">
+                                {yearOptions.map((year) => (
+                                    <motion.button
+                                        key={year}
+                                        whileHover={{ scale: 1.05 }}
+                                        whileTap={{ scale: 0.95 }}
+                                        onClick={() => handleYearSelect(year)}
+                                        className="p-4 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 text-white font-black text-lg shadow-lg hover:shadow-xl transition-shadow"
+                                    >
+                                        {year}
+                                    </motion.button>
+                                ))}
+                            </div>
+                            
+                            <div className="flex flex-col items-center gap-2">
+                                <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
+                                    Your selection will be saved to your device
+                                </p>
+                                <button
+                                    onClick={() => {
+                                        setShowYearSelector(false);
+                                        const currentYear = new Date().getFullYear();
+                                        setSelectedYear(currentYear);
+                                        localStorage.setItem('nigeria_curriculum_year', currentYear.toString());
+                                    }}
+                                    className="text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 underline"
+                                >
+                                    Skip and use current year
+                                </button>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+
+                {/* Update Notification */}
+                <AnimatePresence>
+                    {showUpdateNotification && versionInfo && !versionInfo.isCurrent && (
+                        <motion.div
+                            initial={{ opacity: 0, y: -20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -20 }}
+                            className="fixed top-4 left-4 right-4 lg:left-auto lg:right-4 lg:max-w-md z-40"
+                        >
+                            <div className="bg-gradient-to-br from-orange-100 to-red-100 dark:from-orange-900/30 dark:to-red-900/30 rounded-2xl border-2 border-orange-300 dark:border-orange-700 p-6 shadow-2xl">
+                                <div className="flex items-start gap-4">
+                                    <div className="w-12 h-12 rounded-xl bg-orange-500 flex items-center justify-center shrink-0 shadow-lg">
+                                        <AlertTriangle size={24} className="text-white" />
+                                    </div>
+                                    <div className="flex-1">
+                                        <h3 className="text-lg font-black text-gray-900 dark:text-white mb-2">
+                                            Curriculum Update Available
+                                        </h3>
+                                        <p className="text-sm text-gray-800 dark:text-gray-300 mb-3">
+                                            {versionInfo.message}
+                                        </p>
+                                        {versionInfo.changes && versionInfo.changes.length > 0 && (
+                                            <div className="mb-3">
+                                                <p className="text-xs font-bold text-gray-700 dark:text-gray-400 mb-1">
+                                                    Major Changes:
+                                                </p>
+                                                <ul className="text-xs text-gray-700 dark:text-gray-300 space-y-1">
+                                                    {versionInfo.changes.slice(0, 3).map((change, idx) => (
+                                                        <li key={idx} className="flex items-start gap-2">
+                                                            <ChevronRight size={14} className="shrink-0 mt-0.5" />
+                                                            <span>{change}</span>
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            </div>
+                                        )}
+                                        <div className="flex gap-2">
+                                            <button
+                                                onClick={handleUpdateCurriculum}
+                                                className="px-4 py-2 rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 text-white font-bold text-sm shadow-lg hover:shadow-xl transition-shadow"
+                                            >
+                                                Update to {versionInfo.latestYear}
+                                            </button>
+                                            <button
+                                                onClick={() => setShowUpdateNotification(false)}
+                                                className="px-4 py-2 rounded-xl bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-300 font-bold text-sm hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                                            >
+                                                Later
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <button
+                                        onClick={() => setShowUpdateNotification(false)}
+                                        className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                                    >
+                                        <X size={20} />
+                                    </button>
+                                </div>
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+
                 {/* Hero Section */}
                 <div className="max-w-7xl mx-auto px-6 mb-12 lg:mb-16">
                     <motion.div
@@ -168,11 +295,27 @@ export default function NigeriaCurriculum() {
                         animate={{ opacity: 1, y: 0 }}
                         className="text-center space-y-6"
                     >
-                        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-green-100 dark:bg-green-500/10 border-2 border-green-300 dark:border-green-500/20">
-                            <Sparkles size={16} className="text-green-600 dark:text-green-400" />
-                            <span className="text-xs font-black uppercase tracking-wider text-green-700 dark:text-green-400">
-                                Nigerian Education System
-                            </span>
+                        <div className="flex items-center justify-center gap-4 flex-wrap">
+                            {selectedYear && (
+                                <button
+                                    onClick={() => setShowYearSelector(true)}
+                                    className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-green-100 dark:bg-green-500/10 border-2 border-green-300 dark:border-green-500/20 hover:bg-green-200 dark:hover:bg-green-500/20 transition-colors"
+                                >
+                                    <Calendar size={16} className="text-green-600 dark:text-green-400" />
+                                    <span className="text-xs font-black uppercase tracking-wider text-green-700 dark:text-green-400">
+                                        {selectedYear} Curriculum
+                                    </span>
+                                </button>
+                            )}
+                            
+                            {versionInfo?.isCurrent && (
+                                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-100 dark:bg-emerald-500/10 border-2 border-emerald-300 dark:border-emerald-500/20">
+                                    <CheckCircle2 size={16} className="text-emerald-600 dark:text-emerald-400" />
+                                    <span className="text-xs font-black uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
+                                        Up to Date
+                                    </span>
+                                </div>
+                            )}
                         </div>
 
                         <h1 className="text-4xl lg:text-6xl font-black text-gray-900 dark:text-white uppercase italic tracking-tight">
@@ -180,25 +323,62 @@ export default function NigeriaCurriculum() {
                         </h1>
 
                         <p className="text-lg lg:text-xl text-gray-700 dark:text-gray-400 max-w-3xl mx-auto font-medium">
-                            Comprehensive overview of the Nigerian educational curriculum from Primary to Senior Secondary School
+                            AI-powered comprehensive overview of the Nigerian educational curriculum
                         </p>
+                        
+                        {isLoading && (
+                            <div className="flex items-center justify-center gap-2 mt-4">
+                                <Loader2 size={20} className="animate-spin text-blue-600 dark:text-blue-400" />
+                                <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                                    Generating {selectedYear} curriculum with AI...
+                                </span>
+                            </div>
+                        )}
+                        
+                        {error && (
+                            <div className="mt-4 p-4 rounded-2xl bg-orange-100 dark:bg-orange-900/20 border-2 border-orange-300 dark:border-orange-500/20">
+                                <div className="flex items-start gap-3">
+                                    <Info size={20} className="text-orange-600 dark:text-orange-400 shrink-0 mt-0.5" />
+                                    <div>
+                                        <p className="text-sm font-medium text-orange-700 dark:text-orange-400">
+                                            {error.status === 'NO_API_KEY' 
+                                                ? 'OpenRouter API key not configured. Add your API key to generate curriculum.'
+                                                : 'Failed to generate curriculum. Please try refreshing or check your API key.'}
+                                        </p>
+                                        <p className="text-xs text-orange-600 dark:text-orange-500 mt-1">
+                                            See documentation: OPENROUTER_API_SETUP.md
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                        
+                        {!isLoading && curriculum && (
+                            <button
+                                onClick={handleRefresh}
+                                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-purple-100 dark:bg-purple-500/10 border-2 border-purple-300 dark:border-purple-500/20 hover:bg-purple-200 dark:hover:bg-purple-500/20 transition-colors"
+                            >
+                                <Sparkles size={16} className="text-purple-600 dark:text-purple-400" />
+                                <span className="text-xs font-black uppercase tracking-wider text-purple-700 dark:text-purple-400">
+                                    Regenerate with AI
+                                </span>
+                            </button>
+                        )}
                     </motion.div>
                 </div>
 
                 {/* Level Selector */}
-                <div className="max-w-7xl mx-auto px-6 mb-12">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        {Object.entries(curriculumData).map(([key, data]) => {
+                {curriculum && (
+                    <div className="max-w-7xl mx-auto px-6 mb-12">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            {Object.entries(curriculum).map(([key, data]) => {
                             const LevelIcon = data.icon;
                             return (
                                 <motion.button
                                     key={key}
                                     whileHover={{ scale: 1.02 }}
                                     whileTap={{ scale: 0.98 }}
-                                    onClick={() => {
-                                        setSelectedLevel(key);
-                                        setExpandedSubject(null);
-                                    }}
+                                    onClick={() => setSelectedLevel(key)}
                                     className={`relative p-8 rounded-3xl border-2 transition-all shadow-lg ${
                                         selectedLevel === key
                                             ? `bg-gradient-to-br ${data.color} text-white border-transparent shadow-2xl`
@@ -231,8 +411,10 @@ export default function NigeriaCurriculum() {
                         })}
                     </div>
                 </div>
+                )}
 
                 {/* Curriculum Content */}
+                {curriculum && currentData && (
                 <div className="max-w-7xl mx-auto px-6">
                     <AnimatePresence mode="wait">
                         <motion.div
@@ -242,7 +424,7 @@ export default function NigeriaCurriculum() {
                             exit={{ opacity: 0, y: -20 }}
                             className="space-y-8"
                         >
-                            {currentData.classes.map((classData, classIndex) => (
+                            {currentData.classes?.map((classData, classIndex) => (
                                 <div key={classIndex} className="bg-white dark:bg-gray-900 rounded-3xl border-2 border-gray-300 dark:border-gray-800 p-8 shadow-xl">
                                     <div className="flex items-center gap-4 mb-8">
                                         <div className="w-12 h-12 rounded-xl bg-indigo-100 dark:bg-gradient-to-br dark:from-blue-500 dark:to-cyan-500 flex items-center justify-center shadow-lg">
@@ -279,8 +461,13 @@ export default function NigeriaCurriculum() {
                                                                 <h3 className="text-lg font-black text-gray-900 dark:text-white">
                                                                     {subject.name}
                                                                 </h3>
-                                                                <p className="text-sm text-gray-600 dark:text-gray-400 font-medium">
-                                                                    {subject.topics.length} Topics
+                                                                {subject.description && (
+                                                                    <p className="text-xs text-gray-500 dark:text-gray-500 font-medium mt-1 max-w-md">
+                                                                        {subject.description}
+                                                                    </p>
+                                                                )}
+                                                                <p className="text-sm text-gray-600 dark:text-gray-400 font-medium mt-1">
+                                                                    {subject.topics?.length || 0} Topics
                                                                 </p>
                                                             </div>
                                                         </div>
@@ -301,23 +488,56 @@ export default function NigeriaCurriculum() {
                                                                 transition={{ duration: 0.3 }}
                                                                 className="overflow-hidden"
                                                             >
-                                                                <div className="p-6 bg-white dark:bg-gray-900 border-t-2 border-gray-300 dark:border-gray-800">
-                                                                    <h4 className="text-sm font-black text-gray-700 dark:text-gray-400 uppercase tracking-wider mb-4">
-                                                                        Topics Covered:
-                                                                    </h4>
-                                                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                                                                        {subject.topics.map((topic, topicIndex) => (
+                                                                <div className="p-6 bg-white dark:bg-gray-900 border-t-2 border-gray-300 dark:border-gray-800 space-y-6">
+                                                                    {subject.topics?.map((topic, topicIndex) => {
+                                                                        // Handle both old format (string) and new format (object)
+                                                                        const topicName = typeof topic === 'string' ? topic : topic.name;
+                                                                        const topicDescription = typeof topic === 'object' ? topic.description : null;
+                                                                        const subtopics = typeof topic === 'object' ? topic.subtopics : null;
+                                                                        
+                                                                        return (
                                                                             <div
                                                                                 key={topicIndex}
-                                                                                className="flex items-center gap-2 p-3 rounded-xl bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-gray-800 dark:to-gray-800 border border-blue-200 dark:border-gray-700"
+                                                                                className="p-4 rounded-xl bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-gray-800 dark:to-gray-800/50 border-2 border-blue-200 dark:border-gray-700"
                                                                             >
-                                                                                <ChevronRight size={16} className="text-blue-600 dark:text-blue-400 shrink-0" />
-                                                                                <span className="text-sm font-medium text-gray-800 dark:text-gray-300">
-                                                                                    {topic}
-                                                                                </span>
+                                                                                <div className="flex items-start gap-3 mb-2">
+                                                                                    <div className="w-8 h-8 rounded-lg bg-blue-500 dark:bg-blue-600 flex items-center justify-center shrink-0 mt-0.5">
+                                                                                        <Target size={16} className="text-white" />
+                                                                                    </div>
+                                                                                    <div className="flex-1">
+                                                                                        <h5 className="text-base font-black text-gray-900 dark:text-white mb-1">
+                                                                                            {topicName}
+                                                                                        </h5>
+                                                                                        {topicDescription && (
+                                                                                            <p className="text-sm text-gray-700 dark:text-gray-300 font-medium mb-3">
+                                                                                                {topicDescription}
+                                                                                            </p>
+                                                                                        )}
+                                                                                        {subtopics && subtopics.length > 0 && (
+                                                                                            <div className="space-y-2">
+                                                                                                <p className="text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider">
+                                                                                                    Subtopics:
+                                                                                                </p>
+                                                                                                <div className="grid grid-cols-1 gap-2">
+                                                                                                    {subtopics.map((subtopic, subIndex) => (
+                                                                                                        <div
+                                                                                                            key={subIndex}
+                                                                                                            className="flex items-start gap-2 p-2 rounded-lg bg-white dark:bg-gray-900 border border-blue-100 dark:border-gray-700"
+                                                                                                        >
+                                                                                                            <ChevronRight size={14} className="text-blue-500 dark:text-blue-400 shrink-0 mt-0.5" />
+                                                                                                            <span className="text-sm text-gray-800 dark:text-gray-300 font-medium">
+                                                                                                                {subtopic}
+                                                                                                            </span>
+                                                                                                        </div>
+                                                                                                    ))}
+                                                                                                </div>
+                                                                                            </div>
+                                                                                        )}
+                                                                                    </div>
+                                                                                </div>
                                                                             </div>
-                                                                        ))}
-                                                                    </div>
+                                                                        );
+                                                                    })}
                                                                 </div>
                                                             </motion.div>
                                                         )}
@@ -331,6 +551,24 @@ export default function NigeriaCurriculum() {
                         </motion.div>
                     </AnimatePresence>
                 </div>
+                )}
+
+                {/* Loading State */}
+                {isLoading && (
+                    <div className="max-w-7xl mx-auto px-6">
+                        <div className="bg-white dark:bg-gray-900 rounded-3xl border-2 border-gray-300 dark:border-gray-800 p-12 shadow-xl">
+                            <div className="flex flex-col items-center gap-4">
+                                <Loader2 size={48} className="animate-spin text-blue-600 dark:text-blue-400" />
+                                <p className="text-lg font-medium text-gray-600 dark:text-gray-400">
+                                    Generating comprehensive curriculum for {selectedYear}...
+                                </p>
+                                <p className="text-sm text-gray-500 dark:text-gray-500">
+                                    This may take a few seconds
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 {/* Info Section */}
                 <div className="max-w-7xl mx-auto px-6 mt-16">

@@ -15,6 +15,19 @@ class MediaRecorder {
     }
 
     /**
+     * Set camera stream from external source
+     * Useful when stream is already obtained elsewhere
+     */
+    setCameraStream(stream) {
+        if (this.cameraStream) {
+            this.stopCameraStream();
+        }
+        this.cameraStream = stream;
+        console.log('✅ Camera stream set from external source');
+        return { success: true, stream };
+    }
+
+    /**
      * Request camera and microphone permissions
      */
     async requestCameraAndMicrophone() {

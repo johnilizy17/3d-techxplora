@@ -6,7 +6,18 @@ import path from 'path'
 export default defineConfig({
   plugins: [react()],
   server: {
-    allowedHosts: true
+    host: true,
+    port: 5173,
+    strictPort: false,
+    hmr: {
+      protocol: 'ws',
+      host: 'localhost',
+      clientPort: 5173,
+      overlay: true
+    },
+    watch: {
+      usePolling: false,
+    }
   },
   resolve: {
     alias: {

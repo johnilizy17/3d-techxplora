@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useSelector } from 'react-redux';
@@ -55,6 +55,8 @@ export default function QuizCameraSetup() {
     const [isActivating, setIsActivating] = useState(false);
     const [streamReady, setStreamReady] = useState(false);
     const [currentStream, setCurrentStream] = useState(null);
+    const [permissionError, setPermissionError] = useState(null);
+    const isCleaningUpRef = useRef(false); // Prevent double cleanup
 
     // Face detection hook - pass the ref itself, not ref.current
     const faceDetection = useFaceDetection(currentStream, videoRef);
@@ -65,6 +67,7 @@ export default function QuizCameraSetup() {
     // Media recording hook
     const {
         startRecording,
+        setCameraStreamExternal,
         hasPermissions,
         error: recordingError,
         browserSupport
@@ -92,31 +95,92 @@ export default function QuizCameraSetup() {
         }
     }, [quiz, quizCode, navigate]);
 
-    // Cleanup: Stop camera stream when component unmounts
+    // Cleanup: Stop camera stream when component unmounts ONLY
     useEffect(() => {
         return () => {
+            if (isCleaningUpRef.current) {
+                console.log('[Cleanup] Already cleaning up, skipping...');
+                return;
+            }
+            
+            isCleaningUpRef.current = true;
+            console.log('[Cleanup] Component unmounting - stopping all streams...');
+            
+            // Stop video element stream (this is the most reliable source of truth)
             if (videoRef.current && videoRef.current.srcObject) {
                 const stream = videoRef.current.srcObject;
                 const tracks = stream.getTracks();
-                tracks.forEach(track => track.stop());
+                tracks.forEach(track => {
+                    track.stop();
+                    console.log('[Cleanup] Stopped video track:', track.kind);
+                });
+                videoRef.current.srcObject = null;
             }
+            
+            // Stop WebRTC streaming (won't stop the camera now)
+            stopStreaming();
         };
-    }, []);
+    }, []); // Empty dependency array - only run on unmount
+
+    // Helper function to stop all existing streams before activation
+    // Don't include currentStream in dependencies to avoid infinite loops
+    const stopExistingStreams = useCallback(() => {
+        console.log('[stopExistingStreams] Called');
+        
+        // Stop video element stream first (most reliable)
+        if (videoRef.current?.srcObject) {
+            console.log('[stopExistingStreams] Stopping videoRef stream');
+            const stream = videoRef.current.srcObject;
+            stream.getTracks().forEach(track => track.stop());
+            videoRef.current.srcObject = null;
+        }
+        
+        setCameraActive(false);
+        setMicActive(false);
+        setStreamReady(false);
+        setCurrentStream(null);
+    }, []); // Empty deps - we access refs and setState which are stable
 
     // Activate camera and microphone
     const handleActivateCamera = async () => {
         setIsActivating(true);
         setStreamReady(false);
+        setPermissionError(null);
 
         try {
-            // Get media stream to show preview
+            // First, stop any existing streams to free up the camera
+            stopExistingStreams();
+            
+            // Wait a bit for the camera to be fully released
+            await new Promise(resolve => setTimeout(resolve, 300));
+            
+            // Detect if device is Android for optimized settings
+            const isAndroid = /Android/i.test(navigator.userAgent);
+            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+            
+            console.log('[Camera] Requesting media access...');
+            
+            // Get media stream with Android-optimized settings
             const stream = await navigator.mediaDevices.getUserMedia({
                 video: {
-                    width: { ideal: 1280 },
-                    height: { ideal: 720 },
-                    facingMode: 'user'
+                    width: isAndroid ? { ideal: 640, max: 1280 } : { ideal: 1280 },
+                    height: isAndroid ? { ideal: 480, max: 720 } : { ideal: 720 },
+                    facingMode: 'user',
+                    frameRate: isAndroid ? { ideal: 15, max: 24 } : { ideal: 30 },
+                    ...(isAndroid && {
+                        // Android-specific optimizations
+                        aspectRatio: { ideal: 4/3 },
+                    })
                 },
-                audio: true
+                audio: {
+                    echoCancellation: true,
+                    noiseSuppression: true,
+                    autoGainControl: true,
+                    ...(isMobile && {
+                        sampleRate: 16000, // Lower sample rate for mobile
+                        channelCount: 1     // Mono for mobile
+                    })
+                }
             });
 
             console.log('Stream obtained:', stream);
@@ -130,10 +194,24 @@ export default function QuizCameraSetup() {
             if (videoRef.current) {
                 videoRef.current.srcObject = stream;
                 
-                // Wait for metadata to load
-                videoRef.current.onloadedmetadata = async () => {
+                // Android-specific video settings
+                if (isAndroid) {
+                    videoRef.current.setAttribute('playsinline', 'true');
+                    videoRef.current.setAttribute('webkit-playsinline', 'true');
+                    videoRef.current.style.transform = 'translateZ(0)'; // Hardware acceleration
+                }
+                
+                // Unified handler for video activation
+                let hasActivated = false; // Guard to prevent double activation
+                
+                const activateVideo = async () => {
+                    // Ensure we only activate once
+                    if (hasActivated || streamReady) return;
+                    hasActivated = true;
+                    
                     console.log('Video metadata loaded');
                     console.log('Video dimensions:', videoRef.current.videoWidth, 'x', videoRef.current.videoHeight);
+                    
                     try {
                         await videoRef.current.play();
                         console.log('Video playing successfully');
@@ -142,13 +220,25 @@ export default function QuizCameraSetup() {
                         setMicActive(true);
                         console.log('Camera activated, stream set:', stream);
                         
-                        // Start WebRTC streaming
-                        const streamResult = await startStreaming(stream);
-                        if (streamResult.success) {
-                            console.log('WebRTC streaming started');
+                        // Set the stream in the recording hook
+                        const permResult = setCameraStreamExternal(stream);
+                        if (permResult.success) {
+                            console.log('Recording stream set successfully');
                         } else {
-                            console.warn('WebRTC streaming failed:', streamResult.error);
+                            console.warn('Failed to set recording stream:', permResult.error);
                         }
+                        
+                        // Defer WebRTC streaming to reduce initial load (especially on Android)
+                        setTimeout(async () => {
+                            if (videoRef.current?.srcObject === stream) {
+                                const streamResult = await startStreaming(stream);
+                                if (streamResult.success) {
+                                    console.log('WebRTC streaming started');
+                                } else {
+                                    console.warn('WebRTC streaming failed:', streamResult.error);
+                                }
+                            }
+                        }, isAndroid ? 1500 : 500);
                         
                         // Start activity logging when camera is activated
                         try {
@@ -156,7 +246,7 @@ export default function QuizCameraSetup() {
                                 quiz_title: quiz.title,
                                 quiz_id: quiz.id,
                                 total_questions: questionsData?.data?.length || 0,
-                                recording_started: false, // Recording hasn't started yet, just camera setup
+                                recording_started: false,
                             });
                             console.log('Activity logging started');
                         } catch (logError) {
@@ -169,55 +259,62 @@ export default function QuizCameraSetup() {
                         toast.error("Failed to play video. Please try again.");
                     }
                 };
-
-                // Fallback: if metadata doesn't load in 3 seconds, try to play anyway
-                setTimeout(() => {
-                    if (!streamReady && videoRef.current) {
-                        console.log('Fallback: trying to play video');
-                        videoRef.current.play().then(async () => {
-                            setStreamReady(true);
-                            setCameraActive(true);
-                            setMicActive(true);
-                            
-                            // Start WebRTC streaming (fallback)
-                            const streamResult = await startStreaming(stream);
-                            if (streamResult.success) {
-                                console.log('WebRTC streaming started (fallback)');
-                            }
-                            
-                            // Start activity logging when camera is activated (fallback)
-                            try {
-                                await logQuizStart({
-                                    quiz_title: quiz.title,
-                                    quiz_id: quiz.id,
-                                    total_questions: questionsData?.data?.length || 0,
-                                    recording_started: false,
-                                });
-                                console.log('Activity logging started (fallback)');
-                            } catch (logError) {
-                                console.error('Failed to log activity (fallback):', logError);
-                            }
-                            
-                            toast.success("Camera and microphone activated!");
-                        }).catch(err => {
-                            console.error('Fallback play failed:', err);
-                        });
+                
+                // Primary: Wait for metadata to load
+                videoRef.current.onloadedmetadata = activateVideo;
+                
+                // Backup: Use canplaythrough for slower devices/connections
+                videoRef.current.oncanplaythrough = () => {
+                    // Only activate if metadata handler didn't already succeed
+                    if (!streamReady) {
+                        console.log('Activating via canplaythrough (metadata was slow)');
+                        activateVideo();
                     }
-                }, 3000);
+                };
             }
         } catch (error) {
-            console.error('Failed to activate camera:', error);
+            // Only log unexpected errors to console (not common user errors)
+            if (import.meta.env.DEV) {
+                console.error('Failed to activate camera:', error);
+            } else if (error.name !== 'NotReadableError' && 
+                       error.name !== 'NotAllowedError' && 
+                       error.name !== 'NotFoundError' &&
+                       error.name !== 'SecurityError') {
+                // Only log truly unexpected errors in production
+                console.error('Camera activation error:', error.name);
+            }
+            
+            let errorMessage = '';
+            let errorDetails = '';
             
             // Provide more specific error messages
             if (error.name === 'NotAllowedError') {
-                toast.error("Camera access denied. Please allow camera permissions.");
+                errorMessage = "Camera access denied";
+                errorDetails = "Please allow camera and microphone permissions when prompted. If you don't see the permission prompt, check your browser settings.";
+                setPermissionError('denied');
             } else if (error.name === 'NotFoundError') {
-                toast.error("No camera found. Please connect a camera.");
+                errorMessage = "No camera found";
+                errorDetails = "Please make sure your device has a camera and it's properly connected.";
+                setPermissionError('no-device');
             } else if (error.name === 'NotReadableError') {
-                toast.error("Camera is already in use by another application.");
+                errorMessage = "Camera is already in use";
+                errorDetails = "Another application is using your camera. Please close other apps and try again.";
+                setPermissionError('in-use');
+            } else if (error.name === 'NotSupportedError' || error.name === 'TypeError') {
+                errorMessage = "Camera not supported";
+                errorDetails = "Your browser or device doesn't support camera access. Try using Chrome or Firefox.";
+                setPermissionError('not-supported');
+            } else if (error.name === 'SecurityError') {
+                errorMessage = "Permission blocked";
+                errorDetails = "Close any floating apps, bubbles, or screen overlays (like Facebook Messenger, screen recorders) and try again.";
+                setPermissionError('overlay-blocking');
             } else {
-                toast.error("Failed to activate camera. You can still proceed with the quiz.");
+                errorMessage = "Failed to activate camera";
+                errorDetails = "An unexpected error occurred. Please try again or continue without camera.";
+                setPermissionError('unknown');
             }
+            
+            toast.error(errorMessage);
             setIsActivating(false);
         } finally {
             // Don't set isActivating to false here, let the onloadedmetadata do it
@@ -254,7 +351,7 @@ export default function QuizCameraSetup() {
             toast.success("Starting quiz now!");
 
             // Navigate to quiz using the quiz code
-            navigate(`/dashboard/quizzes/completion?code=${quiz.id}`);
+             navigate(`/dashboard/quizzes/completion?code=${quiz.id}`);
         } catch (error) {
             toast.dismiss(loadingToast);
             console.error('Error starting quiz:', error);
@@ -291,6 +388,28 @@ export default function QuizCameraSetup() {
                             <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" />
                             Go Back
                         </motion.button>
+                        
+                        {/* Android Permission Info Banner */}
+                        {/Android/i.test(navigator.userAgent) && !cameraActive && (
+                            <motion.div
+                                initial={{ opacity: 0, y: -10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="mb-6 p-4 bg-blue-50 dark:bg-blue-500/5 border-2 border-blue-200 dark:border-blue-500/20 rounded-2xl"
+                            >
+                                <div className="flex items-start gap-3">
+                                    <Info size={18} className="text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
+                                    <div className="space-y-1">
+                                        <p className="text-xs font-black text-blue-700 dark:text-blue-400 uppercase">
+                                            Before You Start
+                                        </p>
+                                        <p className="text-[10px] text-blue-600 dark:text-blue-500 font-medium leading-relaxed">
+                                            If you see "This site can't ask for permission", close any floating apps or bubbles (like Messenger chat heads) and try again.
+                                        </p>
+                                    </div>
+                                </div>
+                            </motion.div>
+                        )}
+                        
                         <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-gray-900 dark:text-white italic tracking-tighter uppercase leading-none">
                             Camera <span className="text-indigo-600 dark:text-[#a6b1ff]">Setup</span>
                         </h1>
@@ -327,8 +446,14 @@ export default function QuizCameraSetup() {
                                         autoPlay
                                         muted
                                         playsInline
+                                        webkit-playsinline="true"
                                         width="640"
                                         height="480"
+                                        style={{ 
+                                            transform: 'translateZ(0)', // Hardware acceleration for Android
+                                            backfaceVisibility: 'hidden', // Reduce rendering overhead
+                                            WebkitBackfaceVisibility: 'hidden'
+                                        }}
                                         className={`w-full h-full object-cover ${!cameraActive ? 'hidden' : ''}`}
                                     />
                                     {!cameraActive && (
@@ -343,23 +468,97 @@ export default function QuizCameraSetup() {
 
                                 {/* Activate Button */}
                                 {!cameraActive && (
-                                    <button
-                                        onClick={handleActivateCamera}
-                                        disabled={isActivating}
-                                        className="w-full h-14 bg-gradient-to-r from-indigo-500 to-purple-600 dark:from-[#a6b1ff] dark:to-[#a6b1ff] hover:from-indigo-600 hover:to-purple-700 text-white dark:text-black rounded-2xl font-black uppercase tracking-wider text-sm flex items-center justify-center gap-3 transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50 shadow-lg"
-                                    >
-                                        {isActivating ? (
-                                            <>
-                                                <Loader2 size={20} className="animate-spin" />
-                                                Activating...
-                                            </>
-                                        ) : (
-                                            <>
-                                                <Camera size={20} />
-                                                Activate Camera & Mic
-                                            </>
+                                    <>
+                                        <button
+                                            onClick={handleActivateCamera}
+                                            disabled={isActivating}
+                                            className="w-full h-14 bg-gradient-to-r from-indigo-500 to-purple-600 dark:from-[#a6b1ff] dark:to-[#a6b1ff] hover:from-indigo-600 hover:to-purple-700 text-white dark:text-black rounded-2xl font-black uppercase tracking-wider text-sm flex items-center justify-center gap-3 transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50 shadow-lg"
+                                        >
+                                            {isActivating ? (
+                                                <>
+                                                    <Loader2 size={20} className="animate-spin" />
+                                                    Activating...
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Camera size={20} />
+                                                    Activate Camera & Mic
+                                                </>
+                                            )}
+                                        </button>
+                                        
+                                        {/* Permission Error Help */}
+                                        {permissionError && (
+                                            <motion.div
+                                                initial={{ opacity: 0, y: -10 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                className="mt-4 p-4 bg-amber-50 dark:bg-amber-500/5 border-2 border-amber-200 dark:border-amber-500/20 rounded-xl"
+                                            >
+                                                <div className="flex items-start gap-3">
+                                                    <AlertCircle size={18} className="text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                                                    <div className="space-y-2 flex-1">
+                                                        <p className="text-xs font-black text-amber-700 dark:text-amber-400 uppercase">
+                                                            {permissionError === 'overlay-blocking' && 'Overlay Detected'}
+                                                            {permissionError === 'denied' && 'Permission Needed'}
+                                                            {permissionError === 'in-use' && 'Camera Busy'}
+                                                            {permissionError === 'no-device' && 'No Camera Found'}
+                                                            {permissionError === 'not-supported' && 'Not Supported'}
+                                                            {permissionError === 'unknown' && 'Camera Error'}
+                                                        </p>
+                                                        <div className="text-[10px] text-amber-600 dark:text-amber-500 space-y-1.5 font-medium">
+                                                            {permissionError === 'overlay-blocking' && (
+                                                                <>
+                                                                    <p className="font-bold">Close these apps if open:</p>
+                                                                    <ul className="space-y-0.5 ml-3">
+                                                                        <li>• Facebook Messenger (chat heads/bubbles)</li>
+                                                                        <li>• Screen recording apps</li>
+                                                                        <li>• Floating widgets or overlays</li>
+                                                                        <li>• Blue light filter apps</li>
+                                                                    </ul>
+                                                                    <p className="mt-2">Then tap "Try Again" below.</p>
+                                                                </>
+                                                            )}
+                                                            {permissionError === 'denied' && (
+                                                                <>
+                                                                    <p>1. Tap the lock icon in your browser's address bar</p>
+                                                                    <p>2. Allow Camera and Microphone permissions</p>
+                                                                    <p>3. Refresh this page and try again</p>
+                                                                </>
+                                                            )}
+                                                            {permissionError === 'in-use' && (
+                                                                <>
+                                                                    <p>Close any apps using your camera:</p>
+                                                                    <ul className="space-y-0.5 ml-3">
+                                                                        <li>• Video call apps (Zoom, WhatsApp, etc.)</li>
+                                                                        <li>• Camera app</li>
+                                                                        <li>• Other browser tabs using camera</li>
+                                                                    </ul>
+                                                                </>
+                                                            )}
+                                                            {permissionError === 'no-device' && (
+                                                                <p>Make sure your device has a working camera. Try restarting your device if the problem continues.</p>
+                                                            )}
+                                                            {permissionError === 'not-supported' && (
+                                                                <p>Try opening this page in Google Chrome or Firefox browser for better compatibility.</p>
+                                                            )}
+                                                            {permissionError === 'unknown' && (
+                                                                <p>Try refreshing the page or restarting your browser. You can also continue to the quiz without camera.</p>
+                                                            )}
+                                                        </div>
+                                                        <button
+                                                            onClick={() => {
+                                                                setPermissionError(null);
+                                                                handleActivateCamera();
+                                                            }}
+                                                            className="mt-3 px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white text-[10px] font-black uppercase rounded-lg transition-colors"
+                                                        >
+                                                            Try Again
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </motion.div>
                                         )}
-                                    </button>
+                                    </>
                                 )}
 
                                 {/* Environment Checks - Show after camera is activated */}

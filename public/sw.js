@@ -61,8 +61,23 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Skip chrome extensions and other protocols
+  // Skip chrome extensions, other protocols, and HMR/WS requests
   if (!url.protocol.startsWith('http')) {
+    return;
+  }
+
+  // Skip Vite HMR and WebSocket connections
+  if (url.pathname.includes('/@vite') || 
+      url.pathname.includes('/@fs') ||
+      url.pathname.includes('/__vite') ||
+      url.pathname.includes('/node_modules/') ||
+      url.protocol === 'ws:' || 
+      url.protocol === 'wss:') {
+    return;
+  }
+
+  // Skip localhost/development requests during dev
+  if (url.hostname === 'localhost' && url.port === '5173') {
     return;
   }
 

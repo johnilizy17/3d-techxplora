@@ -308,16 +308,20 @@ export function useWebRTCStream(userId, quizCode, role = 'student') {
      * Stop streaming
      */
     const stopStreaming = useCallback(() => {
-        // Close all peer connections
+        console.log('WebRTC: stopStreaming called');
+        
+        // Close all peer connections (but don't stop the local stream - that's managed by the component)
         Object.keys(peerConnectionsRef.current).forEach(peerId => {
-            closePeerConnection(peerId);
+            const peerConnection = peerConnectionsRef.current[peerId];
+            if (peerConnection) {
+                peerConnection.close();
+                delete peerConnectionsRef.current[peerId];
+            }
         });
 
-        // Stop local stream
-        if (localStreamRef.current) {
-            localStreamRef.current.getTracks().forEach(track => track.stop());
-            localStreamRef.current = null;
-        }
+        // Don't stop the local stream here - let the component that created it manage it
+        // This prevents the camera from turning off when we only want to stop WebRTC
+        localStreamRef.current = null;
 
         setIsStreaming(false);
         setPeers({});

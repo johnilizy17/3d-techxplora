@@ -22,7 +22,14 @@ export const useEnvironmentCheck = (videoStream, faceDetectionData, videoRef) =>
     // Runs continuously on interval, independent of videoStream changes
     useEffect(() => {
         const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
+        const ctx = canvas.getContext('2d', { willReadFrequently: true }); // Optimize for Android
+        
+        // Detect device type
+        const isAndroid = /Android/i.test(navigator.userAgent);
+        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+        
+        // Use longer interval on mobile devices
+        const checkInterval = isAndroid ? 2000 : isMobile ? 1500 : 1000;
 
         const checkLighting = () => {
             // Query DOM directly instead of using ref to avoid closure issues
@@ -35,23 +42,30 @@ export const useEnvironmentCheck = (videoStream, faceDetectionData, videoRef) =>
 
             // Check if video has dimensions and is ready
             if (video.videoWidth > 0 && video.videoHeight > 0 && video.readyState >= 2) {
-                canvas.width = video.videoWidth;
-                canvas.height = video.videoHeight;
+                // Use smaller canvas on Android for better performance
+                const scale = isAndroid ? 0.25 : 1;
+                canvas.width = video.videoWidth * scale;
+                canvas.height = video.videoHeight * scale;
                 
                 try {
-                    ctx.drawImage(video, 0, 0);
+                    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
                     const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
                     const data = imageData.data;
 
+                    // Sample fewer pixels on Android (every 8th pixel vs every pixel)
+                    const step = isAndroid ? 8 : 4;
                     let brightness = 0;
-                    for (let i = 0; i < data.length; i += 4) {
+                    let pixelCount = 0;
+                    
+                    for (let i = 0; i < data.length; i += step) {
                         const r = data[i];
                         const g = data[i + 1];
                         const b = data[i + 2];
                         brightness += (r + g + b) / 3;
+                        pixelCount++;
                     }
-                    brightness = brightness / (data.length / 4);
+                    brightness = brightness / pixelCount;
 
                     let status = 'good';
                     if (brightness < 50) {
@@ -73,10 +87,9 @@ export const useEnvironmentCheck = (videoStream, faceDetectionData, videoRef) =>
             }
         };
 
-        // Start checking immediately and then every second
-        // This interval runs continuously regardless of videoStream changes
+        // Start checking immediately and then on adaptive interval
         checkLighting();
-        const interval = setInterval(checkLighting, 1000);
+        const interval = setInterval(checkLighting, checkInterval);
         
         return () => {
             clearInterval(interval);
@@ -168,12 +181,18 @@ export const useEnvironmentCheck = (videoStream, faceDetectionData, videoRef) =>
 
         const checkNoise = async () => {
             try {
+                // Detect device type
+                const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+                const isAndroid = /Android/i.test(navigator.userAgent);
+                
                 const audioContext = new (window.AudioContext || window.webkitAudioContext)();
                 audioContextRef.current = audioContext;
 
                 const analyser = audioContext.createAnalyser();
                 analyserRef.current = analyser;
-                analyser.fftSize = 2048;
+                
+                // Reduce FFT size on mobile for better performance
+                analyser.fftSize = isMobile ? 512 : 2048;
                 analyser.smoothingTimeConstant = 0.8;
 
                 const source = audioContext.createMediaStreamSource(videoStream);
@@ -181,6 +200,9 @@ export const useEnvironmentCheck = (videoStream, faceDetectionData, videoRef) =>
 
                 const bufferLength = analyser.frequencyBinCount;
                 const dataArray = new Uint8Array(bufferLength);
+                
+                // Use longer check interval on Android
+                const checkInterval = isAndroid ? 1000 : 500;
 
                 const checkLevel = () => {
                     analyser.getByteTimeDomainData(dataArray);
@@ -212,7 +234,7 @@ export const useEnvironmentCheck = (videoStream, faceDetectionData, videoRef) =>
                 };
 
                 checkLevel();
-                const interval = setInterval(checkLevel, 500); // Check every 500ms for more responsive updates
+                const interval = setInterval(checkLevel, checkInterval);
                 
                 return () => {
                     clearInterval(interval);

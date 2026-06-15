@@ -61,7 +61,7 @@ export default function CountUpStats() {
     },
     {
       label: 'Total Users',
-      value: stats?.total_students + stats?.total_teachers + stats?.total_teacher_admins || 0,
+      value: stats?.total_students + stats?.total_teachers +2 || 0,
       icon: '👥',
       color: 'from-purple-500 to-purple-600',
     },

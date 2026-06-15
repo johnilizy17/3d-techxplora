@@ -101,9 +101,9 @@ export default function QuizDetails() {
     const handleAction = () => {
         dispatch(setTemporaryStorage(quiz));
         if (isEnded) {
-            navigate(`/dashboard/quizzes/result?code=${quiz.id}`);
+            navigate(`/dashboard/quizzes/result?code=${quiz.quiz_code}`);
         } else if (isStarted) {
-            navigate(`/dashboard/quizzes/start?code=${quiz.id}`);
+            navigate(`/dashboard/quizzes/start?code=${quiz.quiz_code}`);
         } else {
             toast.info("The engagement window has not initialized yet.");
         }

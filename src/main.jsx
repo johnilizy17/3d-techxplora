@@ -5,8 +5,8 @@ import App from '@/App.jsx'
 import '@/index.css'
 import store from '@/redux/store'
 
-// Register service worker for offline support
-if ('serviceWorker' in navigator) {
+// Register service worker for offline support (only in production)
+if ('serviceWorker' in navigator && import.meta.env.PROD) {
   window.addEventListener('load', () => {
     navigator.serviceWorker
       .register('/sw.js')
@@ -26,6 +26,14 @@ if ('serviceWorker' in navigator) {
       .catch((error) => {
         console.warn('⚠️ Service Worker registration failed:', error);
       });
+  });
+} else if ('serviceWorker' in navigator && import.meta.env.DEV) {
+  // Unregister service workers in development to avoid caching issues
+  navigator.serviceWorker.getRegistrations().then((registrations) => {
+    registrations.forEach((registration) => {
+      registration.unregister();
+      console.log('🔧 Dev mode: Service Worker unregistered');
+    });
   });
 }
 

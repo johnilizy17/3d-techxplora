@@ -28,7 +28,6 @@ import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { saveQuizProgress, loadQuizProgress, clearQuizProgress, clearExpiredProgress } from '@/utils/quizStorage';
 import { useAntiCheating } from '@/hooks/useAntiCheating';
-import { useMediaRecording } from '@/hooks/useMediaRecording';
 import { useLiveStreaming } from '@/hooks/useLiveStreaming';
 import { useActivityLogger } from '@/hooks/useActivityLogger';
 import { useWebRTCStream } from '@/hooks/useWebRTCStream';
@@ -209,9 +208,6 @@ export default function QuizCompletion() {
         }
     }, [questions.length, showResults, localCameraStream, startWebRTCStream]);
 
-    // Anti-cheating monitoring
-    const { isRecording, stopRecording, cameraStream, screenStream } = useMediaRecording();
-
     // Live streaming
     const {
         isStreaming,
@@ -220,6 +216,7 @@ export default function QuizCompletion() {
         sendViolation: sendViolationToStream
     } = useLiveStreaming();
 
+    // Handle violations from anti-cheating system
     const handleViolation = useCallback((violation, violationCount) => {
         // Show warning toast
         toast.error(
@@ -239,7 +236,9 @@ export default function QuizCompletion() {
         }
     }, [isStreaming, sendViolationToStream]);
 
+    // Anti-cheating monitoring (camera only, no screen recording)
     const {
+        cameraStream,
         startMonitoring,
         stopMonitoring,
         violations,
@@ -256,30 +255,27 @@ export default function QuizCompletion() {
             startMonitoring();
             console.log('🔒 Anti-cheating monitoring activated');
 
-            // Start live streaming if we have camera stream
-            if (!isStreaming) {
-                // For live streaming, we still need screen stream, but for WebRTC we only use camera
-                if (cameraStream && screenStream) {
-                    startStreaming(cameraStream, screenStream, user, quiz)
-                        .then(result => {
-                            if (result.success) {
-                                console.log('📡 Live streaming started');
-                                toast.success('Live monitoring active', {
-                                    description: 'Your quiz session is being monitored',
-                                    duration: 3000
-                                });
-                            } else {
-                                console.error('Failed to start streaming:', result.error);
-                            }
-                        });
-                }
+            // Start live streaming with camera only (no screen stream)
+            if (!isStreaming && cameraStream) {
+                startStreaming(cameraStream, null, user, quiz)
+                    .then(result => {
+                        if (result.success) {
+                            console.log('📡 Live streaming started');
+                            toast.success('Live monitoring active', {
+                                description: 'Your quiz session is being monitored',
+                                duration: 3000
+                            });
+                        } else {
+                            console.error('Failed to start streaming:', result.error);
+                        }
+                    });
             }
         }
 
         return () => {
             stopMonitoring();
         };
-    }, [questions.length, showResults, localCameraStream, cameraStream, screenStream, isStreaming, startMonitoring, stopMonitoring, startStreaming, user, quiz]);
+    }, [questions.length, showResults, localCameraStream, cameraStream, isStreaming, startMonitoring, stopMonitoring, startStreaming, user, quiz]);
 
     // Listen for exam termination event
     useEffect(() => {
@@ -298,11 +294,6 @@ export default function QuizCompletion() {
             // Stop streaming
             if (isStreaming) {
                 await stopLiveStream();
-            }
-
-            // Stop recording if active
-            if (isRecording) {
-                await stopRecording();
             }
 
             // Clear quiz progress
@@ -332,60 +323,9 @@ export default function QuizCompletion() {
         return () => {
             window.removeEventListener('examTerminated', handleExamTerminated);
         };
-    }, [stopMonitoring, isWebRTCStreaming, stopWebRTCStream, isStreaming, stopLiveStream, isRecording, stopRecording, quizCode, navigate, quiz.title, violations, user]);
+    }, [stopMonitoring, isWebRTCStreaming, stopWebRTCStream, isStreaming, stopLiveStream, quizCode, navigate, quiz.title, violations, user]);
 
-    // Listen for screen share stopped event
-    useEffect(() => {
-        const handleScreenShareStopped = async (event) => {
-            console.error('🚨 SCREEN SHARE STOPPED:', event.detail);
-
-            // Stop monitoring
-            stopMonitoring();
-
-            // Stop WebRTC streaming
-            if (isWebRTCStreaming) {
-                console.log('Stopping WebRTC stream due to screen share stopped');
-                stopWebRTCStream();
-            }
-
-            // Stop streaming
-            if (isStreaming) {
-                await stopLiveStream();
-            }
-
-            // Stop recording
-            if (isRecording) {
-                await stopRecording();
-            }
-
-            // Clear quiz progress
-            if (quizCode) {
-                clearQuizProgress(quizCode);
-            }
-
-            // Show error message
-            toast.error('Screen sharing stopped! Exam terminated.', {
-                duration: 10000
-            });
-
-            // Navigate to violation page
-            navigate('/dashboard/quiz-violation', {
-                state: {
-                    quizTitle: quiz.title,
-                    violations: ['screen-share-stopped'],
-                    timestamp: new Date().toISOString(),
-                    studentName: `${user?.first_name} ${user?.last_name}`
-                },
-                replace: true
-            });
-        };
-
-        window.addEventListener('screenShareStopped', handleScreenShareStopped);
-
-        return () => {
-            window.removeEventListener('screenShareStopped', handleScreenShareStopped);
-        };
-    }, [stopMonitoring, isWebRTCStreaming, stopWebRTCStream, isStreaming, stopLiveStream, isRecording, stopRecording, quizCode, navigate, quiz.title, user]);
+    // Listen for screen share stopped event (removed - no longer using screen sharing)
 
     // Load saved progress on mount
     useEffect(() => {
@@ -556,12 +496,6 @@ export default function QuizCompletion() {
             await stopLiveStream();
         }
 
-        // Stop recording and camera
-        if (isRecording) {
-            console.log('Stopping recording - quiz completed');
-            await stopRecording();
-        }
-
         // Stop camera stream
         if (localCameraStream) {
             console.log('Stopping camera stream - quiz completed');
@@ -605,7 +539,7 @@ export default function QuizCompletion() {
             // Even if submission fails, we show local results for UX
             setShowResults(true);
         }
-    }, [questions, selectedAnswers, quiz, user, submitQuiz, navigate, currentIndex, getQuestionDuration, logQuizCompleted, isWebRTCStreaming, stopWebRTCStream, isStreaming, stopLiveStream, isRecording, stopRecording, localCameraStream, stopMonitoring]);
+    }, [questions, selectedAnswers, quiz, user, submitQuiz, navigate, currentIndex, getQuestionDuration, logQuizCompleted, isWebRTCStreaming, stopWebRTCStream, isStreaming, stopLiveStream, localCameraStream, stopMonitoring]);
 
     const handleNext = useCallback(() => {
         // Log question answered or skipped

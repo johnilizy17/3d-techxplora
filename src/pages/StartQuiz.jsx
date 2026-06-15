@@ -125,6 +125,7 @@ export default function StartQuiz() {
 
     const handleAcceptIntegrity = async () => {
         setShowIntegrityModal(false);
+        navigate(`/dashboard/quizzes/camera-setup?code=${quiz.id}`);
 
         // Store quiz data for next page
         dispatch(setTemporaryStorage(quiz));

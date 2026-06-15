@@ -82,6 +82,13 @@ export const useFaceDetection = (videoStream, videoRef) => {
             return;
         }
 
+        // Detect device type for adaptive intervals
+        const isAndroid = /Android/i.test(navigator.userAgent);
+        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+        
+        // Use longer intervals on Android/mobile for better performance
+        const detectionInterval = isAndroid ? 2000 : isMobile ? 1500 : 1000;
+
         const detectFaces = async () => {
             // Query DOM directly to avoid ref issues
             const video = document.querySelector('video');
@@ -103,9 +110,9 @@ export const useFaceDetection = (videoStream, videoRef) => {
             }
         };
 
-        // Start checking immediately and then every second
+        // Start checking immediately and then on adaptive interval
         detectFaces();
-        const interval = setInterval(detectFaces, 1000);
+        const interval = setInterval(detectFaces, detectionInterval);
 
         // Cleanup
         return () => {

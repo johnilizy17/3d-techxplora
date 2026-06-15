@@ -191,12 +191,18 @@ export default function Stats() {
           <StatCard
             icon={BookOpen}
             label="Total Teachers"
-            value={stats?.total_teachers || 0}
+            value={stats?.total_teachers-stats?.total_teacher_admins || 0}
+            color="bg-green-500"
+          />
+           <StatCard
+            icon={BookOpen}
+            label="Total Admin"
+            value={2 || 0}
             color="bg-green-500"
           />
         <StatCard
             icon={BookOpen}
-            label="Total Admin"
+            label="Total Admin Teachers"
             value={stats?.total_teacher_admins || 0}
             color="bg-green-500"
           />

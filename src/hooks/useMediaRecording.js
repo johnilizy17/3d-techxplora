@@ -14,6 +14,19 @@ export function useMediaRecording() {
     const [isRequesting, setIsRequesting] = useState(false);
 
     /**
+     * Set an existing camera stream (when permissions are already granted)
+     */
+    const setCameraStreamExternal = useCallback((stream) => {
+        const result = mediaRecorder.setCameraStream(stream);
+        if (result.success) {
+            setHasPermissions(true);
+            setCameraStream(stream);
+            return { success: true };
+        }
+        return { success: false, error: 'Failed to set camera stream' };
+    }, []);
+
+    /**
      * Request media permissions (camera and microphone only)
      */
     const requestPermissions = useCallback(async () => {
@@ -110,6 +123,7 @@ export function useMediaRecording() {
 
         // Actions
         requestPermissions,
+        setCameraStreamExternal,
         startRecording,
         stopRecording,
         cleanup,
