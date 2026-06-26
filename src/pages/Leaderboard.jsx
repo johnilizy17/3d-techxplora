@@ -67,7 +67,7 @@ export default function Leaderboard() {
                 trend: item.trend || 'same',
                 level: Math.floor((student.xp || 0) / 1000) + 1, // Simple level calculation if not provided
                 role: student.role || (item.student ? 'student' : 'user'),
-                date: item.date || item.created_at || item.updated_at || null
+                date: item.date || student.created_at || student.updated_at || new Date().toISOString()
             };
         })
         .sort((a, b) => b.xp - a.xp) // Sort by XP descending (highest first)
@@ -455,11 +455,6 @@ export default function Leaderboard() {
                                 <p className="text-gray-500 dark:text-white/20 text-[10px] font-bold uppercase tracking-[0.3em]">
                                     Scores update super fast! Keep playing! 🚀
                                 </p>
-                                {leaderboardData.length > 0 && !leaderboardData[0].date && (
-                                    <p className="text-amber-600 dark:text-amber-400 text-[9px] font-bold uppercase tracking-wider">
-                                        Date info not available right now
-                                    </p>
-                                )}
                             </div>
                         </>
                     )}

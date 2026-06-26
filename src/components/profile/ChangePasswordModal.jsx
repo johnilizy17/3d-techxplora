@@ -1,12 +1,13 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { X, Lock, Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
 
 export default function ChangePasswordModal({ isOpen, onClose }) {
-    const [showPassword, setShowPassword] = useState(false);
+    const [showOldPassword, setShowOldPassword] = useState(false);
+    const [showNewPassword, setShowNewPassword] = useState(false);
     const [formData, setFormData] = useState({
         oldPassword: '',
         newPassword: ''
@@ -55,12 +56,19 @@ export default function ChangePasswordModal({ isOpen, onClose }) {
                                         <div className="relative">
                                             <Input
                                                 id="oldPassword"
-                                                type={showPassword ? "text" : "password"}
+                                                type={showOldPassword ? "text" : "password"}
                                                 placeholder="Enter old password"
-                                                className="bg-black/20 border-white/10 h-14 text-white rounded-2xl focus:border-[#7c3aed] focus:ring-[#7c3aed]/20 px-4 text-base placeholder:text-gray-600"
+                                                className="bg-black/20 border-white/10 h-14 text-white rounded-2xl focus:border-[#7c3aed] focus:ring-[#7c3aed]/20 px-4 pr-12 text-base placeholder:text-gray-600"
                                                 value={formData.oldPassword}
                                                 onChange={(e) => setFormData({ ...formData, oldPassword: e.target.value })}
                                             />
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowOldPassword(!showOldPassword)}
+                                                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-300 transition-colors"
+                                            >
+                                                {showOldPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                                            </button>
                                         </div>
                                     </div>
 
@@ -69,18 +77,18 @@ export default function ChangePasswordModal({ isOpen, onClose }) {
                                         <div className="relative">
                                             <Input
                                                 id="newPassword"
-                                                type={showPassword ? "text" : "password"}
+                                                type={showNewPassword ? "text" : "password"}
                                                 placeholder="Enter new password"
-                                                className="bg-black/20 border-white/10 h-14 text-white rounded-2xl focus:border-[#7c3aed] focus:ring-[#7c3aed]/20 px-4 text-base placeholder:text-gray-600"
+                                                className="bg-black/20 border-white/10 h-14 text-white rounded-2xl focus:border-[#7c3aed] focus:ring-[#7c3aed]/20 px-4 pr-12 text-base placeholder:text-gray-600"
                                                 value={formData.newPassword}
                                                 onChange={(e) => setFormData({ ...formData, newPassword: e.target.value })}
                                             />
                                             <button
                                                 type="button"
-                                                onClick={() => setShowPassword(!showPassword)}
-                                                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-300"
+                                                onClick={() => setShowNewPassword(!showNewPassword)}
+                                                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-300 transition-colors"
                                             >
-                                                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                                                {showNewPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                                             </button>
                                         </div>
                                     </div>

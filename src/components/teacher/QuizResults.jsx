@@ -15,7 +15,9 @@ import {
     ArrowRight,
     TrophyIcon,
     Eye,
-    Radio
+    Radio,
+    Globe,
+    Lock
 } from 'lucide-react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
@@ -70,7 +72,8 @@ export default function QuizResults() {
         end_at: '',
         xp: 0,
         p_xp: 0,
-        attempt: ''
+        attempt: '',
+        public: 1
     });
 
     React.useEffect(() => {
@@ -80,7 +83,8 @@ export default function QuizResults() {
                 end_at: tempStorage.end_at ? format(new Date(tempStorage.end_at), "yyyy-MM-dd'T'HH:mm") : '',
                 xp: tempStorage.xp || 0,
                 p_xp: tempStorage.p_xp || 0,
-                attempt: tempStorage.attempt || ''
+                attempt: tempStorage.attempt || '',
+                public: tempStorage.public !== undefined ? tempStorage.public : 1
             });
         }
     }, [tempStorage]);
@@ -89,7 +93,7 @@ export default function QuizResults() {
         const { name, value } = e.target;
         setFormData(prev => ({
             ...prev,
-            [name]: name === 'xp' || name === 'p_xp' || name === 'attempt' ? Number(value) : value
+            [name]: name === 'xp' || name === 'p_xp' || name === 'attempt' || name === 'public' ? Number(value) : value
         }));
     };
 
@@ -140,7 +144,8 @@ export default function QuizResults() {
                 xp: formData.xp,
                 p_xp: formData.p_xp,
                 attempt: formData.attempt,
-                difficulty: difficulty
+                difficulty: difficulty,
+                public: formData.public
             };
 
             const updatedQuiz = await updateQuiz(updatePayload).unwrap();
@@ -158,7 +163,8 @@ export default function QuizResults() {
                 end_at: formData.end_at,
                 xp: formData.xp,
                 p_xp: formData.p_xp,
-                attempt: formData.attempt
+                attempt: formData.attempt,
+                public: formData.public
             }));
 
             setIsDrawerOpen(false);
@@ -325,6 +331,42 @@ export default function QuizResults() {
                                                 <div className="w-10 h-10 rounded-xl bg-indigo-500/20 flex items-center justify-center">
                                                     <Trophy size={18} className="text-indigo-400" />
                                                 </div>
+                                            </div>
+
+                                            {/* Public/Private Toggle */}
+                                            <div className="p-4 rounded-2xl bg-gradient-to-r from-emerald-500/10 to-purple-500/10 border border-white/10 flex items-center justify-between">
+                                                <div className="flex items-center gap-3">
+                                                    {formData.public === 1 ? (
+                                                        <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center">
+                                                            <Globe size={18} className="text-emerald-400" />
+                                                        </div>
+                                                    ) : (
+                                                        <div className="w-10 h-10 rounded-xl bg-gray-500/20 flex items-center justify-center">
+                                                            <Lock size={18} className="text-gray-400" />
+                                                        </div>
+                                                    )}
+                                                    <div>
+                                                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40 mb-1">Quiz Visibility</p>
+                                                        <p className={`text-lg font-black italic ${formData.public === 1 ? 'text-emerald-400' : 'text-gray-400'}`}>
+                                                            {formData.public === 1 ? 'Public - Live Quiz' : 'Private - Code Only'}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setFormData(prev => ({ ...prev, public: prev.public === 1 ? 0 : 1 }))}
+                                                    className={`relative w-16 h-8 rounded-full transition-all duration-300 ${
+                                                        formData.public === 1 
+                                                            ? 'bg-emerald-500' 
+                                                            : 'bg-white/10'
+                                                    }`}
+                                                >
+                                                    <div
+                                                        className={`absolute top-1 left-1 w-6 h-6 rounded-full bg-white shadow-lg transition-transform duration-300 ${
+                                                            formData.public === 1 ? 'translate-x-8' : 'translate-x-0'
+                                                        }`}
+                                                    />
+                                                </button>
                                             </div>
 
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

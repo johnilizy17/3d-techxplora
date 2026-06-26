@@ -120,9 +120,9 @@ export default function JoinGroup() {
                                 { icon: Globe, label: "Global Sync", color: "text-blue-400" },
                                 { icon: Target, label: "Precision", color: "text-indigo-400" }
                             ].map((item, idx) => (
-                                <div key={idx} className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-white/5 border border-white/5">
+                                <div key={idx} className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-gray-100 dark:bg-white/5 border-2 border-gray-200 dark:border-white/10">
                                     <item.icon size={16} className={item.color} />
-                                    <span className="text-[8px] font-black text-white/30 uppercase tracking-[0.2em]">{item.label}</span>
+                                    <span className="text-[8px] font-black text-gray-600 dark:text-white/50 uppercase tracking-[0.2em]">{item.label}</span>
                                 </div>
                             ))}
                         </div>

@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Sparkles, Mail, Lock, Loader2, ArrowRight, AlertCircle, CheckCircle2, X } from "lucide-react";
+import { Sparkles, Mail, Lock, Loader2, ArrowRight, AlertCircle, CheckCircle2, X, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -35,6 +35,7 @@ function AuthContent() {
 
     const [isLoading, setIsLoading] = useState(false);
     const [authFeedback, setAuthFeedback] = useState(null);
+    const [showPassword, setShowPassword] = useState(false);
 
     const form = useForm({
         resolver: zodResolver(loginSchema),
@@ -319,11 +320,22 @@ function AuthContent() {
                                         <Input
                                             {...form.register("password")}
                                             id="password"
-                                            type="password"
+                                            type={showPassword ? "text" : "password"}
                                             placeholder="••••••••"
-                                            className="pl-10 h-12 bg-input border-border text-foreground placeholder:text-muted-foreground focus:border-[#a6b1ff] focus:ring-[#a6b1ff]/20 rounded-xl transition-all"
+                                            className="pl-10 pr-10 h-12 bg-input border-border text-foreground placeholder:text-muted-foreground focus:border-[#a6b1ff] focus:ring-[#a6b1ff]/20 rounded-xl transition-all"
                                             disabled={isLoading || isLoginLoading}
                                         />
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowPassword(!showPassword)}
+                                            className="absolute right-3 top-3 text-muted-foreground hover:text-foreground transition-colors"
+                                        >
+                                            {showPassword ? (
+                                                <EyeOff className="h-5 w-5" />
+                                            ) : (
+                                                <Eye className="h-5 w-5" />
+                                            )}
+                                        </button>
                                     </div>
                                     {form.formState.errors.password && (
                                         <p className="text-xs text-red-400 ml-1">{form.formState.errors.password.message}</p>

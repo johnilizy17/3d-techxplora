@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import { selectIsAuthenticated, selectCurrentUser } from '@/redux/slices/authSlice';
+import { selectIsAuthenticated } from '@/redux/slices/authSlice';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-    ArrowLeft, CheckCircle, Circle, Clock, Trophy,
+    ArrowLeft, Circle, Trophy, Clock,
     AlertCircle, Loader2, Target, ChevronRight, Send
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -17,7 +17,6 @@ export default function CourseQuiz() {
     const navigate = useNavigate();
     const { toast } = useToast();
     const isAuthenticated = useSelector(selectIsAuthenticated);
-    const user = useSelector(selectCurrentUser);
 
     // Fetch Course Details
     const { data: courseData, isLoading: isCourseLoading, error: courseError } = useGetStudentCourseByIdQuery(courseId);
@@ -27,22 +26,33 @@ export default function CourseQuiz() {
     const [userAnswers, setUserAnswers] = useState({});
     const [quizCompleted, setQuizCompleted] = useState(false);
     const [score, setScore] = useState(0);
-    const [startTime] = useState(Date.now());
-    const [timeElapsed, setTimeElapsed] = useState(0);
+    const [timeRemaining, setTimeRemaining] = useState(50); // 50 seconds per question
 
     // Parse manual quiz questions
     const manualQuiz = course?.manual_quiz || [];
     const currentQuestion = manualQuiz[currentQuestionIndex];
 
-    // Timer effect
+    // Timer effect - 50 seconds per question
     useEffect(() => {
         if (!quizCompleted && manualQuiz.length > 0) {
             const timer = setInterval(() => {
-                setTimeElapsed(Math.floor((Date.now() - startTime) / 1000));
+                setTimeRemaining((prev) => {
+                    if (prev <= 1) {
+                        // Time's up - auto move to next question
+                        handleNextQuestion();
+                        return 50; // Reset for next question
+                    }
+                    return prev - 1;
+                });
             }, 1000);
             return () => clearInterval(timer);
         }
-    }, [quizCompleted, startTime, manualQuiz.length]);
+    }, [quizCompleted, currentQuestionIndex, manualQuiz.length]);
+
+    // Reset timer when question changes
+    useEffect(() => {
+        setTimeRemaining(50);
+    }, [currentQuestionIndex]);
 
     // Redirect if not authenticated
     useEffect(() => {
@@ -64,15 +74,6 @@ export default function CourseQuiz() {
     };
 
     const handleNextQuestion = () => {
-        if (!userAnswers[currentQuestionIndex]) {
-            toast({
-                title: "No Answer Selected",
-                description: "Please select an answer before proceeding.",
-                variant: "destructive"
-            });
-            return;
-        }
-
         if (currentQuestionIndex < manualQuiz.length - 1) {
             setCurrentQuestionIndex(prev => prev + 1);
         } else {
@@ -102,12 +103,6 @@ export default function CourseQuiz() {
         if (currentQuestionIndex > 0) {
             setCurrentQuestionIndex(prev => prev - 1);
         }
-    };
-
-    const formatTime = (seconds) => {
-        const mins = Math.floor(seconds / 60);
-        const secs = seconds % 60;
-        return `${mins}:${secs.toString().padStart(2, '0')}`;
     };
 
     if (isCourseLoading) {
@@ -191,11 +186,11 @@ export default function CourseQuiz() {
                                     <p className="text-white/60 text-sm">Course Quiz</p>
                                 </div>
 
-                                <div className="flex items-center gap-4">
-                                    <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/10">
-                                        <Clock className="w-4 h-4 text-[#a6b1ff]" />
-                                        <span className="text-sm font-bold">{formatTime(timeElapsed)}</span>
-                                    </div>
+                                <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/10">
+                                    <Clock className={`w-4 h-4 ${timeRemaining <= 10 ? 'text-red-500 animate-pulse' : 'text-[#a6b1ff]'}`} />
+                                    <span className={`text-sm font-bold ${timeRemaining <= 10 ? 'text-red-500' : ''}`}>
+                                        {timeRemaining}s
+                                    </span>
                                 </div>
                             </div>
 
@@ -284,8 +279,7 @@ export default function CourseQuiz() {
                                     )}
                                     <Button
                                         onClick={handleNextQuestion}
-                                        disabled={!userAnswers[currentQuestionIndex]}
-                                        className="flex-1 bg-gradient-to-r from-[#a6b1ff] to-[#c7aff8] hover:from-[#8b95cc] hover:to-[#b399e6] text-black font-bold py-6 rounded-2xl disabled:opacity-50 disabled:cursor-not-allowed"
+                                        className="flex-1 bg-gradient-to-r from-[#a6b1ff] to-[#c7aff8] hover:from-[#8b95cc] hover:to-[#b399e6] text-black font-bold py-6 rounded-2xl"
                                     >
                                         {currentQuestionIndex < manualQuiz.length - 1 ? (
                                             <>
@@ -320,10 +314,6 @@ export default function CourseQuiz() {
                             <p className="text-white/60 text-lg">
                                 You answered {Math.round((score / 100) * manualQuiz.length)} out of {manualQuiz.length} questions correctly
                             </p>
-                            <div className="mt-6 flex items-center justify-center gap-2 text-white/40">
-                                <Clock className="w-4 h-4" />
-                                <span className="text-sm">Completed in {formatTime(timeElapsed)}</span>
-                            </div>
                         </div>
 
                         {/* Performance Message */}
@@ -356,6 +346,7 @@ export default function CourseQuiz() {
                                     setUserAnswers({});
                                     setQuizCompleted(false);
                                     setScore(0);
+                                    setTimeRemaining(50);
                                 }}
                                 variant="outline"
                                 className="flex-1 border-white/20 text-white hover:bg-white/10 font-bold py-6 rounded-2xl"

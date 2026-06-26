@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useNavigate, Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import {
     ArrowLeft,
     Sparkles,
@@ -17,18 +17,27 @@ import VerifyQuizModal from '@/components/dashboard/VerifyQuizModal';
 
 export default function JoinQuiz() {
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
+    const codeFromUrl = searchParams.get('code');
+    
     const [code, setCode] = useState('');
     const [isVerifyModalOpen, setIsVerifyModalOpen] = useState(false);
     const [selectedQuiz, setSelectedQuiz] = useState(null);
 
     const [verifyCode, { isFetching: isVerifying }] = useLazyVerifyQuizCodeQuery();
 
-    const handleVerify = async (e) => {
-        e.preventDefault();
-        if (!code.trim()) return;
+    // Auto-load code from URL and verify it
+    useEffect(() => {
+        if (codeFromUrl) {
+            setCode(codeFromUrl);
+            handleVerifyWithCode(codeFromUrl);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [codeFromUrl]);
 
+    const handleVerifyWithCode = async (quizCode) => {
         try {
-            const result = await verifyCode(code).unwrap();
+            const result = await verifyCode(quizCode).unwrap();
             setSelectedQuiz(result.data || result);
             setIsVerifyModalOpen(true);
             toast.success('Quiz found!');
@@ -38,11 +47,18 @@ export default function JoinQuiz() {
         }
     };
 
+    const handleVerify = async (e) => {
+        e.preventDefault();
+        if (!code.trim()) return;
+
+        await handleVerifyWithCode(code.trim());
+    };
+
     return (
         <DashboardLayout>
-            <div className="min-h-screen pb-24 lg:pb-10 bg-white dark:bg-[#0a0a0a] relative overflow-hidden">
-                {/* Visual Background Elements */}
-                <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-200/30 dark:bg-indigo-600/5 rounded-full blur-[120px] -mr-64 -mt-64" />
+            <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-purple-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
+                {/* Decorative Background Elements */}
+                <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-indigo-200/30 dark:bg-indigo-600/5 rounded-full blur-[100px] -mr-40 -mt-40" />
                 <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-purple-200/30 dark:bg-purple-600/5 rounded-full blur-[100px] -ml-40 -mb-40" />
                 
                 <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 mt-10 relative z-10">
@@ -77,7 +93,7 @@ export default function JoinQuiz() {
                                         <h1 className="text-2xl sm:text-4xl font-black text-gray-900 dark:text-white italic tracking-tight uppercase mb-4">
                                             Join a <span className="text-indigo-600 dark:text-[#a6b1ff]">Quiz</span>
                                         </h1>
-                                        <p className="text-gray-600 dark:text-white/40 text-sm font-medium leading-relaxed max-w-xs mx-auto">
+                                        <p className="text-gray-700 dark:text-white/60 text-sm font-medium leading-relaxed max-w-xs mx-auto">
                                             Enter the code your teacher gave you to start playing!
                                         </p>
                                     </div>
@@ -92,7 +108,7 @@ export default function JoinQuiz() {
                                                 value={code}
                                                 onChange={(e) => setCode(e.target.value.toUpperCase())}
                                                 placeholder="ENTER CODE (e.g. QZ-123)"
-                                                className="w-full bg-gray-100 dark:bg-white/5 border-2 border-gray-200 dark:border-white/10 rounded-2xl py-4 sm:py-6 pl-14 sm:pl-16 pr-6 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-white/20 focus:outline-none focus:border-indigo-500 dark:focus:border-indigo-400/50 transition-all font-black tracking-widest text-lg sm:text-xl italic text-center shadow-sm"
+                                                className="w-full bg-gray-100 dark:bg-white/5 border-2 border-gray-200 dark:border-white/10 rounded-2xl py-4 sm:py-6 pl-14 sm:pl-16 pr-6 text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-white/30 focus:outline-none focus:border-indigo-500 dark:focus:border-indigo-400/50 transition-all font-black tracking-widest text-lg sm:text-xl italic text-center shadow-sm"
                                                 autoFocus
                                             />
                                         </div>
@@ -110,7 +126,7 @@ export default function JoinQuiz() {
 
                                     <div className="flex items-center gap-4 py-4 px-6 bg-blue-50 dark:bg-white/5 rounded-2xl border-2 border-blue-200 dark:border-white/5 shadow-sm">
                                         <Info className="text-blue-600 dark:text-[#a6b1ff] shrink-0" size={20} />
-                                        <p className="text-[10px] font-bold text-blue-700 dark:text-white/40 uppercase tracking-widest text-left leading-relaxed">
+                                        <p className="text-[10px] font-bold text-blue-800 dark:text-white/60 uppercase tracking-widest text-left leading-relaxed">
                                             Quiz codes are usually 6-8 letters and numbers. Ask your teacher if you don't have one!
                                         </p>
                                     </div>
@@ -120,12 +136,12 @@ export default function JoinQuiz() {
                             {/* External Links */}
                             <div className="mt-12 grid grid-cols-2 gap-4">
                                 <Link to="/dashboard/quizzes" className="flex flex-col items-center gap-2 p-6 rounded-[2rem] bg-gray-100 dark:bg-white/5 border-2 border-gray-200 dark:border-white/5 hover:bg-gray-200 dark:hover:bg-white/10 transition-all group shadow-sm">
-                                    <Gamepad2 className="text-gray-400 dark:text-white/20 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors" size={24} />
-                                    <span className="text-[10px] font-black text-gray-600 dark:text-white/40 uppercase tracking-widest italic group-hover:text-gray-900 dark:group-hover:text-white transition-colors">All Quizzes</span>
+                                    <Gamepad2 className="text-gray-600 dark:text-white/40 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors" size={24} />
+                                    <span className="text-[10px] font-black text-gray-800 dark:text-white/60 uppercase tracking-widest italic group-hover:text-gray-900 dark:group-hover:text-white transition-colors">All Quizzes</span>
                                 </Link>
                                 <Link to="/dashboard/leaderboard" className="flex flex-col items-center gap-2 p-6 rounded-[2rem] bg-gray-100 dark:bg-white/5 border-2 border-gray-200 dark:border-white/5 hover:bg-gray-200 dark:hover:bg-white/10 transition-all group shadow-sm">
-                                    <Trophy className="text-gray-400 dark:text-white/20 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors" size={24} />
-                                    <span className="text-[10px] font-black text-gray-600 dark:text-white/40 uppercase tracking-widest italic group-hover:text-gray-900 dark:group-hover:text-white transition-colors">Top Players</span>
+                                    <Trophy className="text-gray-600 dark:text-white/40 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors" size={24} />
+                                    <span className="text-[10px] font-black text-gray-800 dark:text-white/60 uppercase tracking-widest italic group-hover:text-gray-900 dark:group-hover:text-white transition-colors">Top Players</span>
                                 </Link>
                             </div>
                         </motion.div>

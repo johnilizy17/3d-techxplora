@@ -84,7 +84,10 @@ export default function Groups() {
                             </div>
                         ) : groups.length === 0 ? (
                             <div className="bg-gray-100 dark:bg-white/5 border-2 border-gray-200 dark:border-white/10 rounded-[2rem] p-12 shadow-sm">
-                                <EmptyState title="No Groups Found" description="You haven't joined or created any groups yet." />
+                                <EmptyState 
+                                    title="No Groups Found" 
+                                    description={type === "student" ? "You haven't joined any groups yet." : "You haven't joined or created any groups yet."} 
+                                />
                             </div>
                         ) : (
                             <>
@@ -195,7 +198,7 @@ const PromotionalBanner = ({ groups, quizzes, quizData }) => {
         <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mx-4 sm:mx-6 lg:mx-10 mt-6 lg:mt-8 relative overflow-hidden rounded-[2rem] lg:rounded-[2.5rem] bg-gradient-to-br from-[#1a1f4d] via-[#2a2f6d] to-[#1a1f4d] border border-[#a6b1ff]/20 shadow-2xl"
+            className="mx-4 sm:mx-6 lg:mx-10 mt-6 lg:mt-8 relative overflow-hidden rounded-[2rem] lg:rounded-[2.5rem] bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 dark:from-[#1a1f4d] dark:via-[#2a2f6d] dark:to-[#1a1f4d] border-2 border-indigo-200 dark:border-[#a6b1ff]/20 shadow-2xl"
         >
             {/* Background Decorations */}
             <div className="absolute top-0 right-0 w-64 h-64 bg-purple-500/10 rounded-full blur-[100px]" />
@@ -203,13 +206,13 @@ const PromotionalBanner = ({ groups, quizzes, quizData }) => {
 
             {/* Decorative Elements */}
             <div className="absolute top-4 left-8 hidden lg:block">
-                <Sparkles className="text-pink-400 animate-pulse" size={20} />
+                <Sparkles className="text-pink-400 dark:text-pink-400 animate-pulse" size={20} />
             </div>
             <div className="absolute top-8 right-32 hidden lg:block">
-                <Sparkles className="text-purple-400 animate-pulse" size={16} style={{ animationDelay: '0.5s' }} />
+                <Sparkles className="text-purple-400 dark:text-purple-400 animate-pulse" size={16} style={{ animationDelay: '0.5s' }} />
             </div>
             <div className="absolute bottom-8 left-1/4 hidden lg:block">
-                <Sparkles className="text-indigo-400 animate-pulse" size={14} style={{ animationDelay: '1s' }} />
+                <Sparkles className="text-indigo-400 dark:text-indigo-400 animate-pulse" size={14} style={{ animationDelay: '1s' }} />
             </div>
 
             <div className="relative z-10 p-6 sm:p-8 lg:p-12">
@@ -217,18 +220,18 @@ const PromotionalBanner = ({ groups, quizzes, quizData }) => {
                 <div className="flex flex-col lg:flex-row items-center justify-between gap-6 lg:gap-8 mb-6 lg:mb-8">
                     <div className="flex-1 space-y-3 lg:space-y-4 w-full lg:w-auto text-center lg:text-left">
                         {/* Dynamic Badge */}
-                        <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r ${content.badgeColor} border border-white/20 shadow-lg`}>
+                        <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r ${content.badgeColor} border-2 border-white/30 dark:border-white/20 shadow-lg`}>
                             <IconComponent className="text-white" size={16} />
                             <span className="text-white font-black text-sm uppercase tracking-wider italic">{content.badge}</span>
                         </div>
 
                         {/* Main Heading */}
-                        <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-white leading-tight">
+                        <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-gray-900 dark:text-white leading-tight">
                             {content.title}
                         </h2>
 
                         {/* Subtext */}
-                        <p className="text-white/80 text-sm sm:text-base lg:text-lg font-medium max-w-md mx-auto lg:mx-0">
+                        <p className="text-gray-700 dark:text-white/80 text-sm sm:text-base lg:text-lg font-medium max-w-md mx-auto lg:mx-0">
                             {content.subtitle}
                         </p>
 
@@ -236,30 +239,30 @@ const PromotionalBanner = ({ groups, quizzes, quizData }) => {
                         <div className="hidden sm:flex flex-col gap-2 pt-2">
                             {isStudent ? (
                                 <>
-                                    <div className="flex items-center gap-2 text-xs sm:text-sm text-white/70">
+                                    <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-600 dark:text-white/70">
                                         <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
                                         <span>Access exclusive quizzes from your teachers</span>
                                     </div>
-                                    <div className="flex items-center gap-2 text-xs sm:text-sm text-white/70">
+                                    <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-600 dark:text-white/70">
                                         <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
                                         <span>Track your progress and compete with peers</span>
                                     </div>
-                                    <div className="flex items-center gap-2 text-xs sm:text-sm text-white/70">
+                                    <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-600 dark:text-white/70">
                                         <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
                                         <span>Earn XP and climb the leaderboard</span>
                                     </div>
                                 </>
                             ) : (
                                 <>
-                                    <div className="flex items-center gap-2 text-xs sm:text-sm text-white/70">
+                                    <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-600 dark:text-white/70">
                                         <div className="w-1.5 h-1.5 rounded-full bg-indigo-400" />
                                         <span>Organize students into learning groups</span>
                                     </div>
-                                    <div className="flex items-center gap-2 text-xs sm:text-sm text-white/70">
+                                    <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-600 dark:text-white/70">
                                         <div className="w-1.5 h-1.5 rounded-full bg-indigo-400" />
                                         <span>Share quizzes and track student performance</span>
                                     </div>
-                                    <div className="flex items-center gap-2 text-xs sm:text-sm text-white/70">
+                                    <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-600 dark:text-white/70">
                                         <div className="w-1.5 h-1.5 rounded-full bg-indigo-400" />
                                         <span>Manage multiple groups with ease</span>
                                     </div>
@@ -272,7 +275,7 @@ const PromotionalBanner = ({ groups, quizzes, quizData }) => {
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
                             onClick={content.ctaAction}
-                            className="mt-4 w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 rounded-xl sm:rounded-2xl bg-white text-[#1a1f4d] font-black text-sm sm:text-base uppercase tracking-wide shadow-xl hover:shadow-2xl transition-all flex items-center justify-center gap-2 group"
+                            className="mt-4 w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 rounded-xl sm:rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 dark:bg-white dark:hover:bg-gray-100 text-white dark:text-[#1a1f4d] font-black text-sm sm:text-base uppercase tracking-wide shadow-xl hover:shadow-2xl transition-all flex items-center justify-center gap-2 group"
                         >
                             {content.ctaText}
                             <ArrowUpRight className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" size={18} />
@@ -295,19 +298,19 @@ const PromotionalBanner = ({ groups, quizzes, quizData }) => {
                 </div>
 
                 {/* Statistics Section */}
-                <div className="relative z-10 pt-6 border-t border-white/10">
+                <div className="relative z-10 pt-6 border-t-2 border-indigo-200 dark:border-white/10">
                     <div className="grid grid-cols-3 gap-3 sm:gap-4 lg:gap-6">
                         {/* Total Groups */}
                         <motion.div
                             whileHover={{ scale: 1.05 }}
                             onClick={() => navigate('/dashboard/groups')}
-                            className="bg-white/5 backdrop-blur-sm rounded-2xl p-3 sm:p-4 lg:p-5 border border-white/10 hover:border-[#a6b1ff]/30 transition-all cursor-pointer group"
+                            className="bg-white/60 dark:bg-white/5 backdrop-blur-sm rounded-2xl p-3 sm:p-4 lg:p-5 border-2 border-indigo-200 dark:border-white/10 hover:border-indigo-400 dark:hover:border-[#a6b1ff]/30 transition-all cursor-pointer group"
                         >
                             <div className="flex flex-col items-center text-center">
-                                <span className="text-2xl sm:text-3xl lg:text-4xl font-black text-white group-hover:text-[#a6b1ff] transition-colors">
+                                <span className="text-2xl sm:text-3xl lg:text-4xl font-black text-indigo-700 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-[#a6b1ff] transition-colors">
                                     {totalGroups}
                                 </span>
-                                <span className="text-[10px] sm:text-xs lg:text-sm text-white/60 font-bold uppercase tracking-wider mt-1">
+                                <span className="text-[10px] sm:text-xs lg:text-sm text-indigo-600 dark:text-white/60 font-bold uppercase tracking-wider mt-1">
                                     Total Groups
                                 </span>
                             </div>
@@ -317,13 +320,13 @@ const PromotionalBanner = ({ groups, quizzes, quizData }) => {
                         <motion.div
                             whileHover={{ scale: 1.05 }}
                             onClick={() => navigate('/dashboard/quizzes')}
-                            className="bg-white/5 backdrop-blur-sm rounded-2xl p-3 sm:p-4 lg:p-5 border border-white/10 hover:border-[#a6b1ff]/30 transition-all cursor-pointer group"
+                            className="bg-white/60 dark:bg-white/5 backdrop-blur-sm rounded-2xl p-3 sm:p-4 lg:p-5 border-2 border-indigo-200 dark:border-white/10 hover:border-indigo-400 dark:hover:border-[#a6b1ff]/30 transition-all cursor-pointer group"
                         >
                             <div className="flex flex-col items-center text-center">
-                                <span className="text-2xl sm:text-3xl lg:text-4xl font-black text-white group-hover:text-[#a6b1ff] transition-colors">
+                                <span className="text-2xl sm:text-3xl lg:text-4xl font-black text-indigo-700 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-[#a6b1ff] transition-colors">
                                     {totalQuizzes}
                                 </span>
-                                <span className="text-[10px] sm:text-xs lg:text-sm text-white/60 font-bold uppercase tracking-wider mt-1">
+                                <span className="text-[10px] sm:text-xs lg:text-sm text-indigo-600 dark:text-white/60 font-bold uppercase tracking-wider mt-1">
                                     Quizzes
                                 </span>
                             </div>
@@ -333,13 +336,13 @@ const PromotionalBanner = ({ groups, quizzes, quizData }) => {
                         <motion.div
                             whileHover={{ scale: 1.05 }}
                             onClick={() => navigate('/dashboard/result')}
-                            className="bg-white/5 backdrop-blur-sm rounded-2xl p-3 sm:p-4 lg:p-5 border border-white/10 hover:border-[#a6b1ff]/30 transition-all cursor-pointer group"
+                            className="bg-white/60 dark:bg-white/5 backdrop-blur-sm rounded-2xl p-3 sm:p-4 lg:p-5 border-2 border-indigo-200 dark:border-white/10 hover:border-indigo-400 dark:hover:border-[#a6b1ff]/30 transition-all cursor-pointer group"
                         >
                             <div className="flex flex-col items-center text-center">
-                                <span className="text-2xl sm:text-3xl lg:text-4xl font-black text-white group-hover:text-[#a6b1ff] transition-colors">
+                                <span className="text-2xl sm:text-3xl lg:text-4xl font-black text-indigo-700 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-[#a6b1ff] transition-colors">
                                     {totalPlays}
                                 </span>
-                                <span className="text-[10px] sm:text-xs lg:text-sm text-white/60 font-bold uppercase tracking-wider mt-1">
+                                <span className="text-[10px] sm:text-xs lg:text-sm text-indigo-600 dark:text-white/60 font-bold uppercase tracking-wider mt-1">
                                     Plays
                                 </span>
                             </div>
@@ -385,10 +388,10 @@ const GroupCard = ({ group, index, onClick }) => {
                             {isActive ? <ShieldCheck size={10} /> : <ShieldAlert size={10} />}
                             {isActive ? 'Active' : 'Disabled'}
                         </div>
-                        <span className="text-[9px] font-bold text-gray-500 dark:text-white/30 uppercase tracking-widest">{timeAgo(group.created_at)}</span>
+                        <span className="text-[9px] font-bold text-gray-500 dark:text-white/50 uppercase tracking-widest">{timeAgo(group.created_at)}</span>
                     </div>
                     <h3 className="text-xl font-black text-gray-900 dark:text-white italic line-clamp-1 uppercase tracking-tighter group-hover:text-purple-600 dark:group-hover:text-[#a6b1ff] transition-colors leading-tight">{group.title}</h3>
-                    <p className="text-xs text-gray-600 dark:text-white/40 line-clamp-1 font-medium italic mt-1">{group.description || "No description available"}</p>
+                    <p className="text-xs text-gray-700 dark:text-white/60 line-clamp-1 font-medium italic mt-1">{group.description || "No description available"}</p>
                 </div>
             </div>
 
@@ -396,7 +399,7 @@ const GroupCard = ({ group, index, onClick }) => {
                 <div className="flex -space-x-2">
                     {[1, 2].map((i) => (
                         <div key={i} className="w-8 h-8 rounded-xl bg-gray-100 dark:bg-white/5 border-2 border-white dark:border-[#0a0a0a] flex items-center justify-center backdrop-blur-md">
-                            <span className="text-[10px] text-gray-500 dark:text-white/40 font-black italic">?</span>
+                            <span className="text-[10px] text-gray-500 dark:text-white/50 font-black italic">?</span>
                         </div>
                     ))}
                     <div className="w-8 h-8 rounded-xl bg-purple-100 dark:bg-[#a6b1ff]/10 border-2 border-white dark:border-[#0a0a0a] flex items-center justify-center backdrop-blur-md">
@@ -406,7 +409,7 @@ const GroupCard = ({ group, index, onClick }) => {
 
                 <div className="flex items-center gap-3">
                     <div className="flex flex-col items-end mr-2">
-                        <span className="text-[8px] font-black text-gray-500 dark:text-white/20 uppercase tracking-[0.2em] leading-none mb-1">Group Code</span>
+                        <span className="text-[8px] font-black text-gray-500 dark:text-white/50 uppercase tracking-[0.2em] leading-none mb-1">Group Code</span>
                         <span className="text-sm font-black text-purple-600 dark:text-[#a6b1ff] uppercase tracking-wider leading-none italic">{group.group_code}</span>
                     </div>
                     <div className="p-3 rounded-2xl bg-purple-100 dark:bg-white/5 border-2 border-purple-200 dark:border-white/10 hover:bg-purple-600 dark:hover:bg-[#a6b1ff] hover:text-white dark:hover:text-[#0a0a0a] transition-all duration-300 group/link shadow-sm">

@@ -154,27 +154,25 @@ export default function Profile() {
                             <MenuItem
                                 icon={HelpCircle}
                                 label="Help Center & FAQs"
-                                onClick={() => navigate('/')}
+                                onClick={() => navigate('/dashboard/toolkit')}
                             />
 
-                            {/* Premium Support Card */}
-                            <div className="bg-gradient-to-br from-green-500 to-green-700 rounded-[2.5rem] p-8 relative overflow-hidden shadow-[0_20px_50px_rgba(34,197,94,0.3)] group cursor-pointer transition-all hover:scale-[1.02]">
+                            {/* AI Assistant Card */}
+                            <div className="bg-gradient-to-br from-indigo-500 to-purple-700 dark:from-indigo-600 dark:to-purple-800 rounded-[2.5rem] p-8 relative overflow-hidden shadow-[0_20px_50px_rgba(99,102,241,0.3)] group cursor-pointer transition-all hover:scale-[1.02]">
                                 <div className="relative z-10">
                                     <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center mb-6 backdrop-blur-md">
                                         <MessageCircle className="text-white" size={24} />
                                     </div>
                                     <h3 className="text-white font-black text-xl uppercase tracking-tighter mb-2 italic">Need Assistance?</h3>
-                                    <p className="text-green-100 font-medium mb-6 text-sm leading-relaxed opacity-80 uppercase tracking-tight">
-                                        Chat with us on WhatsApp for real-time support and assistance.
+                                    <p className="text-indigo-100 font-medium mb-6 text-sm leading-relaxed opacity-80 uppercase tracking-tight">
+                                        Chat with our AI assistant for instant help and guidance.
                                     </p>
-                                    <a 
-                                        href="https://wa.me/080xxxxxxxx" 
-                                        target="_blank" 
-                                        rel="noopener noreferrer"
-                                        className="inline-block h-12 px-8 bg-white text-green-700 font-black uppercase tracking-widest text-xs rounded-xl shadow-xl transition-all active:scale-95 group-hover:bg-green-50 leading-[3rem]"
+                                    <button 
+                                        onClick={() => navigate('/support')}
+                                        className="inline-block h-12 px-8 bg-white text-indigo-700 font-black uppercase tracking-widest text-xs rounded-xl shadow-xl transition-all active:scale-95 group-hover:bg-indigo-50 leading-[3rem]"
                                     >
-                                        Chat on WhatsApp
-                                    </a>
+                                        Chat with AI Assistant
+                                    </button>
                                 </div>
                                 {/* Decorative elements */}
                                 <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-3xl translate-x-12 -translate-y-12"></div>

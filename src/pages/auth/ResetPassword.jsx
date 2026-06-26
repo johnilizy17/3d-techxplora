@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { Lock, Check, Loader2, ShieldAlert, Sparkles, CheckCircle2 } from "lucide-react";
+import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { Lock, Loader2, ShieldAlert, Sparkles, CheckCircle2, Eye, EyeOff } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -34,6 +34,8 @@ export default function ResetPassword() {
     const token = searchParams.get("token");
     const { tempVerification } = useSelector((state) => state.auth);
     const [isSuccess, setIsSuccess] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
     useEffect(() => {
         if (!token && !tempVerification?.code) {
@@ -138,10 +140,17 @@ export default function ResetPassword() {
                                     <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500 group-focus-within/input:text-orange-400 transition-colors" />
                                     <Input
                                         {...register("password")}
-                                        type="password"
+                                        type={showPassword ? "text" : "password"}
                                         placeholder="••••••••"
-                                        className="pl-12 h-14 bg-black/40 border-white/10 text-white placeholder:text-gray-600 focus:border-orange-400 focus:ring-4 focus:ring-orange-400/20 rounded-2xl transition-all font-bold italic"
+                                        className="pl-12 pr-12 h-14 bg-black/40 border-white/10 text-white placeholder:text-gray-600 focus:border-orange-400 focus:ring-4 focus:ring-orange-400/20 rounded-2xl transition-all font-bold italic"
                                     />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPassword(!showPassword)}
+                                        className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-orange-400 transition-colors"
+                                    >
+                                        {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                                    </button>
                                 </div>
                                 {errors.password && (
                                     <p className="text-xs text-red-400 ml-2 font-bold italic">{errors.password.message}</p>
@@ -154,10 +163,17 @@ export default function ResetPassword() {
                                     <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500 group-focus-within/input:text-orange-400 transition-colors" />
                                     <Input
                                         {...register("confirmPassword")}
-                                        type="password"
+                                        type={showConfirmPassword ? "text" : "password"}
                                         placeholder="••••••••"
-                                        className="pl-12 h-14 bg-black/40 border-white/10 text-white placeholder:text-gray-600 focus:border-orange-400 focus:ring-4 focus:ring-orange-400/20 rounded-2xl transition-all font-bold italic"
+                                        className="pl-12 pr-12 h-14 bg-black/40 border-white/10 text-white placeholder:text-gray-600 focus:border-orange-400 focus:ring-4 focus:ring-orange-400/20 rounded-2xl transition-all font-bold italic"
                                     />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                        className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-orange-400 transition-colors"
+                                    >
+                                        {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                                    </button>
                                 </div>
                                 {errors.confirmPassword && (
                                     <p className="text-xs text-red-400 ml-2 font-bold italic">{errors.confirmPassword.message}</p>

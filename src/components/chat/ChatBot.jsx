@@ -7,20 +7,20 @@ import TiltCard from '../ui/TiltCard';
 import { cn } from '@/lib/utils';
 import { useTheme } from '@/contexts/ThemeContext';
 
-// OpenAI ChatGPT Integration
+// OpenRouter AI Integration (supports multiple free AI models)
 const generateResponse = async (userInput, conversationHistory = []) => {
     try {
-        const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
+        const apiKey = import.meta.env.VITE_OPENROUTER_API_KEY;
         
-        if (!apiKey) {
-            throw new Error('OpenAI API key not configured. Please add VITE_OPENAI_API_KEY to your .env file.');
+        if (!apiKey || apiKey === 'your_openrouter_api_key_here') {
+            throw new Error('OpenRouter API key not configured. Please add VITE_OPENROUTER_API_KEY to your .env file.');
         }
 
         // Build messages array with conversation history
         const messages = [
             {
                 role: "system",
-                content: `You are ChatGPT, a friendly learning helper for students using TechXplora. 
+                content: `You are Xplora AI, a friendly learning helper for students using TechXplora. 
                          You help students with school subjects like math, science, history, reading, and homework questions.
                          Use simple, easy-to-understand language that kids can follow.
                          Be encouraging and positive! Make learning fun.
@@ -34,14 +34,16 @@ const generateResponse = async (userInput, conversationHistory = []) => {
             }
         ];
 
-        const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${apiKey}`
+                'Authorization': `Bearer ${apiKey}`,
+                'HTTP-Referer': window.location?.origin || 'http://localhost:5173',
+                'X-Title': 'TechXplora AI Assistant'
             },
             body: JSON.stringify({
-                model: 'gpt-3.5-turbo', // or 'gpt-4' if you have access
+                model: 'poolside/laguna-xs.2:free', // Free AI model
                 messages: messages,
                 temperature: 0.7,
                 max_tokens: 500
@@ -50,13 +52,13 @@ const generateResponse = async (userInput, conversationHistory = []) => {
 
         if (!response.ok) {
             const errorData = await response.json();
-            throw new Error(errorData.error?.message || 'Failed to get response from ChatGPT');
+            throw new Error(errorData.error?.message || 'Failed to get response from AI');
         }
 
         const data = await response.json();
         return data.choices[0].message.content;
     } catch (error) {
-        console.error("ChatGPT API Error:", error);
+        console.error("OpenRouter AI Error:", error);
         throw error;
     }
 };
@@ -170,7 +172,7 @@ const ChatBot = () => {
         } catch (error) {
             console.error("Chat Error:", error);
             const errorMessage = error.message.includes('API key') 
-                ? "ChatGPT isn't set up yet. Please ask a teacher or contact support!"
+                ? "Xplora AI isn't set up yet. Please ask a teacher or contact support!"
                 : "Oops! I'm having trouble connecting right now. Can you try again in a moment?";
             
             setMessages(prev => [...prev, {

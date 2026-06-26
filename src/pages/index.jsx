@@ -33,6 +33,7 @@ import QuizViolation from "./QuizViolation.jsx";
 import QuizResult from "./QuizResult.jsx";
 import QuizMonitoring from "./QuizMonitoring.jsx";
 import QuizCameraSetup from "./QuizCameraSetup.jsx";
+import ViewLiveQuiz from "./ViewLiveQuiz.jsx";
 import CourseAccessDenied from "./CourseAccessDenied.jsx";
 import TeacherGroupDetails from "./TeacherGroupDetails.jsx";
 import JoinQuiz from './JoinQuiz.jsx';
@@ -127,6 +128,7 @@ function PagesContent() {
         <Route path="/dashboard/quiz-violation" element={<QuizViolation />} />
         <Route path="/dashboard/quizzes/result" element={<QuizResult />} />
         <Route path="/dashboard/quizzes/monitoring" element={<QuizMonitoring />} />
+        <Route path="/dashboard/view-live-quiz" element={<ViewLiveQuiz />} />
         <Route path="/dashboard/teacher/groups" element={<TeacherGroupDetails />} />
         <Route path="/dashboard/quizzes/join" element={<JoinQuiz />} />
         <Route path="/dashboard/teacher/quizzes" element={<CreateQuiz />} />

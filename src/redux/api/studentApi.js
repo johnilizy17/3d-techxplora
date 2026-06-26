@@ -183,6 +183,25 @@ export const studentApi = baseApi.injectEndpoints({
                 'Student',
             ],
         }),
+
+        // Get all live quizzes (public = 1)
+        getLiveQuizzes: builder.query({
+            query: (params = {}) => {
+                const queryParams = new URLSearchParams();
+                
+                if (params.per_page) {
+                    queryParams.append('per_page', params.per_page);
+                }
+                
+                if (params.page) {
+                    queryParams.append('page', params.page);
+                }
+
+                const queryString = queryParams.toString();
+                return `/students/live-quizzes${queryString ? `?${queryString}` : ''}`;
+            },
+            providesTags: ['Quiz'],
+        }),
     }),
 });
 
@@ -205,4 +224,5 @@ export const {
     useLazyVerifyGroupCodeQuery,
     useJoinGroupMutation,
     useSubmitCaseStudyAnswersMutation,
+    useGetLiveQuizzesQuery,
 } = studentApi;

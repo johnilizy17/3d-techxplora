@@ -15,7 +15,9 @@ import {
     Gamepad2,
     Info,
     AlertTriangle,
-    Save
+    Save,
+    Globe,
+    Lock
 } from 'lucide-react';
 import {
     useCreateQuizMutation,
@@ -77,7 +79,8 @@ export default function CreateQuiz() {
         p_xp: 0,
         min_age: '',
         max_age: '',
-        attempt: ''
+        attempt: '',
+        public: 1
     });
 
     const [errors, setErrors] = useState({});
@@ -197,7 +200,8 @@ export default function CreateQuiz() {
                 admin_code: user.admin_code,
                 xp: Number(formData.xp),
                 p_xp: Number(formData.p_xp),
-                difficulty: difficulty
+                difficulty: difficulty,
+                public: Number(formData.public)
             };
 
             await createQuiz(payload).unwrap();
@@ -297,7 +301,8 @@ export default function CreateQuiz() {
                                             p_xp: 0,
                                             min_age: '',
                                             max_age: '',
-                                            attempt: ''
+                                            attempt: '',
+                                            public: 1
                                         });
                                         setCurrentStep(1);
                                         toast.info('Draft cleared');
@@ -600,6 +605,49 @@ const Step2 = ({ formData, handleChange, errors, handleSubmit, isSubmitting, use
                                 placeholder="e.g. 3 (leave empty for unlimited)"
                                 icon={Target}
                             />
+                        </div>
+
+                        {/* Public/Private Toggle */}
+                        <div className="p-6 rounded-3xl bg-gradient-to-r from-emerald-500/10 to-purple-500/10 border border-white/10">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                    {formData.public === 1 ? (
+                                        <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center">
+                                            <Globe size={18} className="text-emerald-400" />
+                                        </div>
+                                    ) : (
+                                        <div className="w-10 h-10 rounded-xl bg-gray-500/20 flex items-center justify-center">
+                                            <Lock size={18} className="text-gray-400" />
+                                        </div>
+                                    )}
+                                    <div>
+                                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40 mb-1">Quiz Visibility</p>
+                                        <p className={`text-lg font-black italic ${formData.public === 1 ? 'text-emerald-400' : 'text-gray-400'}`}>
+                                            {formData.public === 1 ? 'Public - Live Quiz' : 'Private - Code Only'}
+                                        </p>
+                                        <p className="text-[10px] text-white/40 font-medium mt-1">
+                                            {formData.public === 1 
+                                                ? 'Appears in Live Quiz page for all students' 
+                                                : 'Only accessible via quiz code'}
+                                        </p>
+                                    </div>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => handleChange({ target: { name: 'public', value: formData.public === 1 ? 0 : 1 } })}
+                                    className={`relative w-16 h-8 rounded-full transition-all duration-300 ${
+                                        formData.public === 1 
+                                            ? 'bg-emerald-500' 
+                                            : 'bg-white/10'
+                                    }`}
+                                >
+                                    <div
+                                        className={`absolute top-1 left-1 w-6 h-6 rounded-full bg-white shadow-lg transition-transform duration-300 ${
+                                            formData.public === 1 ? 'translate-x-8' : 'translate-x-0'
+                                        }`}
+                                    />
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
