@@ -56,6 +56,8 @@ export default function QuizCompletion() {
     const questions = questionsData?.data || questionsData || [];
     const quiz = quizDataVerify?.data || tempStorage || { title: "Mission Engagement", xp: 0 };
 
+    const isGamingMode = Number(quiz?.mode_id) === 2;
+
     // Get actual quiz code for WebRTC room
     const actualQuizCode = quiz?.quiz_code || quizCode;
 
@@ -82,7 +84,7 @@ export default function QuizCompletion() {
     // Exam Proctoring System
     const proctoringSystem = useExamProctoring({
         videoStream: localCameraStream,
-        enabled: !showResults && questions.length > 0,
+        enabled: !isGamingMode && !showResults && questions.length > 0,
         onViolation: (violation) => {
             console.log('🚨 Proctoring Violation:', violation);
 
@@ -203,10 +205,10 @@ export default function QuizCompletion() {
             }
         };
 
-        if (questions.length > 0 && !showResults) {
+        if (questions.length > 0 && !showResults && !isGamingMode) {
             checkAndActivateCamera();
         }
-    }, [questions.length, showResults, localCameraStream, startWebRTCStream]);
+    }, [questions.length, showResults, isGamingMode, localCameraStream, startWebRTCStream]);
 
     // Live streaming
     const {
@@ -245,13 +247,13 @@ export default function QuizCompletion() {
         violationCount
     } = useAntiCheating({
         onViolation: handleViolation,
-        enabled: true,
+        enabled: !isGamingMode,
         maxViolations: 3
     });
 
     // Start monitoring and streaming when quiz starts
     useEffect(() => {
-        if (questions.length > 0 && !showResults && localCameraStream) {
+        if (questions.length > 0 && !showResults && localCameraStream && !isGamingMode) {
             startMonitoring();
             console.log('🔒 Anti-cheating monitoring activated');
 
@@ -275,7 +277,7 @@ export default function QuizCompletion() {
         return () => {
             stopMonitoring();
         };
-    }, [questions.length, showResults, localCameraStream, cameraStream, isStreaming, startMonitoring, stopMonitoring, startStreaming, user, quiz]);
+    }, [questions.length, showResults, localCameraStream, cameraStream, isStreaming, startMonitoring, stopMonitoring, startStreaming, user, quiz, isGamingMode]);
 
     // Listen for exam termination event
     useEffect(() => {
@@ -895,17 +897,19 @@ export default function QuizCompletion() {
                         {/* Sidebar */}
                         <div className="lg:col-span-4 space-y-8">
                             {/* Proctoring Status */}
-                            <ProctoringStatus
-                                status={proctoringSystem.status}
-                                riskScore={proctoringSystem.riskScore}
-                                facePresent={proctoringSystem.facePresent}
-                                faceCount={proctoringSystem.faceCount}
-                                headPose={proctoringSystem.headPose}
-                                isTalking={proctoringSystem.isTalking}
-                                audioDetected={proctoringSystem.audioDetected}
-                                currentFlags={proctoringSystem.currentFlags}
-                                violations={proctoringSystem.violations}
-                            />
+                            {!isGamingMode && (
+                                <ProctoringStatus
+                                    status={proctoringSystem.status}
+                                    riskScore={proctoringSystem.riskScore}
+                                    facePresent={proctoringSystem.facePresent}
+                                    faceCount={proctoringSystem.faceCount}
+                                    headPose={proctoringSystem.headPose}
+                                    isTalking={proctoringSystem.isTalking}
+                                    audioDetected={proctoringSystem.audioDetected}
+                                    currentFlags={proctoringSystem.currentFlags}
+                                    violations={proctoringSystem.violations}
+                                />
+                            )}
 
                             <div className="bg-gradient-to-br from-green-50 to-teal-50 dark:from-white/5 dark:to-white/5 border-2 border-green-200 dark:border-white/10 rounded-[3rem] p-8 space-y-8 shadow-lg">
                                 <div className="flex items-center justify-between">
@@ -958,36 +962,38 @@ export default function QuizCompletion() {
                                     )}
 
                                     {/* Anti-Cheating Status */}
-                                    <div className="mb-6 p-5 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-500/5 dark:to-indigo-500/5 rounded-[2rem] border-2 border-blue-300 dark:border-blue-500/10 shadow-sm">
-                                        <div className="flex items-center gap-3 mb-3">
-                                            <div className="w-10 h-10 rounded-xl bg-blue-500 flex items-center justify-center">
-                                                <Eye className="w-5 h-5 text-white" />
-                                            </div>
-                                            <div>
-                                                <p className="text-xs font-black text-blue-700 dark:text-blue-400 uppercase tracking-wide">
-                                                    Proctoring Active
-                                                </p>
-                                                <div className="flex items-center gap-2 mt-1">
-                                                    <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                                                    <span className="text-[9px] font-bold text-blue-600 dark:text-blue-500 uppercase tracking-wider">
-                                                        Monitoring
-                                                    </span>
+                                    {!isGamingMode && (
+                                        <div className="mb-6 p-5 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-500/5 dark:to-indigo-500/5 rounded-[2rem] border-2 border-blue-300 dark:border-blue-500/10 shadow-sm">
+                                            <div className="flex items-center gap-3 mb-3">
+                                                <div className="w-10 h-10 rounded-xl bg-blue-500 flex items-center justify-center">
+                                                    <Eye className="w-5 h-5 text-white" />
+                                                </div>
+                                                <div>
+                                                    <p className="text-xs font-black text-blue-700 dark:text-blue-400 uppercase tracking-wide">
+                                                        Proctoring Active
+                                                    </p>
+                                                    <div className="flex items-center gap-2 mt-1">
+                                                        <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                                                        <span className="text-[9px] font-bold text-blue-600 dark:text-blue-500 uppercase tracking-wider">
+                                                            Monitoring
+                                                        </span>
+                                                    </div>
                                                 </div>
                                             </div>
+                                            {violationCount > 0 && (
+                                                <div className="mt-3 pt-3 border-t border-blue-200 dark:border-blue-500/20">
+                                                    <div className="flex items-center justify-between">
+                                                        <span className="text-[9px] font-bold text-orange-600 dark:text-orange-500 uppercase tracking-wider">
+                                                            Violations
+                                                        </span>
+                                                        <span className="text-sm font-black text-orange-600 dark:text-orange-500">
+                                                            {violationCount}/3
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
-                                        {violationCount > 0 && (
-                                            <div className="mt-3 pt-3 border-t border-blue-200 dark:border-blue-500/20">
-                                                <div className="flex items-center justify-between">
-                                                    <span className="text-[9px] font-bold text-orange-600 dark:text-orange-500 uppercase tracking-wider">
-                                                        Violations
-                                                    </span>
-                                                    <span className="text-sm font-black text-orange-600 dark:text-orange-500">
-                                                        {violationCount}/3
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
+                                    )}
 
                                     <div className="flex items-start gap-4 p-5 bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-500/5 dark:to-orange-500/5 rounded-[2rem] border-2 border-orange-300 dark:border-orange-500/10 shadow-sm">
                                         <AlertCircle size={20} className="text-orange-600 dark:text-orange-500 shrink-0 mt-0.5" />

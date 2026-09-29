@@ -11,8 +11,10 @@ export const curriculumApi = baseApi.injectEndpoints({
                     const { year } = args || {};
                     const curriculumYear = year || new Date().getFullYear();
                     const apiKey = import.meta.env.VITE_OPENROUTER_API_KEY;
+                    const model = import.meta.env.VITE_OPENROUTER_MODEL || 'inclusionai/ling-3.0-flash-sante:free';
                     
                     console.log('🔑 API Key check:', apiKey ? `Found (${apiKey.substring(0, 15)}...)` : 'Not found');
+                    console.log('🤖 Model:', model);
                     
                     if (!apiKey || apiKey === 'your_openrouter_api_key_here') {
                         console.warn('⚠️ No valid API key configured');
@@ -88,7 +90,7 @@ Include 6-8 main subjects per level. Keep JSON valid!`;
                     const response = await axios.post(
                         'https://openrouter.ai/api/v1/chat/completions',
                         {
-                            model: 'poolside/laguna-xs.2:free',
+                            model: model,
                             messages: [
                                 {
                                     role: 'user',

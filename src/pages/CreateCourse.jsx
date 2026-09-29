@@ -30,6 +30,7 @@ import { selectCurrentUser } from '@/redux/slices/authSlice';
 import { useCreateCourseMutation, useGetQuizzesQuery } from '@/redux/api/teacherApi';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import CaseStudyBuilder from '@/components/course/CaseStudyBuilder';
+import VisibilitySettings from '@/components/course/VisibilitySettings';
 import { Button } from "@/components/ui/button";
 import { toast } from 'sonner';
 import { uploadToCloudinary } from '@/lib/cloudinary';
@@ -67,7 +68,10 @@ export default function CreateCourse() {
         attachments: [], // document modules
         quiz_id: null,
         questions: [],
-        manual_quiz: []
+        manual_quiz: [],
+        visibility: 'public',
+        allowed_students: [],
+        access_code: ''
     });
 
     const [errors, setErrors] = useState({});
@@ -264,7 +268,10 @@ export default function CreateCourse() {
                 // Handle new logic: if quiz_code exists, send it in question array as per admin
                 question: formData.quiz_code ? [`quiz: ${formData.quiz_code} `] : formData.questions,
                 quiz_id: formData.quiz_id,
-                manual_quiz: formData.manual_quiz
+                manual_quiz: formData.manual_quiz,
+                visibility: formData.visibility,
+                allowed_students: formData.allowed_students,
+                access_code: formData.access_code
             };
 
             await createCourse(payload).unwrap();
@@ -420,7 +427,10 @@ export default function CreateCourse() {
                                         other: [],
                                         attachments: [],
                                         quiz_id: null,
-                                        questions: []
+                                        questions: [],
+                                        visibility: 'public',
+                                        allowed_students: [],
+                                        access_code: ''
                                     });
                                     setCurrentStep(1);
                                     toast.info('Draft cleared');
@@ -1064,6 +1074,18 @@ const Step4Assessment = ({ formData, setFormData, quizzes, onLaunch, isSubmittin
                     <CaseStudyBuilder
                         caseStudies={formData.case_studies}
                         onChange={(caseStudies) => setFormData(prev => ({ ...prev, case_studies: caseStudies }))}
+                    />
+                </div>
+
+                {/* Visibility Settings Section */}
+                <div className="p-8 rounded-[2rem] bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 space-y-6">
+                    <VisibilitySettings
+                        visibility={formData.visibility}
+                        setVisibility={(val) => setFormData(prev => ({ ...prev, visibility: val }))}
+                        allowedStudents={formData.allowed_students}
+                        setAllowedStudents={(students) => setFormData(prev => ({ ...prev, allowed_students: students }))}
+                        accessCode={formData.access_code}
+                        setAccessCode={(code) => setFormData(prev => ({ ...prev, access_code: code }))}
                     />
                 </div>
 

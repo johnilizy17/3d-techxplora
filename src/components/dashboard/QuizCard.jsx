@@ -20,12 +20,34 @@ const QuizCard = ({ quiz, index, onClick, isTeacher = false }) => {
     const [countdown, setCountdown] = useState("00:00:00");
     const [showDeleteDialog, setShowDeleteDialog] = useState(false);
     const [deleteQuiz, { isLoading: isDeleting }] = useDeleteQuizMutation();
-    const isStarted = hasDatePassed(quiz.start_at);
-    const isEnded = hasDatePassed(quiz.end_at);
+    
+    // Check if quiz has valid dates
+    const hasValidDates = quiz.start_at && quiz.end_at;
+    const isStarted = hasValidDates ? hasDatePassed(quiz.start_at) : false;
+    const isEnded = hasValidDates ? hasDatePassed(quiz.end_at) : false;
+
+    // Debug logging (remove after fixing)
+    useEffect(() => {
+        if (quiz.quiz_code === 'QZ3F10F8AD' || quiz.end_at?.includes('2027')) {
+            const parsedDate = new Date(quiz.end_at?.replace(' ', 'T'));
+            console.log('🔍 Quiz Debug:', {
+                quiz_code: quiz.quiz_code,
+                title: quiz.title,
+                end_at_raw: quiz.end_at,
+                end_at_parsed: parsedDate.toString(),
+                parsed_year: parsedDate.getFullYear(),
+                now: new Date().toString(),
+                isEnded,
+                isStarted,
+                should_be_future: parsedDate > new Date()
+            });
+        }
+    }, [quiz, isEnded, isStarted]);
 
     useEffect(() => {
         let interval;
         if (isStarted && !isEnded) {
+            console.log(quiz, "quiz")
             interval = startCountdown(quiz.end_at, setCountdown);
         }
         return () => interval && clearInterval(interval);

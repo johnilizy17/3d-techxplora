@@ -30,6 +30,11 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
+                <Link to="/bootcamp" className="text-sm text-gray-700 dark:text-gray-400 hover:text-[#a6b1ff] transition-colors">
+                  Data & AI Bootcamp 🚀
+                </Link>
+              </li>
+              <li>
                 <Link to="/courses" className="text-sm text-gray-700 dark:text-gray-400 hover:text-[#a6b1ff] transition-colors">
                   Courses
                 </Link>

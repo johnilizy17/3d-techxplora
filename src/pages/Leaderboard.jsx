@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Trophy, Medal, Crown, Timer, Filter, Search, ArrowUp, ArrowDown, User, Sparkles } from 'lucide-react';
+import { Trophy, Medal, Crown, Timer, Filter, Search, ArrowUp, ArrowDown, User, Sparkles, Calendar, MapPin, X, Clock } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { selectCurrentUser } from '@/redux/slices/authSlice';
 import { useGetGlobalLeaderboardQuery, useGetAdminLeaderboardQuery, useGetQuizLeaderboardQuery, useGetGroupLeaderboardQuery } from '@/redux/api/leaderboardApi';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import EmptyState from '@/components/dashboard/EmptyState';
+import { nigeriaStates } from '@/data/nigeriaStates';
 
 export default function Leaderboard() {
     const user = useSelector(selectCurrentUser);
@@ -14,25 +15,60 @@ export default function Leaderboard() {
     const [activeTab, setActiveTab] = useState('weekly');
     const [selectedQuizCode, setSelectedQuizCode] = useState('');
     const [selectedGroupCode, setSelectedGroupCode] = useState('');
+    
+    // Filter states
+    const [timeFilter, setTimeFilter] = useState('all');
+    const [dateRange, setDateRange] = useState({ start: '', end: '' });
+    const [locationFilter, setLocationFilter] = useState('all');
+    const [showFilters, setShowFilters] = useState(false);
+    const [currentTime, setCurrentTime] = useState(new Date());
+
+    // Update time every second
+    useEffect(() => {
+        const timer = setInterval(() => {
+            setCurrentTime(new Date());
+        }, 1000);
+        return () => clearInterval(timer);
+    }, []);
+
+    // Build query parameters for filters
+    const filterParams = {
+        time_filter: timeFilter !== 'all' ? timeFilter : undefined,
+        start_date: dateRange.start || undefined,
+        end_date: dateRange.end || undefined,
+        state: locationFilter !== 'all' ? locationFilter : undefined,
+    };
 
     const { data: globalData, isLoading: isGlobalLoading } = useGetGlobalLeaderboardQuery(
-        activeTab === 'weekly' ? 'weekly' : activeTab === 'monthly' ? 'monthly' : activeTab === 'yearly' ? 'yearly' : 'weekly',
+        {
+            period: activeTab === 'weekly' ? 'weekly' : activeTab === 'monthly' ? 'monthly' : activeTab === 'yearly' ? 'yearly' : 'weekly',
+            ...filterParams
+        },
         {
             skip: !['weekly', 'monthly', 'yearly'].includes(activeTab)
         }
     );
 
-    const { data: adminData, isLoading: isAdminLoading } = useGetAdminLeaderboardQuery(user?.admin_code, {
-        skip: !isAdmin || !user?.admin_code || activeTab !== 'admin'
-    });
+    const { data: adminData, isLoading: isAdminLoading } = useGetAdminLeaderboardQuery(
+        { admin_code: user?.admin_code, ...filterParams },
+        {
+            skip: !isAdmin || !user?.admin_code || activeTab !== 'admin'
+        }
+    );
 
-    const { data: quizData, isLoading: isQuizLoading } = useGetQuizLeaderboardQuery(selectedQuizCode, {
-        skip: activeTab !== 'quiz' || !selectedQuizCode
-    });
+    const { data: quizData, isLoading: isQuizLoading } = useGetQuizLeaderboardQuery(
+        { quiz_code: selectedQuizCode, ...filterParams },
+        {
+            skip: activeTab !== 'quiz' || !selectedQuizCode
+        }
+    );
 
-    const { data: groupData, isLoading: isGroupLoading } = useGetGroupLeaderboardQuery(selectedGroupCode, {
-        skip: activeTab !== 'group' || !selectedGroupCode
-    });
+    const { data: groupData, isLoading: isGroupLoading } = useGetGroupLeaderboardQuery(
+        { group_code: selectedGroupCode, ...filterParams },
+        {
+            skip: activeTab !== 'group' || !selectedGroupCode
+        }
+    );
 
     const isLoading = ['weekly', 'monthly', 'yearly'].includes(activeTab)
         ? isGlobalLoading
@@ -59,26 +95,78 @@ export default function Leaderboard() {
         .map((item, index) => {
             // The API might return the student object nested or fields directly
             const student = item.student || item;
+            
+            // For quiz leaderboard, prioritize quiz_xp, otherwise use profile XP
+            const xpValue = activeTab === 'quiz' 
+                ? (item.quiz_xp ?? item.quiz_result?.xp_earned ?? student.xp ?? 0)
+                : (student.xp ?? 0);
+            
             return {
                 id: item.id || student.id || index + 1,
                 name: `${student.first_name || ''} ${student.last_name || ''}`.trim() || student.name || "Unknown Xplora",
-                xp: student.xp || 0,
+                xp: xpValue,
                 avatar: student.photo || student.avatar || null,
                 trend: item.trend || 'same',
-                level: Math.floor((student.xp || 0) / 1000) + 1, // Simple level calculation if not provided
+                level: Math.floor((xpValue || 0) / 1000) + 1,
                 role: student.role || (item.student ? 'student' : 'user'),
-                date: item.date || student.created_at || student.updated_at || new Date().toISOString()
+                date: item.date || student.created_at || student.updated_at || new Date().toISOString(),
+                state: student.state || null,
+                location: student.state || student.location || null,
+                // Store quiz-specific data if available
+                quizScore: item.highest_score || item.quiz_result?.score || null,
+                quizXp: item.quiz_xp || item.quiz_result?.xp_earned || null,
+                profileXp: student.xp || item.profile_xp || null,
             };
         })
-        .sort((a, b) => b.xp - a.xp) // Sort by XP descending (highest first)
+        .sort((a, b) => b.xp - a.xp)
         .map((item, index) => ({
             ...item,
-            rank: index + 1 // Assign rank based on sorted position
+            rank: index + 1
         }));
 
-    const filteredData = leaderboardData.filter(item =>
-        item.name.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    const filteredData = leaderboardData.filter(item => {
+        // Search filter
+        const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase());
+        
+        // Time filter
+        let matchesTime = true;
+        if (timeFilter !== 'all' && item.date) {
+            const itemDate = new Date(item.date);
+            const now = new Date();
+            
+            if (timeFilter === 'today') {
+                matchesTime = itemDate.toDateString() === now.toDateString();
+            } else if (timeFilter === 'week') {
+                const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+                matchesTime = itemDate >= weekAgo;
+            } else if (timeFilter === 'month') {
+                const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+                matchesTime = itemDate >= monthAgo;
+            }
+        }
+        
+        // Date range filter
+        let matchesDateRange = true;
+        if ((dateRange.start || dateRange.end) && item.date) {
+            const itemDate = new Date(item.date);
+            if (dateRange.start) {
+                matchesDateRange = itemDate >= new Date(dateRange.start);
+            }
+            if (dateRange.end && matchesDateRange) {
+                const endDate = new Date(dateRange.end);
+                endDate.setHours(23, 59, 59, 999);
+                matchesDateRange = itemDate <= endDate;
+            }
+        }
+        
+        // Location filter (would need location data from API)
+        let matchesLocation = true;
+        if (locationFilter !== 'all' && item.location) {
+            matchesLocation = item.location.toLowerCase().includes(locationFilter.toLowerCase());
+        }
+        
+        return matchesSearch && matchesTime && matchesDateRange && matchesLocation;
+    });
 
     const topThree = filteredData.slice(0, 3);
     const others = filteredData.slice(3);
@@ -94,7 +182,7 @@ export default function Leaderboard() {
                     <header className="pt-10 pb-8 relative">
                         <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8 pb-8 border-b border-gray-200 dark:border-white/5">
                             <div className="space-y-2">
-                                <div className="flex items-center gap-3">
+                                <div className="flex items-center gap-3 flex-wrap">
                                     <div className="flex -space-x-2">
                                         {[1, 2, 3].map((i) => (
                                             <div key={i} className="w-6 h-6 rounded-full border-2 border-[#0a0a0a] bg-white/10 backdrop-blur-sm overflow-hidden">
@@ -103,6 +191,19 @@ export default function Leaderboard() {
                                         ))}
                                     </div>
                                     <span className="text-[10px] font-bold text-indigo-600 dark:text-[#a6b1ff] uppercase tracking-widest">Global Rankings</span>
+                                    
+                                    {/* Live Time Display */}
+                                    <div className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-500/10 dark:to-purple-500/10 border border-indigo-200 dark:border-indigo-500/20 rounded-full">
+                                        <Clock size={14} className="text-indigo-600 dark:text-[#a6b1ff] animate-pulse" />
+                                        <span className="text-[10px] font-bold text-indigo-700 dark:text-[#a6b1ff] uppercase tracking-wide">
+                                            {currentTime.toLocaleTimeString('en-US', { 
+                                                hour: '2-digit', 
+                                                minute: '2-digit',
+                                                second: '2-digit',
+                                                hour12: true 
+                                            })}
+                                        </span>
+                                    </div>
                                 </div>
                                 <h1 className="text-4xl sm:text-5xl font-black text-gray-900 dark:text-white tracking-tight uppercase italic leading-none">
                                     {activeTab === 'weekly' && 'Weekly '}
@@ -131,8 +232,122 @@ export default function Leaderboard() {
                                         className="w-full h-11 pl-11 pr-4 bg-gray-100 dark:bg-white/5 border border-gray-300 dark:border-white/10 rounded-2xl text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-white/20 focus:outline-none focus:border-[#a6b1ff]/50 focus:bg-white dark:focus:bg-white/10 transition-all text-sm font-medium"
                                     />
                                 </div>
+                                
+                                {/* Filter Toggle Button */}
+                                <button
+                                    onClick={() => setShowFilters(!showFilters)}
+                                    className={`flex items-center gap-2 px-4 h-11 rounded-2xl font-semibold text-sm transition-all ${
+                                        showFilters || timeFilter !== 'all' || dateRange.start || dateRange.end || locationFilter !== 'all'
+                                            ? 'bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-[#a6b1ff] dark:to-[#a6b1ff] text-white shadow-lg'
+                                            : 'bg-gray-100 dark:bg-white/5 text-gray-600 dark:text-white/60 border-2 border-gray-200 dark:border-white/10 hover:bg-gray-200 dark:hover:bg-white/10'
+                                    }`}
+                                >
+                                    <Filter size={16} />
+                                    Filters
+                                    {(timeFilter !== 'all' || dateRange.start || dateRange.end || locationFilter !== 'all') && (
+                                        <span className="ml-1 px-2 py-0.5 bg-white/20 rounded-full text-xs">
+                                            {[
+                                                timeFilter !== 'all' && 1,
+                                                (dateRange.start || dateRange.end) && 1,
+                                                locationFilter !== 'all' && 1
+                                            ].filter(Boolean).reduce((a, b) => a + b, 0)}
+                                        </span>
+                                    )}
+                                </button>
                             </div>
                         </div>
+
+                        {/* Filters Panel */}
+                        <AnimatePresence>
+                            {showFilters && (
+                                <motion.div
+                                    initial={{ opacity: 0, height: 0 }}
+                                    animate={{ opacity: 1, height: 'auto' }}
+                                    exit={{ opacity: 0, height: 0 }}
+                                    className="overflow-hidden"
+                                >
+                                    <div className="mt-6 p-6 rounded-2xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10">
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                            
+                                            {/* Time Filter */}
+                                            <div>
+                                                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                                                    <Timer size={16} />
+                                                    Time Period
+                                                </label>
+                                                <select
+                                                    value={timeFilter}
+                                                    onChange={(e) => setTimeFilter(e.target.value)}
+                                                    className="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-white/10 bg-white dark:bg-white/5 text-gray-900 dark:text-white focus:outline-none focus:border-[#a6b1ff]/50 text-sm font-medium"
+                                                >
+                                                    <option value="all">All Time</option>
+                                                    <option value="today">Today</option>
+                                                    <option value="week">This Week</option>
+                                                    <option value="month">This Month</option>
+                                                </select>
+                                            </div>
+
+                                            {/* Date Range Filter */}
+                                            <div>
+                                                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                                                    <Calendar size={16} />
+                                                    Custom Date Range
+                                                </label>
+                                                <div className="flex gap-2">
+                                                    <input
+                                                        type="date"
+                                                        value={dateRange.start}
+                                                        onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
+                                                        className="flex-1 px-3 py-2.5 rounded-xl border border-gray-300 dark:border-white/10 bg-white dark:bg-white/5 text-gray-900 dark:text-white focus:outline-none focus:border-[#a6b1ff]/50 text-sm"
+                                                    />
+                                                    <input
+                                                        type="date"
+                                                        value={dateRange.end}
+                                                        onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
+                                                        className="flex-1 px-3 py-2.5 rounded-xl border border-gray-300 dark:border-white/10 bg-white dark:bg-white/5 text-gray-900 dark:text-white focus:outline-none focus:border-[#a6b1ff]/50 text-sm"
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            {/* Location Filter - Nigeria States */}
+                                            <div>
+                                                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                                                    <MapPin size={16} />
+                                                    State (Nigeria)
+                                                </label>
+                                                <select
+                                                    value={locationFilter}
+                                                    onChange={(e) => setLocationFilter(e.target.value)}
+                                                    className="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-white/10 bg-white dark:bg-white/5 text-gray-900 dark:text-white focus:outline-none focus:border-[#a6b1ff]/50 text-sm font-medium"
+                                                >
+                                                    <option value="all">All States</option>
+                                                    {nigeriaStates.map((state) => (
+                                                        <option key={state.name} value={state.name}>
+                                                            {state.name}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                        </div>
+                                        
+                                        {/* Clear Filters Button */}
+                                        {(timeFilter !== 'all' || dateRange.start || dateRange.end || locationFilter !== 'all') && (
+                                            <button
+                                                onClick={() => {
+                                                    setTimeFilter('all');
+                                                    setDateRange({ start: '', end: '' });
+                                                    setLocationFilter('all');
+                                                }}
+                                                className="mt-4 flex items-center gap-2 px-4 py-2 text-sm font-semibold text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
+                                            >
+                                                <X size={16} />
+                                                Clear All Filters
+                                            </button>
+                                        )}
+                                    </div>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
 
                         {/* Tabs Section */}
                         <div className="mt-6 grid grid-cols-2 lg:flex lg:flex-wrap gap-2">

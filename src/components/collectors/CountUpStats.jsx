@@ -31,6 +31,7 @@ const Counter = ({ end, duration = 2 }) => {
 export default function CountUpStats() {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -41,14 +42,28 @@ export default function CountUpStats() {
     try {
       const response = await axios.get(`${API_URL}/platform/stats`);
       setStats(response.data.data);
+      setError(false);
     } catch (err) {
       console.error('Error fetching stats:', err);
+      setError(true);
+      // Set fallback stats so component still renders
+      setStats({
+        total_students: 0,
+        total_teachers: 0,
+        total_quizzes: 0
+      });
     } finally {
       setLoading(false);
     }
   };
 
+  // Show nothing while loading to prevent layout shift
   if (loading) {
+    return null;
+  }
+
+  // Still show the section even if API fails with fallback data
+  if (error && !stats) {
     return null;
   }
 

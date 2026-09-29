@@ -114,9 +114,17 @@ export default function StartQuiz() {
         );
     }
 
+    const isGamingMode = Number(quiz?.mode_id) === 2;
+
     const handleEngage = () => {
         if (!isReady) {
             toast.error("Systems are not fully synchronized yet. Please wait.");
+            return;
+        }
+        // Gaming Mode quizzes skip the academic integrity check and go straight into the quiz
+        if (isGamingMode) {
+            dispatch(setTemporaryStorage(quiz));
+            navigate(`/dashboard/quizzes/completion?code=${quiz.id}`);
             return;
         }
         // Show academic integrity modal before starting
@@ -196,7 +204,7 @@ export default function StartQuiz() {
         <DashboardLayout hideBottomNav={showIntegrityModal}>
             {/* Academic Integrity Modal */}
             <AcademicIntegrityModal
-                isOpen={showIntegrityModal}
+                isOpen={!isGamingMode && showIntegrityModal}
                 onClose={() => setShowIntegrityModal(false)}
                 onAccept={handleAcceptIntegrity}
             />

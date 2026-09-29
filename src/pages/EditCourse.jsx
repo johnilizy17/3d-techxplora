@@ -36,6 +36,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from 'sonner';
 import { uploadToCloudinary } from '@/lib/cloudinary';
 import CaseStudyBuilder from '@/components/course/CaseStudyBuilder';
+import VisibilitySettings from '@/components/course/VisibilitySettings';
 
 const STEPS = [
     { title: 'Basic Info', icon: BookOpen },
@@ -69,7 +70,10 @@ export default function EditCourse() {
         other: [],
         quiz_id: null,
         questions: [],
-        manual_quiz: []
+        manual_quiz: [],
+        visibility: 'public',
+        allowed_students: [],
+        access_code: ''
     });
 
     const [errors, setErrors] = useState({});
@@ -123,7 +127,10 @@ export default function EditCourse() {
                 other: Array.isArray(course.other) ? course.other : [],
                 quiz_id: course.quiz_id || null,
                 questions: Array.isArray(course.question) ? course.question : (Array.isArray(course.questions) ? course.questions : []),
-                manual_quiz: parsedManualQuiz
+                manual_quiz: parsedManualQuiz,
+                visibility: course.visibility || 'public',
+                allowed_students: Array.isArray(course.allowed_students) ? course.allowed_students : [],
+                access_code: course.access_code || ''
             });
         }
     }, [courseData]);
@@ -700,6 +707,18 @@ const Step4Assessment = ({ formData, setFormData, quizzes, onLaunch, isSubmittin
             <CaseStudyBuilder
                 caseStudies={formData.case_studies}
                 onChange={(caseStudies) => setFormData(prev => ({ ...prev, case_studies: caseStudies }))}
+            />
+        </div>
+
+        {/* Visibility Settings Section */}
+        <div className="p-8 rounded-[2rem] bg-white/5 border border-white/10 space-y-6">
+            <VisibilitySettings
+                visibility={formData.visibility}
+                setVisibility={(val) => setFormData(prev => ({ ...prev, visibility: val }))}
+                allowedStudents={formData.allowed_students}
+                setAllowedStudents={(students) => setFormData(prev => ({ ...prev, allowed_students: students }))}
+                accessCode={formData.access_code}
+                setAccessCode={(code) => setFormData(prev => ({ ...prev, access_code: code }))}
             />
         </div>
 

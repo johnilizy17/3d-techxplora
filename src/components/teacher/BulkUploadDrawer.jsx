@@ -1,5 +1,5 @@
-import React, { useState, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useRef } from 'react';
+import { motion } from 'framer-motion';
 import {
     UploadCloud,
     X,
@@ -10,12 +10,13 @@ import {
     FileSpreadsheet,
     ArrowRight,
     Loader2,
-    Trash2
+    Trash2,
+    Sparkles
 } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { setTemporaryStorage, selectTempStorage } from '@/redux/slices/authSlice';
-import { validateQuestionsFile, extractQuestionsFromExcel } from '@/utils/excelUtils';
+import { processFileWithAI } from '@/utils/fileParser';
 import { toast } from 'sonner';
 
 export default function BulkUploadDrawer({ isOpen, onClose }) {
@@ -26,9 +27,10 @@ export default function BulkUploadDrawer({ isOpen, onClose }) {
 
     const [selectedFile, setSelectedFile] = useState(null);
     const [isDragging, setIsDragging] = useState(false);
-    const [uploadStatus, setUploadStatus] = useState('idle'); // idle, validating, ready, error
-    const [validationErrors, setValidationErrors] = useState([]);
-    const [isExtracting, setIsExtracting] = useState(false);
+    const [uploadStatus, setUploadStatus] = useState('idle'); // idle, processing, ready, error
+    const [errorMessage, setErrorMessage] = useState('');
+    const [extractedQuestions, setExtractedQuestions] = useState([]);
+    const [isProcessing, setIsProcessing] = useState(false);
 
     const handleDragOver = (e) => {
         e.preventDefault();
@@ -56,57 +58,72 @@ export default function BulkUploadDrawer({ isOpen, onClose }) {
     };
 
     const processFile = async (file) => {
-        if (!file.name.endsWith('.xlsx')) {
-            toast.error("Please upload a valid .xlsx file");
+        const validExtensions = ['xlsx', 'xls', 'pdf', 'doc', 'docx', 'txt'];
+        const extension = file.name.split('.').pop().toLowerCase();
+        
+        if (!validExtensions.includes(extension)) {
+            toast.error(`Unsupported file type. Please upload: Excel, PDF, Word, or Text files`);
+            return;
+        }
+
+        const maxSize = 15 * 1024 * 1024; // 15MB
+        if (file.size > maxSize) {
+            toast.error("File size exceeds 15MB limit");
             return;
         }
 
         setSelectedFile(file);
-        setUploadStatus('validating');
-        setValidationErrors([]);
+        setUploadStatus('processing');
+        setErrorMessage('');
+        setExtractedQuestions([]);
+        setIsProcessing(true);
 
         try {
-            const result = await validateQuestionsFile(file);
-            if (result.valid) {
+            toast.info('🤖 AI is analyzing your file...');
+            
+            const result = await processFileWithAI(file);
+            
+            if (result.success && result.questions.length > 0) {
+                setExtractedQuestions(result.questions);
                 setUploadStatus('ready');
-                toast.success("File validated successfully!");
+                toast.success(result.message);
             } else {
                 setUploadStatus('error');
-                setValidationErrors(result.errors);
-                toast.error("File validation failed.");
+                setErrorMessage(result.message || 'No questions found in the file');
+                toast.error(result.message);
             }
         } catch (error) {
             console.error("File processing error:", error);
             setUploadStatus('error');
-            setValidationErrors(["Failed to read the file structure."]);
+            setErrorMessage(error.message || 'Failed to process file');
+            toast.error('Failed to process file');
+        } finally {
+            setIsProcessing(false);
         }
     };
 
     const handleExtract = async () => {
-        if (!selectedFile || uploadStatus !== 'ready') return;
+        if (!selectedFile || uploadStatus !== 'ready' || extractedQuestions.length === 0) return;
 
-        setIsExtracting(true);
         try {
-            const questions = await extractQuestionsFromExcel(selectedFile);
             dispatch(setTemporaryStorage({
                 ...tempStorage,
-                questions: questions
+                questions: extractedQuestions
             }));
-            toast.success(`${questions.length} questions extracted successfully!`);
-            navigate('/dashboard/teacher/ai-review'); // Using same review page as AI
+            toast.success(`${extractedQuestions.length} questions loaded successfully!`);
+            navigate('/dashboard/teacher/ai-review');
             onClose();
         } catch (error) {
-            console.error("Extraction error:", error);
-            toast.error("An error occurred during extraction.");
-        } finally {
-            setIsExtracting(false);
+            console.error("Navigation error:", error);
+            toast.error("An error occurred");
         }
     };
 
     const removeFile = () => {
         setSelectedFile(null);
         setUploadStatus('idle');
-        setValidationErrors([]);
+        setErrorMessage('');
+        setExtractedQuestions([]);
         if (fileInputRef.current) fileInputRef.current.value = '';
     };
 
@@ -136,8 +153,12 @@ export default function BulkUploadDrawer({ isOpen, onClose }) {
                             <UploadCloud className="text-white" size={28} />
                         </div>
                         <div>
-                            <h2 className="text-xl font-black text-white uppercase italic tracking-tight">Bulk Question <span className="text-emerald-400">Upload</span></h2>
-                            <p className="text-white/40 text-xs font-medium tracking-wider uppercase">Import from Excel Spreadsheet</p>
+                            <h2 className="text-xl font-black text-white uppercase italic tracking-tight">
+                                <span className="text-emerald-400">AI-Powered</span> Bulk Upload
+                            </h2>
+                            <p className="text-white/40 text-xs font-medium tracking-wider uppercase">
+                                PDF • Excel • Word • Text
+                            </p>
                         </div>
                     </div>
                     <button onClick={onClose} className="p-3 hover:bg-white/5 rounded-2xl transition-colors text-white/50 hover:text-white">
@@ -148,6 +169,23 @@ export default function BulkUploadDrawer({ isOpen, onClose }) {
                 {/* Content */}
                 <div className="flex-1 overflow-y-auto custom-scrollbar p-8">
                     <div className="space-y-8">
+                        {/* AI Feature Banner */}
+                        <div className="p-6 rounded-3xl bg-gradient-to-r from-purple-500/10 via-blue-500/10 to-emerald-500/10 border border-white/10">
+                            <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center shadow-lg shadow-purple-500/20">
+                                    <Sparkles className="text-white" size={24} />
+                                </div>
+                                <div className="flex-1 space-y-1">
+                                    <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                                        AI-Powered Smart Parsing
+                                    </h4>
+                                    <p className="text-xs text-white/60 font-medium leading-relaxed">
+                                        Upload questions in any format - Our AI will intelligently parse and structure them automatically
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
                         {/* Sample Download */}
                         <div className="p-6 rounded-3xl bg-white/[0.02] border border-white/5 flex items-center justify-between">
                             <div className="flex items-center gap-4">
@@ -156,7 +194,7 @@ export default function BulkUploadDrawer({ isOpen, onClose }) {
                                 </div>
                                 <div className="space-y-1">
                                     <h4 className="text-sm font-bold text-white">Need a template?</h4>
-                                    <p className="text-xs text-white/40 font-medium">Download our standardized XLSX format</p>
+                                    <p className="text-xs text-white/40 font-medium">Download our sample XLSX format (optional)</p>
                                 </div>
                             </div>
                             <a
@@ -200,7 +238,7 @@ export default function BulkUploadDrawer({ isOpen, onClose }) {
 
                                 <div className="flex items-center gap-3 px-6 py-2 rounded-full bg-white/5 border border-white/10 text-[10px] font-black text-white/30 uppercase tracking-[0.2em] relative z-10">
                                     <FileText size={12} />
-                                    MAX FILE SIZE: 15MB
+                                    PDF • EXCEL • WORD • TEXT • MAX 15MB
                                 </div>
 
                                 <input
@@ -208,7 +246,7 @@ export default function BulkUploadDrawer({ isOpen, onClose }) {
                                     ref={fileInputRef}
                                     onChange={handleFileSelect}
                                     className="hidden"
-                                    accept=".xlsx"
+                                    accept=".xlsx,.xls,.pdf,.doc,.docx,.txt"
                                 />
                             </div>
                         ) : (
@@ -222,7 +260,7 @@ export default function BulkUploadDrawer({ isOpen, onClose }) {
                             >
                                 <div className={`w-20 h-20 rounded-3xl flex items-center justify-center ${uploadStatus === 'error' ? 'bg-rose-500/20' : 'bg-emerald-500/20'
                                     }`}>
-                                    {uploadStatus === 'validating' ? (
+                                    {uploadStatus === 'processing' ? (
                                         <Loader2 className="text-blue-400 animate-spin" size={40} />
                                     ) : uploadStatus === 'error' ? (
                                         <AlertCircle className="text-rose-400" size={40} />
@@ -237,26 +275,39 @@ export default function BulkUploadDrawer({ isOpen, onClose }) {
                                     </h4>
                                     <p className="text-sm text-white/40 font-bold">
                                         {(selectedFile.size / 1024).toFixed(1)} KB • {
-                                            uploadStatus === 'validating' ? 'Analyzing structure...' :
-                                                uploadStatus === 'error' ? 'Invalid configuration' : 'Ready for extraction'
+                                            uploadStatus === 'processing' ? '🤖 AI is parsing questions...' :
+                                                uploadStatus === 'error' ? 'Processing failed' : 
+                                                `✨ ${extractedQuestions.length} questions extracted`
                                         }
                                     </p>
                                 </div>
 
-                                {uploadStatus === 'error' && validationErrors.length > 0 && (
+                                {uploadStatus === 'error' && errorMessage && (
                                     <div className="w-full bg-rose-500/10 border border-rose-500/20 rounded-2xl p-6 text-left space-y-3">
                                         <p className="text-xs font-black text-rose-400 uppercase tracking-widest flex items-center gap-2">
                                             <AlertCircle size={14} />
-                                            Structure Mismatch
+                                            Processing Error
                                         </p>
-                                        <ul className="space-y-1.5">
-                                            {validationErrors.map((err, i) => (
-                                                <li key={i} className="text-[11px] text-white/60 font-medium flex items-center gap-2">
-                                                    <div className="w-1 h-1 rounded-full bg-rose-500" />
-                                                    {err}
-                                                </li>
-                                            ))}
-                                        </ul>
+                                        <p className="text-sm text-white/60 font-medium">
+                                            {errorMessage}
+                                        </p>
+                                    </div>
+                                )}
+
+                                {uploadStatus === 'ready' && extractedQuestions.length > 0 && (
+                                    <div className="w-full bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-6 text-left space-y-3">
+                                        <p className="text-xs font-black text-emerald-400 uppercase tracking-widest flex items-center gap-2">
+                                            <Sparkles size={14} />
+                                            AI Extraction Complete
+                                        </p>
+                                        <div className="space-y-2">
+                                            <p className="text-sm text-white/80 font-medium">
+                                                Successfully extracted and structured {extractedQuestions.length} questions
+                                            </p>
+                                            <p className="text-xs text-white/40 font-medium">
+                                                Each question has been validated and formatted with 4 options
+                                            </p>
+                                        </div>
                                     </div>
                                 )}
 
@@ -275,20 +326,20 @@ export default function BulkUploadDrawer({ isOpen, onClose }) {
                 {/* Footer */}
                 <div className="p-8 border-t border-white/10 bg-white/[0.02]">
                     <button
-                        disabled={uploadStatus !== 'ready' || isExtracting}
+                        disabled={uploadStatus !== 'ready' || isProcessing || extractedQuestions.length === 0}
                         onClick={handleExtract}
-                        className={`w-full relative h-[64px] rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-black uppercase tracking-widest text-sm overflow-hidden shadow-xl group transition-all duration-300 ${uploadStatus !== 'ready' || isExtracting ? 'opacity-50 grayscale' : 'hover:scale-[1.02] active:scale-[0.98]'
+                        className={`w-full relative h-[64px] rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-black uppercase tracking-widest text-sm overflow-hidden shadow-xl group transition-all duration-300 ${uploadStatus !== 'ready' || isProcessing || extractedQuestions.length === 0 ? 'opacity-50 grayscale' : 'hover:scale-[1.02] active:scale-[0.98]'
                             }`}
                     >
                         <span className="relative z-10 flex items-center justify-center gap-3">
-                            {isExtracting ? (
+                            {isProcessing ? (
                                 <>
                                     <Loader2 className="animate-spin" size={20} />
-                                    Synchronizing Knowledge...
+                                    AI is Processing...
                                 </>
                             ) : (
                                 <>
-                                    Extract & Preview Questions
+                                    Review {extractedQuestions.length} Questions
                                     <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
                                 </>
                             )}

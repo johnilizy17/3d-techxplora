@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import {
     User, Settings, Users, FileText, Wallet,
-    LogOut, X, Zap, ChevronRight, Play, BookOpen, Home, Wrench, GraduationCap, HelpCircle, Radio
+    LogOut, X, Zap, ChevronRight, Play, BookOpen, Home, Wrench, GraduationCap, HelpCircle, Radio, Rocket
 } from 'lucide-react';
 import { selectCurrentUser, logout, updateUser } from '@/redux/slices/authSlice';
 import { useGetStudentProfileQuery } from '@/redux/api/studentApi';
@@ -56,6 +56,7 @@ export default function MoreMenuDrawer({ isOpen, onClose, onLogoutTrigger }) {
         { icon: Play, label: "Courses", path: isStudent ? "/courses" : "/dashboard/courses", show: true },
         { icon: HelpCircle, label: "Quiz", path: "/dashboard/quizzes", show: true },
         { icon: Radio, label: "View Live Quiz", path: "/dashboard/view-live-quiz", show: isStudent, color: "purple" },
+        { icon: Rocket, label: "Bootcamp", path: "/dashboard/bootcamp", show: isStudent, color: "green" },
         { icon: GraduationCap, label: "Nigeria Curriculum", path: "/dashboard/nigeria-curriculum", show: true },
         { icon: Wrench, label: "Toolkit", path: "/dashboard/toolkit", show: true },
         { icon: BookOpen, label: "Docs", path: "/docs", show: true },
@@ -142,6 +143,8 @@ export default function MoreMenuDrawer({ isOpen, onClose, onLogoutTrigger }) {
                                             className={`w-full flex items-center justify-between p-5 lg:p-6 rounded-[1.5rem] lg:rounded-[2rem] ${
                                                 item.color === 'purple' 
                                                     ? 'bg-purple-500/5 hover:bg-purple-500/10 border-2 border-purple-500/20 hover:border-purple-500/40' 
+                                                    : item.color === 'green'
+                                                    ? 'bg-green-500/5 hover:bg-green-500/10 border-2 border-green-500/20 hover:border-green-500/40'
                                                     : 'bg-accent/50 hover:bg-accent border border-border hover:border-[#a6b1ff]/30'
                                             } group transition-all duration-300 relative overflow-hidden`}
                                         >
@@ -149,6 +152,8 @@ export default function MoreMenuDrawer({ isOpen, onClose, onLogoutTrigger }) {
                                                 <div className={`p-3 lg:p-3.5 rounded-xl lg:rounded-2xl ${
                                                     item.color === 'purple'
                                                         ? 'bg-purple-500/10 group-hover:bg-purple-500/20 text-purple-600 dark:text-purple-400'
+                                                        : item.color === 'green'
+                                                        ? 'bg-green-500/10 group-hover:bg-green-500/20 text-green-600 dark:text-green-400'
                                                         : 'bg-accent group-hover:bg-[#a6b1ff]/20 text-foreground group-hover:text-[#a6b1ff]'
                                                 } transition-all duration-300`}>
                                                     <item.icon size={22} />
@@ -156,6 +161,8 @@ export default function MoreMenuDrawer({ isOpen, onClose, onLogoutTrigger }) {
                                                 <span className={`font-bold text-lg ${
                                                     item.color === 'purple'
                                                         ? 'text-purple-700 dark:text-purple-300 group-hover:text-purple-600 dark:group-hover:text-purple-400'
+                                                        : item.color === 'green'
+                                                        ? 'text-green-700 dark:text-green-300 group-hover:text-green-600 dark:group-hover:text-green-400'
                                                         : 'text-foreground/80 group-hover:text-foreground'
                                                 } transition-colors`}>
                                                     {item.label}
@@ -164,6 +171,8 @@ export default function MoreMenuDrawer({ isOpen, onClose, onLogoutTrigger }) {
                                             <ChevronRight size={20} className={`${
                                                 item.color === 'purple'
                                                     ? 'text-purple-500 dark:text-purple-400'
+                                                    : item.color === 'green'
+                                                    ? 'text-green-500 dark:text-green-400'
                                                     : 'text-muted-foreground group-hover:text-foreground'
                                             } group-hover:translate-x-1 transition-all`} />
 
@@ -171,6 +180,8 @@ export default function MoreMenuDrawer({ isOpen, onClose, onLogoutTrigger }) {
                                             <div className={`absolute bottom-0 left-6 right-6 h-[2px] bg-gradient-to-r from-transparent ${
                                                 item.color === 'purple'
                                                     ? 'via-purple-500/40'
+                                                    : item.color === 'green'
+                                                    ? 'via-green-500/40'
                                                     : 'via-[#8b5cf6]/40'
                                             } to-transparent translate-y-full group-hover:translate-y-0 transition-transform duration-500`} />
                                         </motion.button>

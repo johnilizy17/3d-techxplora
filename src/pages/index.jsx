@@ -2,6 +2,7 @@ import React from "react";
 import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
 import useAnalytics from "@/hooks/useAnalytics";
 import ScrollToTop from "@/components/ScrollToTop";
+import ErrorBoundary from "@/components/ErrorBoundary";
 
 import Layout from "./Layout.jsx";
 import Home from "./Home.jsx";
@@ -71,6 +72,10 @@ import PrivacyPolicy from "./PrivacyPolicy.jsx";
 import TermsOfService from "./TermsOfService.jsx";
 import Pricing from "./Pricing.jsx";
 import LiveInspection from "./admin/LiveInspection.jsx";
+import Bootcamp from "./Bootcamp.jsx";
+import BootcampApplication from "./BootcampApplication.jsx";
+import BootcampApply from "./BootcampApply.jsx";
+import BootcampDashboard from "./BootcampDashboard.jsx";
 
 // Mapping of page names for Layout highlighting (optional)
 const PAGES = {
@@ -101,9 +106,10 @@ function PagesContent() {
 
   return (
     <Layout currentPageName={currentPage}>
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/how-to-use" element={<HowToUse />} />
+      <ErrorBoundary>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/how-to-use" element={<HowToUse />} />
         <Route path="/nigeria-curriculum" element={<NigeriaCurriculum />} />
         <Route path="/dashboard/nigeria-curriculum" element={<NigeriaCurriculum />} />
         <Route path="/about" element={<About />} />
@@ -150,6 +156,10 @@ function PagesContent() {
         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
         <Route path="/terms-of-service" element={<TermsOfService />} />
         <Route path="/price" element={<Pricing />} />
+        <Route path="/bootcamp" element={<Bootcamp />} />
+        <Route path="/bootcamp/apply" element={<BootcampApplication />} />
+        <Route path="/dashboard/bootcamp/apply" element={<BootcampApply />} />
+        <Route path="/dashboard/bootcamp" element={<BootcampDashboard />} />
 
         {/* Course Directed Routes */}
         <Route path="/dashboard/courses" element={<ManageCourses />} />
@@ -179,6 +189,7 @@ function PagesContent() {
         {/* Fallback for unknown routes */}
         <Route path="*" element={<div>404 - Page Not Found</div>} />
       </Routes>
+      </ErrorBoundary>
     </Layout>
   );
 }

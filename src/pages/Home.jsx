@@ -11,15 +11,35 @@ import CountUpStats from "../components/collectors/CountUpStats";
 
 export default function Home() {
   const [products, setProducts] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     loadProducts();
   }, []);
 
   const loadProducts = async () => {
-    const data = await Product.list('-created_date', 20);
-    setProducts(data);
+    try {
+      setIsLoading(true);
+      const data = await Product.list('-created_date', 20);
+      setProducts(data);
+    } catch (error) {
+      console.error("Failed to load products:", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
+
+  // Show minimal loading state to prevent white screen
+  if (isLoading) {
+    return (
+      <div className="relative bg-background overflow-hidden transition-colors duration-300 min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#a6b1ff] mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative bg-background overflow-hidden transition-colors duration-300">

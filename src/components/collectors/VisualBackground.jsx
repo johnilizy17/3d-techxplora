@@ -2,7 +2,8 @@ import { useMemo, useEffect } from 'react';
 import { useTheme } from '@/contexts/ThemeContext';
 
 const VisualBackground = () => {
-    const { darkMode } = useTheme();
+    const themeContext = useTheme();
+    const darkMode = themeContext?.darkMode || false;
     
     useEffect(() => {
         console.log('VisualBackground - Dark Mode:', darkMode);
@@ -52,7 +53,8 @@ const VisualBackground = () => {
                         bottom: blob.bottom,
                         animationDuration: blob.duration,
                         animationDelay: blob.delay,
-                        opacity: darkMode ? 0.4 : 0.25
+                        opacity: darkMode ? 0.4 : 0.25,
+                        willChange: 'transform' // Mobile optimization
                     }}
                 />
             ))}

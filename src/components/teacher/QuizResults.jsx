@@ -28,6 +28,7 @@ import { useUpdateQuizMutation, useGetQuizzesQuery } from '@/redux/api/teacherAp
 import { useVerifyQuizQuery } from '@/redux/api/questionApi';
 import { calculateQuizResultsStats } from '@/utils/excelUtils';
 import { formatDistanceToNow, format } from 'date-fns';
+import { hasDatePassed } from '@/utils/date';
 import {
     Drawer,
     DrawerClose,
@@ -40,6 +41,7 @@ import {
 } from "@/components/ui/drawer";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { DateTimePicker } from "@/components/ui/date-time-picker";
 import { Loader2, Settings2 } from 'lucide-react';
 
 export default function QuizResults() {
@@ -76,11 +78,24 @@ export default function QuizResults() {
         public: 1
     });
 
+    // Calculate quiz status based on dates
+    const hasValidDates = tempStorage?.start_at && tempStorage?.end_at;
+    const isStarted = hasValidDates ? hasDatePassed(tempStorage.start_at) : false;
+    const isEnded = hasValidDates ? hasDatePassed(tempStorage.end_at) : false;
+    
+    const quizStatus = !isStarted ? 'pending' : isEnded ? 'closed' : 'live';
+    const statusConfig = {
+        pending: { label: 'Pending', color: 'amber', bgColor: 'bg-amber-500/20', borderColor: 'border-amber-500/30', textColor: 'text-amber-400' },
+        live: { label: 'Active', color: 'emerald', bgColor: 'bg-emerald-500/20', borderColor: 'border-emerald-500/30', textColor: 'text-emerald-400' },
+        closed: { label: 'Closed', color: 'rose', bgColor: 'bg-rose-500/20', borderColor: 'border-rose-500/30', textColor: 'text-rose-400' }
+    };
+    const currentStatus = statusConfig[quizStatus];
+
     React.useEffect(() => {
         if (tempStorage) {
             setFormData({
-                start_at: tempStorage.start_at ? format(new Date(tempStorage.start_at), "yyyy-MM-dd'T'HH:mm") : '',
-                end_at: tempStorage.end_at ? format(new Date(tempStorage.end_at), "yyyy-MM-dd'T'HH:mm") : '',
+                start_at: tempStorage.start_at ? format(new Date(tempStorage.start_at.replace(' ', 'T')), "yyyy-MM-dd'T'HH:mm") : '',
+                end_at: tempStorage.end_at ? format(new Date(tempStorage.end_at.replace(' ', 'T')), "yyyy-MM-dd'T'HH:mm") : '',
                 xp: tempStorage.xp || 0,
                 p_xp: tempStorage.p_xp || 0,
                 attempt: tempStorage.attempt || '',
@@ -239,10 +254,12 @@ export default function QuizResults() {
                 <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-8">
                     <div className="space-y-4">
                         <div className="flex items-center gap-3">
-                            <span className="px-4 py-1.5 rounded-full bg-black/20 backdrop-blur-md border border-white/10 text-[10px] font-black text-white uppercase tracking-[0.2em]">Live Challenge</span>
-                            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/20 border border-emerald-500/30">
-                                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                                <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">Active</span>
+                            <span className="px-4 py-1.5 rounded-full bg-black/20 backdrop-blur-md border border-white/10 text-[10px] font-black text-white uppercase tracking-[0.2em]">
+                                {quizStatus === 'live' ? 'Live Challenge' : quizStatus === 'pending' ? 'Upcoming Challenge' : 'Ended Challenge'}
+                            </span>
+                            <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full ${currentStatus.bgColor} border ${currentStatus.borderColor}`}>
+                                <span className={`w-2 h-2 rounded-full ${currentStatus.textColor.replace('text-', 'bg-')} ${quizStatus === 'live' ? 'animate-pulse' : ''}`} />
+                                <span className={`text-[10px] font-black ${currentStatus.textColor} uppercase tracking-widest`}>{currentStatus.label}</span>
                             </div>
                         </div>
                         <h1 className="text-4xl lg:text-6xl font-black text-white italic tracking-tighter uppercase leading-none">
@@ -258,8 +275,12 @@ export default function QuizResults() {
                                     <Clock className="text-white" size={18} />
                                 </div>
                                 <div>
-                                    <p className="text-[10px] font-black text-white/40 uppercase tracking-widest">Expires In</p>
-                                    <p className="text-sm font-bold text-white">{tempStorage?.end_at ? formatDistanceToNow(new Date(tempStorage.end_at)) : "N/A"}</p>
+                                    <p className="text-[10px] font-black text-white/40 uppercase tracking-widest">
+                                        {isEnded ? 'Expired' : 'Expires In'}
+                                    </p>
+                                    <p className="text-sm font-bold text-white">
+                                        {tempStorage?.end_at ? formatDistanceToNow(new Date(tempStorage.end_at.replace(' ', 'T')), { addSuffix: true }) : "N/A"}
+                                    </p>
                                 </div>
                             </div>
                             <div className="flex items-center gap-2">
@@ -314,8 +335,8 @@ export default function QuizResults() {
                                         Configure Quiz
                                     </button>
                                 </DrawerTrigger>
-                                <DrawerContent className="bg-[#0d0d0d]/95 backdrop-blur-2xl border-white/10 text-white">
-                                    <div className="mx-auto w-full max-w-lg p-8">
+                                <DrawerContent className="bg-[#0d0d0d]/95 backdrop-blur-2xl border-white/10 text-white max-h-[calc(100dvh-7rem)] [&>div:first-child]:shrink-0">
+                                    <div className="mx-auto w-full max-w-lg p-8 min-h-0 flex-1 overflow-y-auto overscroll-contain">
                                         <DrawerHeader>
                                             <DrawerTitle className="text-2xl font-black italic uppercase tracking-tight text-white">Quiz Configuration</DrawerTitle>
                                             <DrawerDescription className="text-white/40 font-medium">Calibrate synchronization parameters for this assessment node.</DrawerDescription>
@@ -372,30 +393,20 @@ export default function QuizResults() {
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                 <div className="space-y-2 text-left">
                                                     <Label htmlFor="start_at" className="text-[10px] font-black uppercase tracking-widest text-white/40 pl-1">Start Activation</Label>
-                                                    <input
+                                                    <DateTimePicker
                                                         id="start_at"
-                                                        name="start_at"
-                                                        type="datetime-local"
                                                         value={formData.start_at}
-                                                        onChange={handleInputChange}
-                                                        className="flex h-11 w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-white/40 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/20 disabled:cursor-not-allowed disabled:opacity-50 hover:bg-white/10 cursor-pointer"
-                                                        style={{
-                                                            colorScheme: 'dark'
-                                                        }}
+                                                        onChange={(value) => setFormData(prev => ({ ...prev, start_at: value }))}
+                                                        placeholder="Pick start date & time"
                                                     />
                                                 </div>
                                                 <div className="space-y-2 text-left">
                                                     <Label htmlFor="end_at" className="text-[10px] font-black uppercase tracking-widest text-white/40 pl-1">End Deactivation</Label>
-                                                    <input
+                                                    <DateTimePicker
                                                         id="end_at"
-                                                        name="end_at"
-                                                        type="datetime-local"
                                                         value={formData.end_at}
-                                                        onChange={handleInputChange}
-                                                        className="flex h-11 w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-white/40 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/20 disabled:cursor-not-allowed disabled:opacity-50 hover:bg-white/10 cursor-pointer"
-                                                        style={{
-                                                            colorScheme: 'dark'
-                                                        }}
+                                                        onChange={(value) => setFormData(prev => ({ ...prev, end_at: value }))}
+                                                        placeholder="Pick end date & time"
                                                     />
                                                 </div>
                                             </div>

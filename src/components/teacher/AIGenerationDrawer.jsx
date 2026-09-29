@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Bot, Sparkles, X, ChevronRight, ChevronLeft, Target, BookOpen, CheckCircle2, AlertCircle } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { model } from '@/utils/firebase';
+import { callOpenRouter, parseAIJsonResponse } from '@/utils/openRouterApi';
 import { setTemporaryStorage, selectTempStorage } from '@/redux/slices/authSlice';
 import { useGetSyllabusQuery } from '@/redux/api/teacherApi';
 import { toast } from 'sonner';
@@ -47,17 +47,6 @@ export default function AIGenerationDrawer({ isOpen, onClose }) {
         }
     };
 
-    const cleanJsonResponse = (rawText) => {
-        try {
-            // Remove code fences ```json ... ```
-            const cleaned = rawText.replace(/```json|```/g, "").trim();
-            return JSON.parse(cleaned);
-        } catch (err) {
-            console.error("Invalid JSON format from AI:", err);
-            return null;
-        }
-    };
-
     const handleGenerate = async () => {
         if (quizNumber < 1) {
             toast.error("Please enter a valid number of questions");
@@ -68,53 +57,60 @@ export default function AIGenerationDrawer({ isOpen, onClose }) {
         try {
             const filteredSyllabus = syllabus.filter(s => selectedSyllabus.includes(s.id));
 
-            const prompt = `
-                Generate a set of quiz questions for a quiz titled "${tempStorage?.title || 'General Quiz'}".
-                Syllabus Topics to cover: ${JSON.stringify(filteredSyllabus)}
-                Additional Description: ${tempStorage?.description || 'N/A'}
-                Number of questions: ${quizNumber}
-                Important: Priority should be given to topics found in the syllabus provided.
+            const prompt = `Generate quiz questions for a quiz titled "${tempStorage?.title || 'General Quiz'}".
 
-                REQUIRED JSON FORMAT:
-                {
-                    "title": string,
-                    "description": string,
-                    "questions": [
-                        {
-                            "question": string,
-                            "options": [
-                                { "option": string, "is_correct": boolean },
-                                { "option": string, "is_correct": boolean },
-                                { "option": string, "is_correct": boolean },
-                                { "option": string, "is_correct": boolean }
-                            ]
-                        }
-                    ]
-                }
-                Return ONLY the JSON. No preamble or explanation.
-            `;
+Syllabus Topics: ${JSON.stringify(filteredSyllabus)}
+Description: ${tempStorage?.description || 'N/A'}
+Number of questions: ${quizNumber}
 
-            const result = await model.generateContent(prompt);
-            const response = await result.response;
-            const text = response.text();
+Return VALID JSON ONLY (no markdown, no text):
+{
+    "title": "${tempStorage?.title || 'General Quiz'}",
+    "description": "${tempStorage?.description || 'AI Generated Quiz'}",
+    "questions": [
+        {
+            "question": "Question text here",
+            "options": [
+                { "option": "Option A", "is_correct": false },
+                { "option": "Option B", "is_correct": true },
+                { "option": "Option C", "is_correct": false },
+                { "option": "Option D", "is_correct": false }
+            ]
+        }
+    ]
+}
 
-            const parsedQuiz = cleanJsonResponse(text);
+Important: Create ${quizNumber} questions covering the syllabus topics. Each question must have exactly 4 options with only ONE correct answer. Keep JSON valid!`;
 
-            if (parsedQuiz) {
+            console.log('📡 Calling OpenRouter API via utility...');
+            
+            const content = await callOpenRouter(prompt, {
+                appTitle: 'TechXplora AI Question Generator'
+            });
+
+            console.log('✅ Response received, parsing...');
+            const parsedQuiz = parseAIJsonResponse(content);
+
+            if (parsedQuiz && parsedQuiz.questions && parsedQuiz.questions.length > 0) {
                 dispatch(setTemporaryStorage({
                     ...tempStorage,
                     ...parsedQuiz,
                     generated_prompt: prompt
                 }));
-                toast.success("Questions generated successfully!");
-                navigate('/dashboard/teacher/ai-review'); // Updated to a more standard route name
+                toast.success(`Generated ${parsedQuiz.questions.length} questions successfully!`);
+                navigate('/dashboard/teacher/ai-review');
                 onClose();
             } else {
                 toast.error("Failed to parse AI response. Please try again.");
             }
         } catch (error) {
             console.error("AI Generation Error:", error);
-            toast.error("Failed to generate questions. Check your connection or AI quota.");
+            
+            const errorMessage = error.response?.data?.error?.message 
+                || error.message 
+                || 'Failed to generate questions';
+            
+            toast.error(`Generation failed: ${errorMessage}`);
         } finally {
             setIsGenerating(false);
         }

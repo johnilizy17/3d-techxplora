@@ -60,6 +60,7 @@ export default function Navbar() {
         { name: 'How To Use', path: '/how-to-use' },
         { name: 'About', path: '/about' },
         { name: 'Courses', path: '/courses' },
+        { name: 'Bootcamp', path: '/bootcamp' },
         { name: 'Docs', path: '/docs' },
         { name: 'Chess', path: '/chess' },
     ];

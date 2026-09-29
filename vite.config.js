@@ -17,7 +17,13 @@ export default defineConfig({
     },
     watch: {
       usePolling: false,
-    }
+    },
+    allowedHosts: [
+      'localhost',
+      '.ngrok-free.dev',
+      '.ngrok.io',
+      'swampier-edie-rockingly.ngrok-free.dev'
+    ]
   },
   resolve: {
     alias: {

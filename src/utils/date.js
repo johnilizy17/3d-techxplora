@@ -13,8 +13,21 @@ export function startCountdown(targetDate, setTargetDate) {
 }
 
 export function diffTime(startDate, endDate) {
-    const start = new Date(startDate);
-    const end = new Date(endDate);
+    let start, end;
+    
+    // Parse start date
+    if (typeof startDate === 'string' && startDate.match(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/)) {
+        start = new Date(startDate.replace(' ', 'T'));
+    } else {
+        start = new Date(startDate);
+    }
+    
+    // Parse end date
+    if (typeof endDate === 'string' && endDate.match(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/)) {
+        end = new Date(endDate.replace(' ', 'T'));
+    } else {
+        end = new Date(endDate);
+    }
 
     let diffMs = end - start;
     if (diffMs < 0) diffMs = 0;
@@ -54,8 +67,31 @@ export function timeAgo(date) {
 
 export function hasDatePassed(inputDate) {
     if (!inputDate) return false;
+    
     const now = new Date();
-    const date = new Date(inputDate);
+    let date;
+    
+    // Handle different date formats
+    if (typeof inputDate === 'string') {
+        // Check if it's MySQL datetime format (YYYY-MM-DD HH:MM:SS)
+        if (inputDate.match(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/)) {
+            // Parse as LOCAL time (replace space with T, but DON'T add Z)
+            // This keeps the year correct and treats it as local timezone
+            date = new Date(inputDate.replace(' ', 'T'));
+        } else {
+            // Use default parsing for ISO formats or other formats
+            date = new Date(inputDate);
+        }
+    } else {
+        date = new Date(inputDate);
+    }
+    
+    // Validate the date
+    if (isNaN(date.getTime())) {
+        console.warn('Invalid date:', inputDate);
+        return false;
+    }
+    
     return date < now;
 }
 
