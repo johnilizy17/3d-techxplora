@@ -1,0 +1,28 @@
+{
+  "name": "quiz-proctoring-signaling-server",
+  "version": "1.0.0",
+  "description": "WebSocket signaling server for live quiz proctoring",
+  "main": "signaling-server.js",
+  "scripts": {
+    "start": "node signaling-server.js",
+    "dev": "nodemon signaling-server.js"
+  },
+  "keywords": [
+    "webrtc",
+    "signaling",
+    "websocket",
+    "proctoring",
+    "live-streaming"
+  ],
+  "author": "TechXplora",
+  "license": "MIT",
+  "dependencies": {
+    "ws": "^8.14.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}

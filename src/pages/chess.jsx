@@ -54,21 +54,21 @@ export default function Chess() {
     ];
 
     return (
-        <div className="min-h-screen bg-[#0a0a0a] pt-24 px-6 pb-20 relative overflow-hidden">
+        <div className="min-h-screen bg-white dark:bg-[#0a0a0a] pt-24 px-6 pb-20 relative overflow-hidden">
             {/* Background Ambient */}
             <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
-                <div className="absolute top-[10%] left-[20%] w-[500px] h-[500px] bg-purple-900/20 rounded-full blur-[120px]" />
-                <div className="absolute bottom-[20%] right-[10%] w-[400px] h-[400px] bg-blue-900/20 rounded-full blur-[100px]" />
+                <div className="absolute top-[10%] left-[20%] w-[500px] h-[500px] bg-purple-200/40 dark:bg-purple-900/20 rounded-full blur-[120px]" />
+                <div className="absolute bottom-[20%] right-[10%] w-[400px] h-[400px] bg-blue-200/40 dark:bg-blue-900/20 rounded-full blur-[100px]" />
             </div>
 
             <div className="relative z-10 max-w-7xl mx-auto text-center mb-16">
-                <div className="inline-block mb-4 p-3 rounded-full bg-white/5 backdrop-blur-sm border border-white/10">
-                    <Crown className="w-8 h-8 text-[#a6b1ff]" />
+                <div className="inline-block mb-4 p-3 rounded-full bg-indigo-100 dark:bg-white/5 backdrop-blur-sm border-2 border-indigo-300 dark:border-white/10">
+                    <Crown className="w-8 h-8 text-indigo-600 dark:text-[#a6b1ff]" />
                 </div>
-                <h1 className="text-5xl md:text-6xl font-bold mb-6 font-['Bricolage_Grotesque'] bg-clip-text text-transparent bg-gradient-to-r from-white via-[#a6b1ff] to-[#c7aff8]">
+                <h1 className="text-5xl md:text-6xl font-bold mb-6 font-['Bricolage_Grotesque'] bg-clip-text text-transparent bg-gradient-to-r from-gray-900 via-indigo-600 to-purple-600 dark:from-white dark:via-[#a6b1ff] dark:to-[#c7aff8]">
                     Techxplora 3D Chess
                 </h1>
-                <p className="text-xl text-gray-400 max-w-2xl mx-auto">
+                <p className="text-xl text-gray-900 dark:text-gray-400 max-w-2xl mx-auto font-bold">
                     Master the royal game with our AI-powered educational chess platform.
                     Learn, practice, and challenge yourself in an immersive 3D environment.
                 </p>
@@ -80,27 +80,27 @@ export default function Chess() {
                     return (
                         <div
                             key={mode.id}
-                            className={`group relative p-6 rounded-2xl bg-[#12121a] border border-white/5 hover:border-white/20 transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl overflow-hidden`}
+                            className={`group relative p-6 rounded-2xl bg-white dark:bg-[#12121a] border-2 border-gray-300 dark:border-white/5 hover:border-indigo-400 dark:hover:border-white/20 transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl overflow-hidden`}
                         >
                             {/* Hover Gradient Background */}
                             <div className={`absolute inset-0 bg-gradient-to-br ${mode.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
 
                             <div className="relative z-10 flex flex-col h-full">
                                 <div className="flex justify-between items-start mb-6">
-                                    <div className={`p-3 rounded-xl bg-white/5 ${mode.color} border border-white/10 group-hover:bg-white/10 transition-colors`}>
+                                    <div className={`p-3 rounded-xl bg-gray-100 dark:bg-white/5 ${mode.color} border-2 border-gray-300 dark:border-white/10 group-hover:bg-gray-200 dark:group-hover:bg-white/10 transition-colors shadow-lg`}>
                                         <Icon className="w-6 h-6" />
                                     </div>
-                                    <span className={`text-xs font-bold px-2 py-1 rounded-full bg-white/5 border border-white/10 text-gray-300`}>
+                                    <span className={`text-xs font-bold px-2 py-1 rounded-full bg-gray-100 dark:bg-white/5 border-2 border-gray-300 dark:border-white/10 text-gray-900 dark:text-gray-300`}>
                                         {mode.difficulty}
                                     </span>
                                 </div>
 
-                                <h3 className="text-2xl font-bold text-white mb-2">{mode.title}</h3>
-                                <p className="text-gray-400 text-sm mb-6 flex-grow">{mode.description}</p>
+                                <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">{mode.title}</h3>
+                                <p className="text-gray-900 dark:text-gray-400 text-sm mb-6 flex-grow font-bold">{mode.description}</p>
 
                                 <div className="space-y-3 mb-8">
                                     {mode.features.map((feature, i) => (
-                                        <div key={i} className="flex items-center gap-2 text-sm text-gray-500 group-hover:text-gray-300 transition-colors">
+                                        <div key={i} className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-500 group-hover:text-gray-900 dark:group-hover:text-gray-300 transition-colors font-bold">
                                             <Play className={`w-3 h-3 ${mode.color}`} />
                                             {feature}
                                         </div>
@@ -108,7 +108,7 @@ export default function Chess() {
                                 </div>
 
                                 <Button
-                                    className="w-full relative overflow-hidden group/btn bg-white/10 hover:bg-white/20 text-white border border-white/10"
+                                    className="w-full relative overflow-hidden group/btn bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 dark:bg-white/10 dark:hover:bg-white/20 text-white border-2 border-indigo-400 dark:border-white/10 shadow-lg"
                                     onClick={() => {
                                         if (mode.id === 'tutorial') {
                                             // Simple navigation to easiest mode for now or dedicated tutorial page if requested
@@ -118,7 +118,7 @@ export default function Chess() {
                                         }
                                     }}
                                 >
-                                    <span className="relative z-10 flex items-center justify-center gap-2">
+                                    <span className="relative z-10 flex items-center justify-center gap-2 font-bold">
                                         {mode.id === 'tutorial' ? 'Start Learning' : 'Start Game'}
                                         <Play className="w-4 h-4" />
                                     </span>

@@ -1,12 +1,41 @@
 import React, { useRef, useMemo, useState, useEffect } from 'react'
 import { useFrame } from '@react-three/fiber'
-import { Float, Environment, MeshTransmissionMaterial, SpotLight, Sparkles } from '@react-three/drei'
+import { Float, Environment, SpotLight, Sparkles } from '@react-three/drei'
 import * as THREE from 'three'
 
+class SafeEnvironment extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = { hasError: false };
+    }
+
+    static getDerivedStateFromError(error) {
+        return { hasError: true };
+    }
+
+    componentDidCatch(error, errorInfo) {
+        console.warn('Environment failed to load:', error);
+    }
+
+    render() {
+        if (this.state.hasError) {
+            return <ambientLight intensity={0.8} />;
+        }
+        return this.props.children;
+    }
+}
+
 function Rig() {
+    const vec = useMemo(() => new THREE.Vector3(), [])
     useFrame((state) => {
-        state.camera.position.lerp({ x: state.pointer.x * 2, y: state.pointer.y * 1 + 2, z: 6 }, 0.05)
-        state.camera.lookAt(0, 0, 0)
+        if (!state.camera) return;
+        try {
+            vec.set(state.pointer.x * 2, state.pointer.y * 1 + 2, 6)
+            state.camera.position.lerp(vec, 0.05)
+            state.camera.lookAt(0, 0, 0)
+        } catch (error) {
+            console.error('Rig animation error:', error);
+        }
     })
 }
 
@@ -15,7 +44,11 @@ function Capsule({ position, color, size = 1, rotationSpeed, floatOffset, isMobi
 
     useFrame((state, delta) => {
         if (mesh.current) {
-            mesh.current.rotation.y += rotationSpeed
+            try {
+                mesh.current.rotation.y += rotationSpeed
+            } catch (error) {
+                console.error('Capsule animation error:', error);
+            }
         }
     })
 
@@ -29,37 +62,18 @@ function Capsule({ position, color, size = 1, rotationSpeed, floatOffset, isMobi
             <group scale={size} ref={mesh}>
                 <mesh castShadow={!isMobile} receiveShadow={!isMobile}>
                     <cylinderGeometry args={[0.4, 0.4, 1.8, 32]} />
-                    {isMobile ? (
-                        <meshPhysicalMaterial
-                            color="#ffffff"
-                            metalness={0.1}
-                            roughness={0.1}
-                            transmission={0.9}
-                            thickness={0.5}
-                            transparent={true}
-                            opacity={0.5}
-                            clearcoat={1}
-                            clearcoatRoughness={0.1}
-                        />
-                    ) : (
-                        <MeshTransmissionMaterial
-                            backside={false}
-                            samples={6}
-                            thickness={0.2}
-                            anisotropicBlur={0.1}
-                            iridescence={1}
-                            iridescenceIOR={1}
-                            iridescenceThicknessRange={[0, 1400]}
-                            clearcoat={1}
-                            clearcoatRoughness={0.1}
-                            chromaticAberration={0.1}
-                            color="#ffffff"
-                            resolution={512}
-                            distortion={0.5}
-                            distortionScale={0.5}
-                            temporalDistortion={0.2}
-                        />
-                    )}
+                    <meshPhysicalMaterial
+                        color="#ffffff"
+                        metalness={0.1}
+                        roughness={0.1}
+                        transmission={0.9}
+                        thickness={0.5}
+                        transparent={true}
+                        opacity={isMobile ? 0.5 : 0.7}
+                        clearcoat={1}
+                        clearcoatRoughness={0.1}
+                        ior={1.5}
+                    />
                 </mesh>
 
                 {/* Inner Content - Placeholder for 3D Figure */}
@@ -97,10 +111,16 @@ function Capsule({ position, color, size = 1, rotationSpeed, floatOffset, isMobi
 
 export default function HeroExamples() {
     const [isMobile, setIsMobile] = useState(false);
+    const [isSafari] = useState(() => {
+        if (typeof window === 'undefined') return false;
+        const ua = navigator.userAgent.toLowerCase();
+        return ua.indexOf('safari') !== -1 && ua.indexOf('chrome') === -1;
+    });
 
     useEffect(() => {
         const checkMobile = () => setIsMobile(window.innerWidth < 768);
         checkMobile();
+
         window.addEventListener('resize', checkMobile);
         return () => window.removeEventListener('resize', checkMobile);
     }, []);
@@ -117,19 +137,21 @@ export default function HeroExamples() {
     return (
         <group>
             <Rig />
-            <Environment preset="night" />
+            <SafeEnvironment>
+                <Environment preset="night" />
+            </SafeEnvironment>
 
             {/* Key Light */}
             <SpotLight
                 position={[10, 10, 10]}
                 angle={0.15}
                 penumbra={1}
-                intensity={2}
-                castShadow={!isMobile}
+                intensity={isSafari ? 1 : 2}
+                castShadow={!isMobile && !isSafari}
             />
 
             <Sparkles
-                count={isMobile ? 30 : 100}
+                count={isMobile ? 30 : (isSafari ? 50 : 100)}
                 scale={12}
                 size={4}
                 speed={0.4}
@@ -141,7 +163,7 @@ export default function HeroExamples() {
                 <Capsule
                     key={i}
                     {...props}
-                    isMobile={isMobile}
+                    isMobile={isMobile || isSafari}
                     rotationSpeed={0.002 + Math.random() * 0.001}
                     floatOffset={Math.random() * Math.PI * 2}
                 />

@@ -6,7 +6,24 @@ import path from 'path'
 export default defineConfig({
   plugins: [react()],
   server: {
-    allowedHosts: true
+    host: true,
+    port: 5173,
+    strictPort: false,
+    hmr: {
+      protocol: 'ws',
+      host: 'localhost',
+      clientPort: 5173,
+      overlay: true
+    },
+    watch: {
+      usePolling: false,
+    },
+    allowedHosts: [
+      'localhost',
+      '.ngrok-free.dev',
+      '.ngrok.io',
+      'swampier-edie-rockingly.ngrok-free.dev'
+    ]
   },
   resolve: {
     alias: {
@@ -21,4 +38,15 @@ export default defineConfig({
       },
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+          'redux-vendor': ['@reduxjs/toolkit', 'react-redux'],
+          'ui-vendor': ['lucide-react', 'framer-motion']
+        }
+      }
+    }
+  }
 }) 

@@ -1,7 +1,10 @@
+import { useLocation } from "react-router-dom";
 import Navbar from "@/components/navigation/Navbar";
+import Footer from "@/components/navigation/Footer";
 import React, { useState, useEffect } from "react";
 import CustomCursor from "@/components/collectors/CustomCursor";
 import ScrollProgress from "@/components/collectors/ScrollProgress";
+import ChatBot from "@/components/chat/ChatBot";
 
 export default function Layout({ children }) {
     const [scrollProgress, setScrollProgress] = useState(0);
@@ -17,14 +20,21 @@ export default function Layout({ children }) {
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
+    const location = useLocation();
+    const isDashboard = location.pathname.startsWith('/dashboard');
+    const isSupport = location.pathname === '/support';
+    const isCameraSetup = location.pathname === '/dashboard/quizzes/camera-setup';
+
     return (
-        <div className="min-h-screen bg-[#0a0a0a] text-white selection:bg-[#a6b1ff]/30">
-            <CustomCursor />
-            <ScrollProgress progress={scrollProgress} />
-            <Navbar />
+        <div className="min-h-screen bg-background text-foreground selection:bg-[#a6b1ff]/30 transition-colors duration-300">
+            {!isSupport && <CustomCursor />}
+            {!isSupport && <ScrollProgress progress={scrollProgress} />}
+            {!isDashboard && !isSupport && <Navbar />}
             <main>
                 {children}
             </main>
+            {!isDashboard && !isSupport && <Footer />}
+            {!isSupport && !isCameraSetup && <ChatBot />}
         </div>
     )
 }

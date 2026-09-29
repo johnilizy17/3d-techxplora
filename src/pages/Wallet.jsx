@@ -1,0 +1,171 @@
+import React from 'react';
+import { motion } from 'framer-motion';
+import { Link, useNavigate } from 'react-router-dom';
+import { ArrowLeft, Settings, ArrowUpRight, ArrowDownLeft, MoreHorizontal } from 'lucide-react';
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Button } from "@/components/ui/button";
+import DashboardLayout from '@/components/dashboard/DashboardLayout';
+import WithdrawModal from '@/components/dashboard/WithdrawModal';
+import { useSelector } from 'react-redux';
+import { selectCurrentUser, selectHistory } from '@/redux/slices/authSlice';
+import DepositModal from '@/components/dashboard/DepositModal';
+import TransferModal from '@/components/dashboard/TransferModal';
+
+export default function Wallet() {
+    const navigate = useNavigate();
+    const user = useSelector(selectCurrentUser);
+    const history = useSelector(selectHistory);
+    const isTeacher = user?.accountable_type?.includes('Teacher') || user?.role === 'admin';
+    
+    // Access the data array - API returns { data: { data: [...] } }
+    const historyList = history?.data?.data || history?.data || (Array.isArray(history) ? history : []);
+
+    console.log("Wallet Page - Redux History:", history);
+    console.log("Wallet Page - Processed List:", historyList);
+
+    // Map API history to UI format, or default to empty array
+    const transactions = Array.isArray(historyList) ? historyList.map((tx, index) => {
+        const isSender = tx.sender_id === user?.id;
+        // Logic derived from legacy history.tsx
+        const name = tx.quiz
+            ? `Quiz: ${tx.hash}`
+            : (tx.account_id === user?.id ? tx.account?.email : (tx.sender_id ? tx.sender?.email : tx.account?.email));
+
+        return {
+            id: tx.id || index,
+            name: name || 'Transaction',
+            status: isSender ? 'Sent' : 'Received',
+            amount: tx.amount,
+            date: new Date(tx.created_at).toLocaleString(),
+            type: isSender ? 'outgoing' : 'incoming',
+            isSender: isSender,
+            icon: isSender ? '📤' : '📥'
+        };
+    }) : [];
+
+    return (
+        <DashboardLayout>
+            <div className="min-h-screen relative overflow-hidden pb-10">
+                {/* Background Gradients to match the purple vibe */}
+                <div className="absolute top-0 left-0 w-full h-[500px] bg-gradient-to-b from-[#4c1d95]/40 to-transparent z-0 pointer-events-none" />
+
+                <div className="relative z-10 w-full max-w-md lg:max-w-none lg:px-10 mx-auto min-h-screen flex flex-col">
+                    {/* Header */}
+                    <div className="flex items-center justify-between px-6 lg:px-0 pt-8 lg:pt-12 pb-6">
+                        <button onClick={() => navigate(-1)} className="p-3 lg:p-4 bg-white/5 hover:bg-white/10 rounded-2xl transition-all text-white border border-white/10 shadow-xl">
+                            <ArrowLeft size={24} />
+                        </button>
+                        <h1 className="text-2xl font-black uppercase tracking-tighter italic">My Wallet</h1>
+                        <button onClick={() => navigate('/dashboard/profile')} className="p-3 lg:p-4 bg-white/5 hover:bg-white/10 rounded-2xl transition-all text-white border border-white/10 shadow-xl">
+                            <Settings size={24} />
+                        </button>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:mt-6">
+                        {/* Balance Column */}
+                        <div className="lg:col-span-5 px-6 lg:px-0">
+                            <motion.div
+                                initial={{ scale: 0.95, opacity: 0 }}
+                                animate={{ scale: 1, opacity: 1 }}
+                                className="w-full bg-gradient-to-br from-[#6d28d9] via-[#8b5cf6] to-[#d946ef] rounded-[2.5rem] p-10 relative overflow-hidden shadow-[0_20px_50px_rgba(109,40,217,0.3)]"
+                            >
+                                {/* Decorative elements */}
+                                <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full blur-3xl -mr-20 -mt-20" />
+
+                                <div className="relative z-10 flex flex-col items-center text-center">
+                                    <div className="mb-6 text-7xl drop-shadow-2xl animate-bounce-slow">
+                                        💸
+                                    </div>
+
+                                    <p className="text-purple-100 text-sm font-black uppercase tracking-[0.2em] mb-2 opacity-80">Total Earnings</p>
+                                    <h2 className="text-5xl lg:text-6xl font-black text-white mb-10 tracking-tighter">
+                                        {user?.xp?.toLocaleString() || 0} XP
+                                        <span className="block text-2xl text-purple-200/60 mt-2 font-bold tracking-normal italic">
+                                            ({((user?.xp || 0) / 10).toLocaleString()} XD)
+                                        </span>
+                                    </h2>
+
+                                    <div className="w-full flex flex-col gap-3">
+                                        <WithdrawModal
+                                            balance={user?.xp || 0}
+                                            trigger={
+                                                <Button className="w-full h-14 bg-white hover:bg-purple-50 text-purple-700 rounded-2xl font-black text-lg shadow-[0_6px_0_#9333ea] active:shadow-none active:translate-y-[6px] transition-all uppercase tracking-widest">
+                                                    Withdraw
+                                                </Button>
+                                            }
+                                        />
+
+                                        {isTeacher && (
+                                            <div className="grid grid-cols-2 gap-3 w-full">
+                                                <DepositModal
+                                                    trigger={
+                                                        <Button className="h-14 bg-white/10 hover:bg-white/20 text-white border border-white/20 rounded-2xl font-black text-sm uppercase tracking-widest transition-all">
+                                                            Deposit
+                                                        </Button>
+                                                    }
+                                                />
+                                                <TransferModal
+                                                    trigger={
+                                                        <Button className="h-14 bg-white/10 hover:bg-white/20 text-white border border-white/20 rounded-2xl font-black text-sm uppercase tracking-widest transition-all">
+                                                            Transfer
+                                                        </Button>
+                                                    }
+                                                />
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </motion.div>
+                        </div>
+
+                        {/* Transaction History Column */}
+                        <div className="lg:col-span-7 px-6 lg:px-0">
+                            <motion.div
+                                initial={{ y: 50, opacity: 0 }}
+                                animate={{ y: 0, opacity: 1 }}
+                                transition={{ delay: 0.2 }}
+                                className="bg-white rounded-[2.5rem] lg:rounded-[3rem] p-8 text-black min-h-[400px] shadow-2xl"
+                            >
+                                <div className="flex items-center justify-between mb-10">
+                                    <h3 className="text-2xl font-black uppercase tracking-tight text-gray-900 italic">History</h3>
+                                </div>
+
+                                {transactions.length > 0 ? (
+                                    <div className="space-y-8">
+                                        {transactions.map((tx) => (
+                                            <div key={tx.id} className="flex items-center justify-between group">
+                                                <div className="flex items-center gap-5">
+                                                    <div className="w-14 h-14 rounded-2xl bg-gray-50 flex items-center justify-center text-2xl shadow-inner border border-gray-100 group-hover:scale-110 transition-transform">
+                                                        {tx.icon}
+                                                    </div>
+                                                    <div>
+                                                        <p className="font-black text-gray-900 text-lg leading-tight uppercase tracking-tight truncate max-w-[150px] lg:max-w-xs" title={tx.name}>{tx.name}</p>
+                                                        <p className={`text-xs font-black uppercase tracking-widest mt-1 ${!tx.isSender ? 'text-green-500' : 'text-red-500'}`}>
+                                                            {tx.status}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                <div className="text-right">
+                                                    <p className={`font-black text-xl tracking-tighter ${!tx.isSender ? 'text-green-600' : 'text-red-500'}`}>
+                                                        {tx.isSender ? '-' : '+'}{Number(tx.amount).toLocaleString()} XP
+                                                    </p>
+                                                    <p className="text-[10px] text-gray-400 font-bold uppercase mt-1 opacity-60 tracking-wider">{tx.date}</p>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="flex flex-col items-center justify-center h-64 text-center opacity-50">
+                                        <div className="text-4xl mb-4">📜</div>
+                                        <p className="font-bold text-gray-900 text-lg">No history yet</p>
+                                        <p className="text-sm text-gray-500">Transactions will appear here.</p>
+                                    </div>
+                                )}
+                            </motion.div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </DashboardLayout>
+    );
+}

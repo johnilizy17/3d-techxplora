@@ -1,0 +1,681 @@
+import React from 'react';
+import { motion } from 'framer-motion';
+import {
+    Users,
+    Trophy,
+    Target,
+    Clock,
+    Calendar,
+    Copy,
+    Edit3,
+    PlusCircle,
+    TrendingUp,
+    UserCheck,
+    AlertCircle,
+    ArrowRight,
+    TrophyIcon,
+    Eye,
+    Radio,
+    Globe,
+    Lock
+} from 'lucide-react';
+import { useSelector, useDispatch } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
+import { toast } from '../ui/use-toast';
+import { selectTempStorage, setTemporaryStorage, selectCurrentUser } from '@/redux/slices/authSlice';
+import { useGetQuizResultsQuery } from '@/redux/api/questionApi';
+import { useUpdateQuizMutation, useGetQuizzesQuery } from '@/redux/api/teacherApi';
+import { useVerifyQuizQuery } from '@/redux/api/questionApi';
+import { calculateQuizResultsStats } from '@/utils/excelUtils';
+import { formatDistanceToNow, format } from 'date-fns';
+import { hasDatePassed } from '@/utils/date';
+import {
+    Drawer,
+    DrawerClose,
+    DrawerContent,
+    DrawerDescription,
+    DrawerFooter,
+    DrawerHeader,
+    DrawerTitle,
+    DrawerTrigger,
+} from "@/components/ui/drawer";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { DateTimePicker } from "@/components/ui/date-time-picker";
+import { Loader2, Settings2 } from 'lucide-react';
+
+export default function QuizResults() {
+    const navigate = useNavigate();
+    const dispatch = useDispatch();
+    const tempStorage = useSelector(selectTempStorage);
+    const user = useSelector(selectCurrentUser);
+    const quizId = tempStorage?.id;
+    const quizCode = tempStorage?.quiz_code;
+    const type = user?.accountable_type === "App\\Models\\Student" ? "student" : "teacher";
+
+    const { data: resultsResults, isLoading } = useGetQuizResultsQuery(quizId, {
+        skip: !quizId
+    });
+
+    const { data: verifyData, refetch: refetchQuiz } = useVerifyQuizQuery(quizCode, {
+        skip: !quizCode
+    });
+
+    // Add query for refetching quizzes list
+    const { refetch: refetchQuizzesList } = useGetQuizzesQuery({ type, id: user?.id }, {
+        skip: !user?.id
+    });
+
+    const [updateQuiz, { isLoading: isUpdating }] = useUpdateQuizMutation();
+
+    const [isDrawerOpen, setIsDrawerOpen] = React.useState(false);
+    const [formData, setFormData] = React.useState({
+        start_at: '',
+        end_at: '',
+        xp: 0,
+        p_xp: 0,
+        attempt: '',
+        public: 1
+    });
+
+    // Calculate quiz status based on dates
+    const hasValidDates = tempStorage?.start_at && tempStorage?.end_at;
+    const isStarted = hasValidDates ? hasDatePassed(tempStorage.start_at) : false;
+    const isEnded = hasValidDates ? hasDatePassed(tempStorage.end_at) : false;
+    
+    const quizStatus = !isStarted ? 'pending' : isEnded ? 'closed' : 'live';
+    const statusConfig = {
+        pending: { label: 'Pending', color: 'amber', bgColor: 'bg-amber-500/20', borderColor: 'border-amber-500/30', textColor: 'text-amber-400' },
+        live: { label: 'Active', color: 'emerald', bgColor: 'bg-emerald-500/20', borderColor: 'border-emerald-500/30', textColor: 'text-emerald-400' },
+        closed: { label: 'Closed', color: 'rose', bgColor: 'bg-rose-500/20', borderColor: 'border-rose-500/30', textColor: 'text-rose-400' }
+    };
+    const currentStatus = statusConfig[quizStatus];
+
+    React.useEffect(() => {
+        if (tempStorage) {
+            setFormData({
+                start_at: tempStorage.start_at ? format(new Date(tempStorage.start_at.replace(' ', 'T')), "yyyy-MM-dd'T'HH:mm") : '',
+                end_at: tempStorage.end_at ? format(new Date(tempStorage.end_at.replace(' ', 'T')), "yyyy-MM-dd'T'HH:mm") : '',
+                xp: tempStorage.xp || 0,
+                p_xp: tempStorage.p_xp || 0,
+                attempt: tempStorage.attempt || '',
+                public: tempStorage.public !== undefined ? tempStorage.public : 1
+            });
+        }
+    }, [tempStorage]);
+
+    const handleInputChange = (e) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({
+            ...prev,
+            [name]: name === 'xp' || name === 'p_xp' || name === 'attempt' || name === 'public' ? Number(value) : value
+        }));
+    };
+
+    const handleUpdate = async () => {
+        const projectedBalance = (user?.xp || 0) + (tempStorage?.xp || 0) - formData.xp;
+
+        if (projectedBalance < 0) {
+            toast({
+                title: "Insufficient XP",
+                description: "You don't have enough XP to increase the pool by this amount.",
+                variant: "destructive"
+            });
+            return;
+        }
+
+        try {
+            // Determine difficulty based on p_xp
+            let difficulty = null;
+            const pxp = Number(formData.p_xp);
+            if (pxp === 50) {
+                difficulty = 'beginner';
+            } else if (pxp === 100) {
+                difficulty = 'intermediate';
+            } else if (pxp === 150) {
+                difficulty = 'advanced';
+            }
+
+            // Include all required fields from tempStorage
+            const updatePayload = {
+                ...tempStorage,
+                id: quizId,
+                title: tempStorage.title,
+                description: tempStorage.description || '',
+                mode_id: tempStorage.mode_id,
+                group_code: tempStorage.group_code,
+                admin_code: tempStorage.admin_code,
+                teacher_id: tempStorage.teacher_id,
+                duration: tempStorage.duration,
+                is_duration_per_question: tempStorage.is_duration_per_question || false,
+                min_age: tempStorage.min_age,
+                max_age: tempStorage.max_age,
+                class: tempStorage.class,
+                is_ai: tempStorage.is_ai || false,
+                status: tempStorage.status !== undefined ? tempStorage.status : true,
+                // Updated fields from form
+                start_at: formData.start_at,
+                end_at: formData.end_at,
+                xp: formData.xp,
+                p_xp: formData.p_xp,
+                attempt: formData.attempt,
+                difficulty: difficulty,
+                public: formData.public
+            };
+
+            const updatedQuiz = await updateQuiz(updatePayload).unwrap();
+
+            // Refetch the quiz data to get the latest information
+            await refetchQuiz();
+
+            // Refetch the quizzes list
+            await refetchQuizzesList();
+
+            // Update temp storage with the updated quiz data
+            dispatch(setTemporaryStorage({
+                ...tempStorage,
+                start_at: formData.start_at,
+                end_at: formData.end_at,
+                xp: formData.xp,
+                p_xp: formData.p_xp,
+                attempt: formData.attempt,
+                public: formData.public
+            }));
+
+            setIsDrawerOpen(false);
+
+            toast({
+                title: "Quiz updated",
+                description: "Parameters synchronized successfully."
+            });
+
+            // Navigate to dashboard after successful update with a small delay
+
+
+        } catch (error) {
+            console.error('Update failed:', error);
+            toast({
+                title: "Update failed",
+                description: error?.data?.message || "Could not synchronize parameters.",
+                variant: "destructive"
+            });
+        }
+    };
+
+    const results = resultsResults?.data || resultsResults || [];
+    const stats = calculateQuizResultsStats(results);
+
+    const copyCode = () => {
+        if (tempStorage?.quiz_code) {
+            navigator.clipboard.writeText(tempStorage.quiz_code);
+            toast({
+                title: "Code copied",
+                description: "Quiz code copied to clipboard."
+            });
+        }
+    };
+
+    if (isLoading) {
+        return (
+            <div className="flex flex-col items-center justify-center py-20 gap-4">
+                <div className="w-16 h-16 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin" />
+                <p className="text-white/40 font-bold uppercase tracking-widest text-xs animate-pulse">Syncing performance data...</p>
+            </div>
+        );
+    }
+
+    const containerVariants = {
+        hidden: { opacity: 0 },
+        visible: {
+            opacity: 1,
+            transition: {
+                staggerChildren: 0.1
+            }
+        }
+    };
+
+    const itemVariants = {
+        hidden: { opacity: 0, y: 20 },
+        visible: { opacity: 1, y: 0 }
+    };
+
+    return (
+        <motion.div
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+            className="space-y-8 pb-20"
+        >
+            {/* Header / Banner */}
+            <motion.div variants={itemVariants} className="relative p-8 lg:p-12 rounded-[3rem] bg-gradient-to-br from-indigo-600 via-blue-600 to-purple-700 overflow-hidden shadow-2xl">
+                <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2" />
+                <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-500/20 rounded-full blur-[80px] translate-y-1/2 -translate-x-1/2" />
+
+                <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-8">
+                    <div className="space-y-4">
+                        <div className="flex items-center gap-3">
+                            <span className="px-4 py-1.5 rounded-full bg-black/20 backdrop-blur-md border border-white/10 text-[10px] font-black text-white uppercase tracking-[0.2em]">
+                                {quizStatus === 'live' ? 'Live Challenge' : quizStatus === 'pending' ? 'Upcoming Challenge' : 'Ended Challenge'}
+                            </span>
+                            <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full ${currentStatus.bgColor} border ${currentStatus.borderColor}`}>
+                                <span className={`w-2 h-2 rounded-full ${currentStatus.textColor.replace('text-', 'bg-')} ${quizStatus === 'live' ? 'animate-pulse' : ''}`} />
+                                <span className={`text-[10px] font-black ${currentStatus.textColor} uppercase tracking-widest`}>{currentStatus.label}</span>
+                            </div>
+                        </div>
+                        <h1 className="text-4xl lg:text-6xl font-black text-white italic tracking-tighter uppercase leading-none">
+                            {tempStorage?.title || "Quiz Performance"}
+                        </h1>
+                        <p className="text-white/70 font-medium max-w-2xl leading-relaxed">
+                            {tempStorage?.description || "Monitor real-time results and adjust your curriculum based on student performance insights."}
+                        </p>
+
+                        <div className="flex flex-wrap items-center gap-6 pt-4">
+                            <div className="flex items-center gap-2">
+                                <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center">
+                                    <Clock className="text-white" size={18} />
+                                </div>
+                                <div>
+                                    <p className="text-[10px] font-black text-white/40 uppercase tracking-widest">
+                                        {isEnded ? 'Expired' : 'Expires In'}
+                                    </p>
+                                    <p className="text-sm font-bold text-white">
+                                        {tempStorage?.end_at ? formatDistanceToNow(new Date(tempStorage.end_at.replace(' ', 'T')), { addSuffix: true }) : "N/A"}
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center">
+                                    <Target className="text-white" size={18} />
+                                </div>
+                                <div>
+                                    <p className="text-[10px] font-black text-white/40 uppercase tracking-widest">Total XP Pool</p>
+                                    <p className="text-sm font-bold text-white">{tempStorage?.xp || 0} XP</p>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center">
+                                    <TrophyIcon className="text-white" size={18} />
+                                </div>
+                                <div>
+                                    <p className="text-[10px] font-black text-white/40 uppercase tracking-widest">Total Attempts</p>
+                                    <p className="text-sm font-bold text-white">{tempStorage?.attempt || 0} trys</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="flex flex-col items-center gap-4">
+                        <div className="p-8 rounded-[2.5rem] bg-black/20 backdrop-blur-xl border border-white/10 shadow-2xl text-center min-w-[200px] group transition-transform hover:scale-105">
+                            <p className="text-[10px] font-black text-white/40 uppercase tracking-widest mb-2">Quiz Code</p>
+                            <h2 className="text-4xl font-black text-white tracking-[0.2em] mb-4 font-mono group-hover:text-blue-400 transition-colors">
+                                {tempStorage?.quiz_code || "------"}
+                            </h2>
+                            <button
+                                onClick={copyCode}
+                                className="w-full py-3 rounded-xl bg-white/10 hover:bg-white text-white hover:text-indigo-600 font-black uppercase tracking-widest text-[10px] flex items-center justify-center gap-2 transition-all"
+                            >
+                                <Copy size={14} />
+                                Copy Code
+                            </button>
+
+                            <button
+                                onClick={() => navigate(`/dashboard/quizzes/monitoring?code=${tempStorage?.quiz_code}`)}
+                                className="w-full mt-3 py-3 rounded-xl bg-gradient-to-r from-purple-500/20 to-pink-500/20 hover:from-purple-500 hover:to-pink-500 border border-purple-500/30 hover:border-purple-500 text-white font-black uppercase tracking-widest text-[10px] flex items-center justify-center gap-2 transition-all group"
+                            >
+                                <Radio size={14} className="group-hover:animate-pulse" />
+                                Live Monitor
+                            </button>
+
+                            <Drawer open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
+                                <DrawerTrigger asChild>
+                                    <button
+                                        className="w-full mt-3 py-3 rounded-xl bg-white/10 hover:bg-white text-white hover:text-indigo-600 font-black uppercase tracking-widest text-[10px] flex items-center justify-center gap-2 transition-all"
+                                    >
+                                        <Settings2 size={14} />
+                                        Configure Quiz
+                                    </button>
+                                </DrawerTrigger>
+                                <DrawerContent className="bg-[#0d0d0d]/95 backdrop-blur-2xl border-white/10 text-white max-h-[calc(100dvh-7rem)] [&>div:first-child]:shrink-0">
+                                    <div className="mx-auto w-full max-w-lg p-8 min-h-0 flex-1 overflow-y-auto overscroll-contain">
+                                        <DrawerHeader>
+                                            <DrawerTitle className="text-2xl font-black italic uppercase tracking-tight text-white">Quiz Configuration</DrawerTitle>
+                                            <DrawerDescription className="text-white/40 font-medium">Calibrate synchronization parameters for this assessment node.</DrawerDescription>
+                                        </DrawerHeader>
+                                        <div className="grid gap-6 py-6">
+                                            <div className="p-4 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-between">
+                                                <div>
+                                                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40 mb-1">XP Balance Status</p>
+                                                    <p className={`text-lg font-black italic ${(user?.xp || 0) + (tempStorage?.xp || 0) - formData.xp < 0 ? 'text-rose-400' : 'text-indigo-400'}`}>
+                                                        {(user?.xp || 0) - formData.xp} XP Remaining
+                                                    </p>
+                                                </div>
+                                                <div className="w-10 h-10 rounded-xl bg-indigo-500/20 flex items-center justify-center">
+                                                    <Trophy size={18} className="text-indigo-400" />
+                                                </div>
+                                            </div>
+
+                                            {/* Public/Private Toggle */}
+                                            <div className="p-4 rounded-2xl bg-gradient-to-r from-emerald-500/10 to-purple-500/10 border border-white/10 flex items-center justify-between">
+                                                <div className="flex items-center gap-3">
+                                                    {formData.public === 1 ? (
+                                                        <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center">
+                                                            <Globe size={18} className="text-emerald-400" />
+                                                        </div>
+                                                    ) : (
+                                                        <div className="w-10 h-10 rounded-xl bg-gray-500/20 flex items-center justify-center">
+                                                            <Lock size={18} className="text-gray-400" />
+                                                        </div>
+                                                    )}
+                                                    <div>
+                                                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40 mb-1">Quiz Visibility</p>
+                                                        <p className={`text-lg font-black italic ${formData.public === 1 ? 'text-emerald-400' : 'text-gray-400'}`}>
+                                                            {formData.public === 1 ? 'Public - Live Quiz' : 'Private - Code Only'}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setFormData(prev => ({ ...prev, public: prev.public === 1 ? 0 : 1 }))}
+                                                    className={`relative w-16 h-8 rounded-full transition-all duration-300 ${
+                                                        formData.public === 1 
+                                                            ? 'bg-emerald-500' 
+                                                            : 'bg-white/10'
+                                                    }`}
+                                                >
+                                                    <div
+                                                        className={`absolute top-1 left-1 w-6 h-6 rounded-full bg-white shadow-lg transition-transform duration-300 ${
+                                                            formData.public === 1 ? 'translate-x-8' : 'translate-x-0'
+                                                        }`}
+                                                    />
+                                                </button>
+                                            </div>
+
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <div className="space-y-2 text-left">
+                                                    <Label htmlFor="start_at" className="text-[10px] font-black uppercase tracking-widest text-white/40 pl-1">Start Activation</Label>
+                                                    <DateTimePicker
+                                                        id="start_at"
+                                                        value={formData.start_at}
+                                                        onChange={(value) => setFormData(prev => ({ ...prev, start_at: value }))}
+                                                        placeholder="Pick start date & time"
+                                                    />
+                                                </div>
+                                                <div className="space-y-2 text-left">
+                                                    <Label htmlFor="end_at" className="text-[10px] font-black uppercase tracking-widest text-white/40 pl-1">End Deactivation</Label>
+                                                    <DateTimePicker
+                                                        id="end_at"
+                                                        value={formData.end_at}
+                                                        onChange={(value) => setFormData(prev => ({ ...prev, end_at: value }))}
+                                                        placeholder="Pick end date & time"
+                                                    />
+                                                </div>
+                                            </div>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <div className="space-y-2 text-left">
+                                                    <Label htmlFor="xp" className="text-[10px] font-black uppercase tracking-widest text-white/40 pl-1">Total XP Pool</Label>
+                                                    <Input
+                                                        id="xp"
+                                                        name="xp"
+                                                        type="number"
+                                                        value={formData.xp}
+                                                        onChange={handleInputChange}
+                                                        className="bg-white/5 border-white/10 rounded-xl"
+                                                    />
+                                                </div>
+                                                <div className="space-y-2 text-left">
+                                                    <Label htmlFor="p_xp" className="text-[10px] font-black uppercase tracking-widest text-white/40 pl-1">Quiz Difficulty</Label>
+                                                    <select
+                                                        id="p_xp"
+                                                        name="p_xp"
+                                                        value={formData.p_xp}
+                                                        onChange={handleInputChange}
+                                                        className="flex h-11 w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white shadow-sm transition-colors appearance-none focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/20 disabled:cursor-not-allowed disabled:opacity-50 hover:bg-white/10 cursor-pointer"
+                                                        style={{
+                                                            backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23ffffff' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
+                                                            backgroundPosition: 'right 0.5rem center',
+                                                            backgroundRepeat: 'no-repeat',
+                                                            backgroundSize: '1.5em 1.5em',
+                                                            paddingRight: '2.5rem'
+                                                        }}
+                                                    >
+                                                        <option value="" className="bg-[#0d0d0d] text-white/40">Select difficulty</option>
+                                                        <option value="50" className="bg-[#0d0d0d] text-white">Beginner - 50 XP</option>
+                                                        <option value="100" className="bg-[#0d0d0d] text-white">Intermediate - 100 XP</option>
+                                                        <option value="150" className="bg-[#0d0d0d] text-white">Advanced - 150 XP</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div className="space-y-2 text-left">
+                                                <Label htmlFor="attempt" className="text-[10px] font-black uppercase tracking-widest text-white/40 pl-1">Max Attempts</Label>
+                                                <Input
+                                                    id="attempt"
+                                                    name="attempt"
+                                                    type="number"
+                                                    value={formData.attempt}
+                                                    onChange={handleInputChange}
+                                                    placeholder="Leave empty for unlimited"
+                                                    className="bg-white/5 border-white/10 rounded-xl"
+                                                />
+                                            </div>
+                                        </div>
+                                        <DrawerFooter className="flex-col sm:flex-row gap-4 pt-4">
+                                            <button
+                                                onClick={handleUpdate}
+                                                disabled={isUpdating}
+                                                className="w-full sm:flex-1 py-4 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-black uppercase tracking-widest text-xs shadow-xl flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50"
+                                            >
+                                                {isUpdating ? <Loader2 className="animate-spin" size={16} /> : <Target size={16} />}
+                                                Save Parameters
+                                            </button>
+                                            <DrawerClose asChild>
+                                                <button className="w-full sm:flex-1 py-4 rounded-xl bg-white/5 border border-white/10 text-white/40 font-black uppercase tracking-widest text-xs hover:bg-white/10 transition-all">
+                                                    Abort Sync
+                                                </button>
+                                            </DrawerClose>
+                                        </DrawerFooter>
+                                    </div>
+                                </DrawerContent>
+                            </Drawer>
+                        </div>
+                    </div>
+                </div>
+            </motion.div>
+
+            {/* Stats Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <StatCard icon={Users} label="Total Attempts" value={stats.totalStudents} sub={`Unique Students`} color="blue" />
+                <StatCard icon={TrendingUp} label="Average Score" value={`${stats.averageScore}%`} sub="Mastery Level" color="purple" />
+                <StatCard icon={UserCheck} label="Success Rate" value={`${stats.passPercentage}%`} sub="Passing Students" color="emerald" />
+                <StatCard icon={AlertCircle} label="Risk Factor" value={`${stats.failPercentage}%`} sub="Below 50% Score" color="rose" />
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                {/* Recent Attempts Table */}
+                <motion.div variants={itemVariants} className="lg:col-span-2 bg-white/[0.03] border border-white/10 rounded-[2.5rem] overflow-hidden">
+                    <div className="p-8 border-b border-white/5 flex items-center justify-between">
+                        <h3 className="text-xl font-black text-white italic uppercase tracking-tight flex items-center gap-3">
+                            <TrendingUp className="text-blue-400" size={24} />
+                            Mission Logs
+                        </h3>
+                        <span className="text-[10px] font-black text-white/40 uppercase tracking-widest italic">{results.length} students found</span>
+                    </div>
+
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left">
+                            <thead className="bg-white/5 border-b border-white/10">
+                                <tr>
+                                    <th className="px-8 py-5 text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">Student Name</th>
+                                    <th className="px-8 py-5 text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">Score</th>
+                                    <th className="px-8 py-5 text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-white/5">
+                                {results.length > 0 ? (
+                                    results.map((item, i) => (
+                                        <tr key={i} className="group hover:bg-white/[0.02] transition-colors">
+                                            <td className="px-8 py-6">
+                                                <div className="flex items-center gap-4">
+                                                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500/20 to-purple-500/20 border border-white/10 flex items-center justify-center font-black text-white italic">
+                                                        {item.student?.first_name?.[0]}{item.student?.last_name?.[0]}
+                                                    </div>
+                                                    <div>
+                                                        <p className="font-bold text-white group-hover:text-blue-400 transition-colors">
+                                                            {item.student?.first_name} {item.student?.last_name}
+                                                        </p>
+                                                        <p className="text-[10px] text-white/30 font-bold uppercase tracking-wider">{item.student?.email}</p>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className="px-8 py-6">
+                                                <div className="space-y-2">
+                                                    <div className="flex items-center justify-between">
+                                                        <span className={`text-sm font-black italic ${item.score >= 50 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                                                            {item.score}%
+                                                        </span>
+                                                    </div>
+                                                    <div className="w-32 h-1.5 bg-white/5 rounded-full overflow-hidden">
+                                                        <motion.div
+                                                            initial={{ width: 0 }}
+                                                            animate={{ width: `${item.score}%` }}
+                                                            className={`h-full rounded-full ${item.score >= 50 ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.3)]' : 'bg-rose-500'}`}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className="px-8 py-6">
+                                                <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border ${item.score >= 50
+                                                    ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+                                                    : 'bg-rose-500/10 border-rose-500/30 text-rose-400'
+                                                    }`}>
+                                                    {item.score >= 50 ? 'Promoted' : 'Sub-optimal'}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    ))
+                                ) : (
+                                    <tr>
+                                        <td colSpan="3" className="px-8 py-20 text-center">
+                                            <div className="flex flex-col items-center gap-4 opacity-30">
+                                                <Users size={48} />
+                                                <p className="font-black uppercase tracking-widest text-xs">Waiting for student interaction...</p>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                </motion.div>
+
+                {/* Quick Actions Side Panel */}
+                <div className="space-y-6">
+                    {/* Live Monitoring Card */}
+                    <motion.div variants={itemVariants} className="p-8 rounded-[2.5rem] bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/20">
+                        <h3 className="text-lg font-black text-white italic uppercase tracking-tight mb-6 flex items-center gap-2">
+                            <Eye className="text-purple-400" size={20} />
+                            Live Monitoring
+                        </h3>
+                        <div className="space-y-4">
+                            <QuickActionButton
+                                icon={Radio}
+                                label="View Live Students"
+                                color="purple"
+                                onClick={() => navigate(`/dashboard/admin/inspection?quiz=${tempStorage?.quiz_code}`)}
+                            />
+                        </div>
+                        <div className="mt-4 p-4 rounded-xl bg-purple-500/5 border border-purple-500/10">
+                            <p className="text-[9px] font-bold text-purple-400/60 uppercase tracking-wider leading-relaxed">
+                                Monitor students in real-time during quiz sessions. View camera feeds, screen recordings, and track violations.
+                            </p>
+                        </div>
+                    </motion.div>
+
+                    <motion.div variants={itemVariants} className="p-8 rounded-[2.5rem] bg-gradient-to-br from-emerald-500/10 to-teal-500/10 border border-emerald-500/20">
+                        <h3 className="text-lg font-black text-white italic uppercase tracking-tight mb-6 flex items-center gap-2">
+                            <Edit3 className="text-emerald-400" size={20} />
+                            Quiz Modification
+                        </h3>
+                        <div className="space-y-4">
+                            <QuickActionButton
+                                icon={Edit3}
+                                label="Modify Quiz Details"
+                                color="emerald"
+                                onClick={() => navigate('/dashboard/teacher/editquiz')}
+                            />
+                            <QuickActionButton
+                                icon={PlusCircle}
+                                label="Incorporate Questions"
+                                color="teal"
+                                onClick={() => navigate('/dashboard/teacher/add-manual')}
+                            />
+                        </div>
+                    </motion.div>
+
+                    <motion.div variants={itemVariants} className="p-8 rounded-[2.5rem] bg-white/[0.03] border border-white/5 relative overflow-hidden group hover:border-blue-500/30 transition-all duration-500">
+                        <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-20 group-hover:scale-110 transition-all">
+                            <Trophy size={60} className="text-blue-400" />
+                        </div>
+                        <h4 className="text-xs font-black text-white/40 uppercase tracking-widest mb-2 italic">Class Champion</h4>
+                        {results.length > 0 ? (
+                            <div className="space-y-3">
+                                <p className="text-xl font-black text-white italic uppercase tracking-tight">
+                                    {results[0]?.student?.first_name || "Unknown"} {results[0]?.student?.last_name || "Student"}
+                                </p>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-2xl font-black text-blue-400 italic font-mono">{Math.max(...results.map(r => r.score || 0))}%</span>
+                                    <Trophy size={16} className="text-amber-400" />
+                                </div>
+                            </div>
+                        ) : (
+                            <p className="text-sm font-bold text-white/20 italic">Leaderboard pending...</p>
+                        )}
+                    </motion.div>
+                </div>
+            </div>
+        </motion.div>
+    );
+}
+
+const StatCard = ({ icon: Icon, label, value, sub, color }) => {
+    const colorClasses = {
+        blue: "from-blue-500/20 to-indigo-500/5 border-blue-500/20 text-blue-400 icon-bg-blue-500/20",
+        purple: "from-purple-500/20 to-fuchsia-500/5 border-purple-500/20 text-purple-400 icon-bg-purple-500/20",
+        emerald: "from-emerald-500/20 to-teal-500/5 border-emerald-500/20 text-emerald-400 icon-bg-emerald-500/20",
+        rose: "from-rose-500/20 to-orange-500/5 border-rose-500/20 text-rose-400 icon-bg-rose-500/20",
+    };
+
+    return (
+        <motion.div variants={{ hidden: { scale: 0.9, opacity: 0 }, visible: { scale: 1, opacity: 1 } }}
+            className={`p-6 rounded-[2rem] bg-gradient-to-br ${colorClasses[color].split(' ')[0]} ${colorClasses[color].split(' ')[1]} border ${colorClasses[color].split(' ')[2]} flex flex-col justify-between group hover:scale-[1.02] transition-transform duration-300`}
+        >
+            <div className={`w-12 h-12 rounded-2xl ${colorClasses[color].split(' ')[4]} flex items-center justify-center mb-6 shadow-lg shadow-black/20 group-hover:rotate-12 transition-transform`}>
+                <Icon size={24} className={colorClasses[color].split(' ')[3]} />
+            </div>
+            <div>
+                <p className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em] mb-1">{label}</p>
+                <h3 className="text-3xl font-black text-white italic tracking-tight font-mono">{value}</h3>
+                <p className="text-[10px] font-bold text-white/30 uppercase tracking-widest mt-2">{sub}</p>
+            </div>
+        </motion.div>
+    );
+};
+
+const QuickActionButton = ({ icon: Icon, label, color, onClick }) => {
+    const colors = {
+        emerald: "bg-emerald-500 hover:bg-emerald-400 text-black shadow-emerald-500/20",
+        teal: "bg-teal-500 hover:bg-teal-400 text-black shadow-teal-500/20",
+        purple: "bg-purple-500 hover:bg-purple-400 text-white shadow-purple-500/20",
+    }
+    return (
+        <button
+            onClick={onClick}
+            className={`w-full h-[56px] px-6 rounded-2xl ${colors[color]} font-black uppercase tracking-widest text-[10px] flex items-center justify-between group transition-all duration-300 shadow-xl`}
+        >
+            <span className="flex items-center gap-3">
+                <Icon size={18} />
+                {label}
+            </span>
+            <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+        </button>
+    );
+}

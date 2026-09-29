@@ -6,9 +6,11 @@ function ChessPiece({ position, piece, color, isHighlighted = false, isDragging 
     const meshRef = useRef(null)
 
     useFrame((state) => {
-        if (isDragging) {
-            if (meshRef.current) {
+        if (isDragging && meshRef.current) {
+            try {
                 meshRef.current.position.y = 1.5 + Math.sin(state.clock.elapsedTime * 5) * 0.1
+            } catch (error) {
+                console.error('ChessPiece animation error:', error);
             }
         }
     })
@@ -247,7 +249,16 @@ export default function ChessBoard3D({ board, ...props }) {
 
     return (
         <div className="w-full relative rounded-2xl overflow-hidden shadow-2xl bg-[#0a0a0a] border border-white/10" style={{ height: windowHeight }}>
-            <Canvas camera={{ position: cameraPosition, fov: 45 }} shadows>
+            <Canvas
+                camera={{ position: cameraPosition, fov: 45 }}
+                shadows
+                frameloop="always"
+                performance={{ min: 0.5 }}
+                gl={{
+                    powerPreference: 'high-performance',
+                    preserveDrawingBuffer: true
+                }}
+            >
                 <ambientLight intensity={0.4} />
                 <directionalLight
                     position={[5, 10, 5]}

@@ -217,7 +217,7 @@ export default function ChessGame() {
 
     if (!chessEngine) {
         return (
-            <div className="h-screen w-full flex items-center justify-center bg-[#0a0a0a] text-white">
+            <div className="h-screen w-full flex items-center justify-center bg-background text-foreground">
                 <Loader2 className="w-10 h-10 animate-spin text-[#a6b1ff]" />
                 <span className="ml-4">Initializing Engine...</span>
             </div>
@@ -225,13 +225,13 @@ export default function ChessGame() {
     }
 
     return (
-        <div className="min-h-screen bg-[#0a0a0a] pt-24 px-4 pb-10 text-white selection:bg-[#a6b1ff]/30">
-            <Toaster position="top-center" theme="dark" />
+        <div className="min-h-screen bg-background pt-24 px-4 pb-10 text-foreground selection:bg-[#a6b1ff]/30 transition-colors duration-300">
+            <Toaster position="top-center" />
 
             <div className="max-w-7xl mx-auto">
                 {/* Header */}
                 <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
-                    <Button variant="ghost" className="text-white/60 hover:text-white" onClick={() => navigate('/chess')}>
+                    <Button variant="ghost" className="text-muted-foreground hover:text-foreground" onClick={() => navigate('/chess')}>
                         <ArrowLeft className="w-4 h-4 mr-2" /> Back to Menu
                     </Button>
 

@@ -3,11 +3,40 @@
 
 <head>
   <meta charset="UTF-8" />
-  <link rel="icon" type="image/svg+xml" href="/assets/favicon-BsejYE93.ico" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.ico" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Techxplora</title>
-  <script type="module" crossorigin src="/assets/index-BEeL39ZA.js"></script>
-  <link rel="stylesheet" crossorigin href="/assets/index-CtMzu3QS.css">
+  
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="/manifest.json" />
+  
+  <!-- Theme Color -->
+  <meta name="theme-color" content="#667eea" />
+  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0a0a0a" />
+  
+  <!-- Apple Touch Icons -->
+  <link rel="apple-touch-icon" href="/icon-192x192.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="TechXplora" />
+  
+  <!-- PWA Meta Tags -->
+  <meta name="description" content="Interactive learning platform with quizzes, courses, and gamified education" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  
+  <!-- Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-CVJB4QD1L2"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-CVJB4QD1L2');
+  </script>
+  <script type="module" crossorigin src="/assets/index-DhJyE1DI.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/react-vendor-BX9Ds-jq.js">
+  <link rel="modulepreload" crossorigin href="/assets/ui-vendor-uLghD-ws.js">
+  <link rel="modulepreload" crossorigin href="/assets/redux-vendor-B4QO1oSL.js">
+  <link rel="stylesheet" crossorigin href="/assets/index-ClmJftOF.css">
 </head>
 
 <body>
